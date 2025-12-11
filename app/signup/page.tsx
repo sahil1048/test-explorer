@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 // Ensure this path is correct for your project structure
-import SearchSchoolInput from '@/app/components/Signup/schoolSearchInput'
+import SearchSchoolInput from '@/components/signup/schoolSearchInput'
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false)
@@ -25,9 +25,9 @@ export default function SignupPage() {
   return (
     // Main container with overflow hidden to contain the blob
     <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden p-4">
-      
+
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 lg:gap-20 items-center z-10">
-        
+
         {/* --- Left Side - Form --- */}
         {/* Order-2 on mobile, Order-1 on desktop to be on the left */}
         <div className="w-full max-w-md mx-auto order-2 lg:order-1">
@@ -116,7 +116,7 @@ export default function SignupPage() {
             >
               {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Create Account"}
             </button>
-            
+
             {/* Google Button */}
             <div className="text-center pt-2">
                <button 
@@ -138,7 +138,7 @@ export default function SignupPage() {
         {/* --- Right Side - Visuals --- */}
         {/* Order-1 on mobile (hidden), Order-2 on desktop to be on the right */}
         <div className="hidden lg:flex flex-col justify-center items-center relative h-full min-h-[700px] order-1 lg:order-2">
-           
+
            {/* Top Right Login Link */}
            <div className="absolute top-0 right-0 p-6 z-20">
               <p className="text-base font-semibold text-gray-700">
@@ -151,9 +151,9 @@ export default function SignupPage() {
                 </Link>
               </p>
            </div>
-           
+
            {/* The Complex Orange Blob Background */}
-           
+
            <div className="relative z-10 w-[500px] mt-20">
              {/* Signup Illustration - Using a vibrant one from Popsy */}
              <Image 

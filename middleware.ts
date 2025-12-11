@@ -1,21 +1,63 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// 1. Define Public Routes
-const isPublicRoute = createRouteMatcher([
-  '/', 
-  '/sign-in(.*)', 
-  '/sign-up(.*)',
-  '/:schoolSlug',           // Landing Pages
-  '/api/webhooks(.*)',      // Webhooks
-  '/api/auth/sync'          // Sync Route
-]);
+import { type NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 
-// 2. Export Middleware
-export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    await auth.protect();
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
+
+  // 1. Refresh Supabase Session
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  await supabase.auth.getUser()
+
+  const url = request.nextUrl
+  const hostname = request.headers.get("host") || ""
+  const allowedDomains = ["localhost:3000", "testexplorer.com"]
+  const isSubdomain = !allowedDomains.includes(hostname) && !hostname.startsWith('www.')
+
+  if (isSubdomain) {
+    const subdomain = hostname.split('.')[0]
+
+    if (url.pathname.includes('.') || url.pathname.startsWith('/api') || url.pathname.startsWith('/_next')) {
+      return response
+    }
+
+    const sharedRoutes = ['/dashboard', '/exams', '/profile']
+    if (sharedRoutes.some(route => url.pathname.startsWith(route))) {
+      return response
+    }
+
+    // Rewrite everything else (Home, Login) to the school folder
+    return NextResponse.rewrite(new URL(`/school/${subdomain}${url.pathname}`, request.url))
   }
-});
+
+  return response
+}
 
 export const config = {
   matcher: [

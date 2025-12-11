@@ -20,7 +20,8 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/')
+  // Redirect to dashboard. The Middleware will handle if this is on a subdomain.
+  redirect('/dashboard') 
 }
 
 export async function signup(formData: FormData) {
@@ -49,21 +50,21 @@ export async function signup(formData: FormData) {
     return { error: error.message }
   }
 
-  // 2. Create the Profile entry manually (if you are not using a Trigger)
+  // 2. Create the Profile
   if (data.user) {
     const { error: profileError } = await supabase
       .from('profiles')
       .insert({
         id: data.user.id,
         full_name: fullName,
-        role: 'student', // Default role
-        school_id: schoolId && schoolId !== '' ? schoolId : null,
+        role: 'student',
+        // Standardized to 'organization_id'
+        organization_id: schoolId && schoolId !== '' ? schoolId : null,
         manual_school_name: !schoolId ? manualSchoolName : null
       })
 
     if (profileError) {
       console.error('Profile creation failed:', profileError)
-      // Optional: Delete the auth user if profile creation fails
     }
   }
 
