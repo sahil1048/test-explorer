@@ -21,7 +21,7 @@ export async function login(formData: FormData) {
 
   revalidatePath('/', 'layout')
   // Redirect to dashboard. The Middleware will handle if this is on a subdomain.
-  redirect('/') 
+  redirect('/dashboard') 
 }
 
 export async function signup(formData: FormData) {
