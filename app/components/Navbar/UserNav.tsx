@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 
+
 interface UserNavProps {
   profile: {
     full_name: string | null
