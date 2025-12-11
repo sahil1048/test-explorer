@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { UserButton, useUser } from "@clerk/nextjs";
 import { 
   ArrowBigLeft,
   ArrowBigRight,
@@ -29,19 +32,16 @@ export default function LandingPage({ profile }: LandingPageProps) {
     <div className="min-h-screen flex flex-col bg-white">
       
       {/* --- Navbar --- */}
-      <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+      <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
-              TE
-            </div>
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">TE</div>
             <span className="text-xl font-bold text-gray-900 tracking-tight">Test Explorer</span>
           </div>
 
           <nav className="hidden md:flex gap-8 items-center text-sm font-medium text-gray-600">
-            <Link href="#features" className="hover:text-blue-600 transition-colors">Features</Link>
-            <Link href="#subjects" className="hover:text-blue-600 transition-colors">Subjects</Link>
-            <Link href="#testimonials" className="hover:text-blue-600 transition-colors">Success Stories</Link>
+            <Link href="#features" className="hover:text-blue-600">Features</Link>
+            <Link href="#subjects" className="hover:text-blue-600">Subjects</Link>
           </nav>
 
           <div className="flex items-center gap-4">
@@ -207,6 +207,21 @@ export default function LandingPage({ profile }: LandingPageProps) {
             <p className="text-blue-100 text-lg mb-10 max-w-2xl mx-auto">
               Join the platform trusted by top schools and toppers. Start your free trial today and see the difference.
             </p>
+            {profile ? (
+               <Link 
+                href="/dashboard/my-courses" 
+                className="inline-block bg-white text-blue-600 px-10 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition-colors shadow-xl"
+              >
+                Go to Dashboard
+              </Link>
+            ) : (
+              <Link 
+                href="/signup" 
+                className="inline-block bg-white text-blue-600 px-10 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition-colors shadow-xl"
+              >
+                Get Started for Free
+              </Link>
+            )}
             {profile ? (
                <Link 
                 href="/dashboard/my-courses" 
