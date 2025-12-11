@@ -21,19 +21,34 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
   // 2. AWAIT the params before using them (Crucial for Next.js 15)
   const { schoolSlug } = await params;
 
+  console.log("------------------------------------------------");
+  console.log("🔍 Looking for slug:", schoolSlug);
+
   // 3. Fetch School Branding
   const { data: school, error } = await supabase
     .from('organizations')
-    .select('name, logo_url, hero_image_url, welcome_message, id, slug')
+    .select('*')
     .eq('slug', schoolSlug)
     .single();
+
+  if (error) {
+    console.error("❌ Supabase Error:", error.message);
+    console.error("   Details:", error.details);
+  }
+
+  if (!school) {
+    console.error("⚠️ No data returned. Check RLS policies or Slug typo.");
+  } else {
+    console.log("✅ School found:", school.name);
+  }
+  console.log("------------------------------------------------");
 
   if (error || !school) {
     return notFound();
   }
 
   // Default fallbacks
-  const heroImage = school.hero_image_url || "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop";
+  const heroImage = school.hero_image_url || "/leftman.png";
   const welcomeText = school.welcome_message || `Welcome to the official ${school.name} Exam Preparation Portal. Powered by best-in-class technology to help you succeed.`;
 
   return (
@@ -65,7 +80,7 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
           </div>
 
           <Link 
-            href={`/${schoolSlug}/login`}
+            href="/sign-in"
             className="group flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-md hover:shadow-lg"
           >
             Student Login
