@@ -20,11 +20,14 @@ import {
 import UserNav from '../Navbar/UserNav';
 
 interface LandingPageProps {
-  profile: any; // Using any for flexibility during migration
+  profile?: {
+    full_name: string | null
+    role: string
+    school_id: string | null
+  } | null
 }
 
 export default function LandingPage({ profile }: LandingPageProps) {
-    const { isSignedIn } = useUser();
   return (
     <div className="min-h-screen flex flex-col bg-white">
       
@@ -42,29 +45,21 @@ export default function LandingPage({ profile }: LandingPageProps) {
           </nav>
 
           <div className="flex items-center gap-4">
-            {isSignedIn ? (
-              <div className="flex items-center gap-4">
-                <Link 
-                  href="/"
-                  className="text-sm font-medium text-gray-700 hover:text-blue-600"
-                >
-                  Dashboard
-                </Link>
-                {/* CLERK USER BUTTON - Handles Avatar, Sign out, Profile Management */}
-                <UserButton afterSignOutUrl="/" />
-              </div>
+            {profile ? (
+              // --- Logged In View ---
+              <UserNav profile={profile} />
             ) : (
+              // --- Guest View ---
               <>
                 <Link 
-                  href="/sign-in" 
+                  href="/login" 
                   className="hidden sm:block text-sm font-medium text-gray-700 hover:text-blue-600"
                 >
                   Log in
                 </Link>
                 <Link 
-                  // Link to Signup -> Then sync to 'test_explorer' org
-                  href="/sign-up?force_redirect_url=/api/auth/sync" 
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md"
+                  href="/signup" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full text-sm font-medium transition-all shadow-md hover:shadow-lg"
                 >
                   Get Started
                 </Link>
@@ -99,23 +94,32 @@ export default function LandingPage({ profile }: LandingPageProps) {
               Real NTA-style interface, detailed analytics, and global benchmarking.
             </p>
 
-            <div className="flex justify-center gap-4">
-               {isSignedIn ? (
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+              {profile ? (
                  <Link 
-                  href="/" 
-                  className="px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 flex items-center gap-2"
+                  href="/dashboard/my-courses" 
+                  className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold text-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200 flex items-center justify-center gap-2"
                 >
-                  Go to Dashboard <ArrowBigRight />
+                  Go to Dashboard
+                  <ArrowBigRight className="w-5 h-5" />
                 </Link>
-               ) : (
-                 <Link 
-                  // HOMEPAGE SIGNUP -> SYNC TO TEST_EXPLORER
-                  href="/sign-up?force_redirect_url=/api/auth/sync" 
-                  className="px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 flex items-center gap-2"
+              ) : (
+                <Link 
+                  href="/signup" 
+                  className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold text-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200 flex items-center justify-center gap-2"
                 >
-                  Start Practicing Free <ArrowBigRight />
+                  Start Practicing Free
+                  <ArrowBigRight className="w-5 h-5" />
                 </Link>
-               )}
+              )}
+              
+              <Link 
+                href="#demo" 
+                className="w-full sm:w-auto px-8 py-4 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold text-lg hover:border-gray-300 hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+              >
+                <Layout className="w-5 h-5" />
+                View Dashboard
+              </Link>
             </div>
 
             {/* Dashboard Mockup / Hero Image */}
@@ -203,6 +207,21 @@ export default function LandingPage({ profile }: LandingPageProps) {
             <p className="text-blue-100 text-lg mb-10 max-w-2xl mx-auto">
               Join the platform trusted by top schools and toppers. Start your free trial today and see the difference.
             </p>
+            {profile ? (
+               <Link 
+                href="/dashboard/my-courses" 
+                className="inline-block bg-white text-blue-600 px-10 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition-colors shadow-xl"
+              >
+                Go to Dashboard
+              </Link>
+            ) : (
+              <Link 
+                href="/signup" 
+                className="inline-block bg-white text-blue-600 px-10 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition-colors shadow-xl"
+              >
+                Get Started for Free
+              </Link>
+            )}
             {profile ? (
                <Link 
                 href="/dashboard/my-courses" 

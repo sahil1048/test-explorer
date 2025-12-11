@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { signout } from '@/app/auth/actions'
 import { 
   LogOut, 
   LayoutDashboard, 
@@ -23,7 +24,6 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-
 
 interface UserNavProps {
   profile: {
@@ -110,6 +110,10 @@ export default function UserNav({ profile }: UserNavProps) {
         
         <DropdownMenuItem 
           className="text-red-600 focus:text-red-600 cursor-pointer"
+          onSelect={(e) => {
+            e.preventDefault() // Prevent menu closing immediately
+            signout()
+          }}
         >
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>

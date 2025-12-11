@@ -13,26 +13,28 @@ import {
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
+
+// 1. Update the Props Type to be a Promise
 export default async function SchoolLandingPage({ params }: { params: Promise<{ schoolSlug: string }> }) {
   const supabase = await createClient();
+  
+  // 2. AWAIT the params before using them (Crucial for Next.js 15)
   const { schoolSlug } = await params;
 
-  console.log("Rendering School Landing Page for:", schoolSlug);
+  // 3. Fetch School Branding
   const { data: school, error } = await supabase
     .from('organizations')
-    .select('*')
+    .select('name, logo_url, hero_image_url, welcome_message, id, slug')
     .eq('slug', schoolSlug)
     .single();
 
-    console.log("Fetched School Data:", school, "Error:", error);
-    
-  if (error || !school) return notFound();
+  if (error || !school) {
+    return notFound();
+  }
 
-  // --- THE MAGIC LINKS ---
-  // Tells Clerk: "After signup, go to sync route and pass this school's slug"
-  const syncUrl = `/api/auth/sync?slug=${schoolSlug}`;
-  const signUpUrl = `/sign-up?force_redirect_url=${encodeURIComponent(syncUrl)}`;
-  const signInUrl = `/sign-in?force_redirect_url=${encodeURIComponent(syncUrl)}`;
+  // Default fallbacks
+  const heroImage = school.hero_image_url || "/leftman.png";
+  const welcomeText = school.welcome_message || `Welcome to the official ${school.name} Exam Preparation Portal. Powered by best-in-class technology to help you succeed.`;
 
   return (
     <div className="min-h-screen flex flex-col bg-white font-sans">
@@ -43,24 +45,32 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
           
           <div className="flex items-center gap-3">
             {school.logo_url ? (
-             <Image src={school.logo_url} alt="Logo" width={50} height={50} className="object-contain" />
-          ) : (
-             <h1 className="text-xl font-bold">{school.name}</h1>
-          )}
+              <div className="relative w-12 h-12 md:w-14 md:h-14">
+                <Image 
+                  src={school.logo_url} 
+                  alt={`${school.name} Logo`} 
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            ) : (
+              <div className="w-12 h-12 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center font-bold text-xl">
+                {school.name.substring(0, 2).toUpperCase()}
+              </div>
+            )}
             <div className="hidden md:block">
               <h1 className="text-lg font-bold text-gray-900 leading-tight">{school.name}</h1>
               <p className="text-xs text-gray-500 font-medium">Official Exam Portal</p>
             </div>
           </div>
 
-          <div className="flex gap-3">
-            <Link href={signInUrl} className="text-sm font-medium text-gray-700 py-2">
-            Login
+          <Link 
+            href={`/${schoolSlug}/login`}
+            className="group flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-md hover:shadow-lg"
+          >
+            Student Login
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
-          <Link href={signUpUrl} className="bg-blue-600 text-white px-6 py-2 rounded-full font-medium">
-            Join Now
-          </Link>
-          </div>
         </div>
       </header>
 
@@ -68,9 +78,13 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
         {/* Hero Section */}
         <section className="relative w-full h-[500px] md:h-[600px] flex items-center">
           <div className="absolute inset-0 z-0">
-            {school.hero_image_url && (
-             <Image src={school.hero_image_url} alt="Hero" fill className="object-cover opacity-40" />
-           )}
+            <Image
+              src={heroImage}
+              alt="Campus"
+              fill
+              className="object-cover"
+              priority
+            />
             <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-transparent" />
           </div>
 
@@ -85,17 +99,19 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
                 Empowering Future <br/>
                 <span className="text-blue-400">Leaders</span>
               </h2>
+              
+              <p className="text-lg md:text-xl text-gray-200 mb-8 leading-relaxed">
+                {welcomeText}
+              </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <div className="container mx-auto px-4 relative z-10">
-               <h2 className="text-4xl font-bold text-white mb-6">Welcome to {school.name}</h2>
-               <Link 
-                  href={signUpUrl}
-                  className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-lg inline-flex items-center gap-2"
+                <Link 
+                  href={`/${schoolSlug}/login`}
+                  className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-lg transition-colors flex items-center justify-center gap-2"
                 >
-                  Start Practicing <Layout className="w-5 h-5" />
+                  Start Practicing
+                  <Layout className="w-5 h-5" />
                 </Link>
-            </div>
               </div>
             </div>
           </div>

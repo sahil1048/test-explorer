@@ -1,36 +1,34 @@
-import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 import LandingPage from '@/app/components/Home/LandingPage';
 
+// 1. Force Next.js to not cache this page, so it always checks Auth
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  // 1. Get Clerk User ID
-  const { userId, getToken } = await auth();
+  const supabase = await createClient();
+  
+  // 2. Get the current User
+  const { data: { user } } = await supabase.auth.getUser();
 
   let profile = null;
 
-  if (userId) {
-    // 2. Fetch Profile from Supabase using Clerk Token
-    const token = await getToken({ template: 'supabase' });
-    
-    // Create a temporary client with the token to respect RLS
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: { headers: { Authorization: `Bearer ${token}` } },
-      }
-    );
-
+  if (user) {
+    // 3. Fetch Profile Data
     const { data } = await supabase
       .from('profiles')
-      .select('*')
-      .eq('id', userId)
+      .select('full_name, role, school_id')
+      .eq('id', user.id)
       .single();
     
-    profile = data;
+    // If profile exists, use it. 
+    // If not (rare case), we create a temporary fallback so they see the Avatar, not "Login"
+    profile = data || { 
+      full_name: user.email?.split('@')[0] || 'Student', 
+      role: 'student', 
+      school_id: null 
+    };
   }
 
+  // 4. Pass data to the UI
   return <LandingPage profile={profile} />;
 }
