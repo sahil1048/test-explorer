@@ -4,33 +4,25 @@ import { WebhookEvent } from '@clerk/nextjs/server'
 import { createClient } from '@supabase/supabase-js'
 
 export async function POST(req: Request) {
-  // 1. Get the webhook secret from your .env
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
 
   if (!WEBHOOK_SECRET) {
-    throw new Error('Please add CLERK_WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local')
+    return new Response('Error: CLERK_WEBHOOK_SECRET is missing', { status: 500 })
   }
 
-  // 2. Get the headers
+  // Get headers
   const headerPayload = await headers();
   const svix_id = headerPayload.get("svix-id");
   const svix_timestamp = headerPayload.get("svix-timestamp");
   const svix_signature = headerPayload.get("svix-signature");
 
-  // If there are no headers, error out
   if (!svix_id || !svix_timestamp || !svix_signature) {
-    return new Response('Error occured -- no svix headers', {
-      status: 400
-    })
+    return new Response('Error: Missing svix headers', { status: 400 })
   }
 
-  // 3. Get the body
   const payload = await req.json()
   const body = JSON.stringify(payload)
-
-  // 4. Verify the payload with the headers
   const wh = new Webhook(WEBHOOK_SECRET)
-
   let evt: WebhookEvent
 
   try {
@@ -40,60 +32,36 @@ export async function POST(req: Request) {
       "svix-signature": svix_signature,
     }) as WebhookEvent
   } catch (err) {
-    console.error('Error verifying webhook:', err);
-    return new Response('Error occured', {
-      status: 400
-    })
+    return new Response('Error verifying webhook', { status: 400 })
   }
 
-  // 5. Handle the "user.created" event
-  const eventType = evt.type;
-
-  if (eventType === 'user.created') {
-    const { id, email_addresses, first_name, last_name, unsafe_metadata } = evt.data;
+  // Handle User Creation
+  if (evt.type === 'user.created') {
+    const { id, email_addresses, first_name, last_name, phone_numbers } = evt.data;
 
     const email = email_addresses[0]?.email_address;
+    const phone = phone_numbers?.[0]?.phone_number; // Get phone if available
     const fullName = `${first_name || ''} ${last_name || ''}`.trim();
 
-    // Use the Service Role Key to bypass RLS and insert into profiles
+    // Use Service Role to bypass RLS
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Extract school_id if you passed it via Clerk metadata (optional advanced step)
-    // const schoolId = unsafe_metadata?.schoolId || null;
+    const { error } = await supabaseAdmin.from('profiles').insert({
+      id: id,
+      full_name: fullName,
+      email: email,
+      // Make sure your 'profiles' table has a 'phone' column if you want this:
+      // phone: phone, 
+      role: 'student', 
+      // We explicitly set organization_id to null initially.
+      // The /api/auth/sync route will fill this in a split second later.
+      organization_id: null 
+    });
 
-    const { error } = await supabaseAdmin
-      .from('profiles')
-      .insert({
-        id: id,               // Clerk ID (e.g., user_2xyz...)
-        full_name: fullName,
-        role: 'student',      // Default role
-        school_id: null,      // Default to null (Global student)
-        // email: email       // Add this if you added an email column to profiles
-      });
-
-    if (error) {
-        console.error('Error inserting user into Supabase:', error);
-        return new Response('Error inserting user', { status: 500 });
-    }
-  }
-
-  // 6. Handle "user.updated" (Optional but recommended)
-  if (eventType === 'user.updated') {
-    const { id, first_name, last_name } = evt.data;
-    const fullName = `${first_name || ''} ${last_name || ''}`.trim();
-
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    await supabaseAdmin
-      .from('profiles')
-      .update({ full_name: fullName })
-      .eq('id', id);
+    if (error) console.error('Supabase Insert Error:', error);
   }
 
   return new Response('', { status: 200 })
