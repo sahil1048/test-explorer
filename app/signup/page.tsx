@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 // Ensure this path is correct for your project structure
-import SearchSchoolInput from '@/app/components/signup/schoolSearchInput'
+import SearchSchoolInput from '@/app/components/Signup/schoolSearchInput'
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false)
