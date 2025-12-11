@@ -1,48 +1,34 @@
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
 import LandingPage from '@/app/components/Home/LandingPage';
 
+// 1. Force Next.js to not cache this page, so it always checks Auth
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
-  // 1. Check Authentication
   const supabase = await createClient();
+  
+  // 2. Get the current User
   const { data: { user } } = await supabase.auth.getUser();
 
-  // 2. If no user, show the public Landing Page
-  if (!user) {
-    return <LandingPage />;
+  let profile = null;
+
+  if (user) {
+    // 3. Fetch Profile Data
+    const { data } = await supabase
+      .from('profiles')
+      .select('full_name, role, school_id')
+      .eq('id', user.id)
+      .single();
+    
+    // If profile exists, use it. 
+    // If not (rare case), we create a temporary fallback so they see the Avatar, not "Login"
+    profile = data || { 
+      full_name: user.email?.split('@')[0] || 'Student', 
+      role: 'student', 
+      school_id: null 
+    };
   }
 
-  // 3. If user exists, fetch their Role to know where to send them
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, school_id')
-    .eq('id', user.id)
-    .single();
-
-  // 4. Role-Based Redirection Logic
-  if (profile) {
-    switch (profile.role) {
-      case 'super_admin':
-        // Super Admins go to their content management area
-        redirect('/dashboard/courses');
-        break;
-        
-      case 'school_admin':
-        // School Admins go to their school settings
-        redirect('/dashboard/settings');
-        break;
-        
-      case 'student':
-        // Students go to their exam portal
-        redirect('/dashboard/my-courses');
-        break;
-        
-      default:
-        // Fallback for unknown roles
-        redirect('/login');
-    }
-  }
-
-  // Safety fallback if profile fetch fails
-  return <LandingPage />;
+  // 4. Pass data to the UI
+  return <LandingPage profile={profile} />;
 }

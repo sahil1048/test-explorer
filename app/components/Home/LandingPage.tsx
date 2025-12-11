@@ -14,8 +14,17 @@ import {
   ShieldCheck, 
   Users 
 } from 'lucide-react';
+import UserNav from '../Navbar/UserNav';
 
-export default function LandingPage() {
+interface LandingPageProps {
+  profile?: {
+    full_name: string | null
+    role: string
+    school_id: string | null
+  } | null
+}
+
+export default function LandingPage({ profile }: LandingPageProps) {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       
@@ -36,18 +45,26 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <Link 
-              href="/login" 
-              className="hidden sm:block text-sm font-medium text-gray-700 hover:text-blue-600"
-            >
-              Log in
-            </Link>
-            <Link 
-              href="/register" 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full text-sm font-medium transition-all shadow-md hover:shadow-lg"
-            >
-              Get Started
-            </Link>
+            {profile ? (
+              // --- Logged In View ---
+              <UserNav profile={profile} />
+            ) : (
+              // --- Guest View ---
+              <>
+                <Link 
+                  href="/login" 
+                  className="hidden sm:block text-sm font-medium text-gray-700 hover:text-blue-600"
+                >
+                  Log in
+                </Link>
+                <Link 
+                  href="/signup" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full text-sm font-medium transition-all shadow-md hover:shadow-lg"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -78,13 +95,24 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-              <Link 
-                href="/register" 
-                className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold text-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200 flex items-center justify-center gap-2"
-              >
-                Start Practicing Free
-                <ArrowBigRight className="w-5 h-5" />
-              </Link>
+              {profile ? (
+                 <Link 
+                  href="/dashboard/my-courses" 
+                  className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold text-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200 flex items-center justify-center gap-2"
+                >
+                  Go to Dashboard
+                  <ArrowBigRight className="w-5 h-5" />
+                </Link>
+              ) : (
+                <Link 
+                  href="/signup" 
+                  className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold text-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200 flex items-center justify-center gap-2"
+                >
+                  Start Practicing Free
+                  <ArrowBigRight className="w-5 h-5" />
+                </Link>
+              )}
+              
               <Link 
                 href="#demo" 
                 className="w-full sm:w-auto px-8 py-4 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold text-lg hover:border-gray-300 hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
@@ -179,12 +207,21 @@ export default function LandingPage() {
             <p className="text-blue-100 text-lg mb-10 max-w-2xl mx-auto">
               Join the platform trusted by top schools and toppers. Start your free trial today and see the difference.
             </p>
-            <Link 
-              href="/register" 
-              className="inline-block bg-white text-blue-600 px-10 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition-colors shadow-xl"
-            >
-              Get Started for Free
-            </Link>
+            {profile ? (
+               <Link 
+                href="/dashboard/my-courses" 
+                className="inline-block bg-white text-blue-600 px-10 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition-colors shadow-xl"
+              >
+                Go to Dashboard
+              </Link>
+            ) : (
+              <Link 
+                href="/signup" 
+                className="inline-block bg-white text-blue-600 px-10 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition-colors shadow-xl"
+              >
+                Get Started for Free
+              </Link>
+            )}
           </div>
         </section>
       </main>
