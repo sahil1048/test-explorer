@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { UserButton, useUser } from "@clerk/nextjs";
 import { 
   ArrowBigLeft,
   ArrowBigRight,
@@ -17,49 +20,51 @@ import {
 import UserNav from '../Navbar/UserNav';
 
 interface LandingPageProps {
-  profile?: {
-    full_name: string | null
-    role: string
-    school_id: string | null
-  } | null
+  profile: any; // Using any for flexibility during migration
 }
 
 export default function LandingPage({ profile }: LandingPageProps) {
+    const { isSignedIn } = useUser();
   return (
     <div className="min-h-screen flex flex-col bg-white">
       
       {/* --- Navbar --- */}
-      <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+      <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
-              TE
-            </div>
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">TE</div>
             <span className="text-xl font-bold text-gray-900 tracking-tight">Test Explorer</span>
           </div>
 
           <nav className="hidden md:flex gap-8 items-center text-sm font-medium text-gray-600">
-            <Link href="#features" className="hover:text-blue-600 transition-colors">Features</Link>
-            <Link href="#subjects" className="hover:text-blue-600 transition-colors">Subjects</Link>
-            <Link href="#testimonials" className="hover:text-blue-600 transition-colors">Success Stories</Link>
+            <Link href="#features" className="hover:text-blue-600">Features</Link>
+            <Link href="#subjects" className="hover:text-blue-600">Subjects</Link>
           </nav>
 
           <div className="flex items-center gap-4">
-            {profile ? (
-              // --- Logged In View ---
-              <UserNav profile={profile} />
+            {isSignedIn ? (
+              <div className="flex items-center gap-4">
+                <Link 
+                  href="/"
+                  className="text-sm font-medium text-gray-700 hover:text-blue-600"
+                >
+                  Dashboard
+                </Link>
+                {/* CLERK USER BUTTON - Handles Avatar, Sign out, Profile Management */}
+                <UserButton afterSignOutUrl="/" />
+              </div>
             ) : (
-              // --- Guest View ---
               <>
                 <Link 
-                  href="/login" 
+                  href="/sign-in" 
                   className="hidden sm:block text-sm font-medium text-gray-700 hover:text-blue-600"
                 >
                   Log in
                 </Link>
                 <Link 
-                  href="/signup" 
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full text-sm font-medium transition-all shadow-md hover:shadow-lg"
+                  // Link to Signup -> Then sync to 'test_explorer' org
+                  href="/sign-up?force_redirect_url=/api/auth/sync" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md"
                 >
                   Get Started
                 </Link>
@@ -94,32 +99,23 @@ export default function LandingPage({ profile }: LandingPageProps) {
               Real NTA-style interface, detailed analytics, and global benchmarking.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-              {profile ? (
+            <div className="flex justify-center gap-4">
+               {isSignedIn ? (
                  <Link 
-                  href="/dashboard/my-courses" 
-                  className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold text-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200 flex items-center justify-center gap-2"
+                  href="/" 
+                  className="px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 flex items-center gap-2"
                 >
-                  Go to Dashboard
-                  <ArrowBigRight className="w-5 h-5" />
+                  Go to Dashboard <ArrowBigRight />
                 </Link>
-              ) : (
-                <Link 
-                  href="/signup" 
-                  className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold text-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200 flex items-center justify-center gap-2"
+               ) : (
+                 <Link 
+                  // HOMEPAGE SIGNUP -> SYNC TO TEST_EXPLORER
+                  href="/sign-up?force_redirect_url=/api/auth/sync" 
+                  className="px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 flex items-center gap-2"
                 >
-                  Start Practicing Free
-                  <ArrowBigRight className="w-5 h-5" />
+                  Start Practicing Free <ArrowBigRight />
                 </Link>
-              )}
-              
-              <Link 
-                href="#demo" 
-                className="w-full sm:w-auto px-8 py-4 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold text-lg hover:border-gray-300 hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
-              >
-                <Layout className="w-5 h-5" />
-                View Dashboard
-              </Link>
+               )}
             </div>
 
             {/* Dashboard Mockup / Hero Image */}
