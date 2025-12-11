@@ -33,7 +33,7 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
   }
 
   // Default fallbacks
-  const heroImage = school.hero_image_url || "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop";
+  const heroImage = school.hero_image_url || "/leftman.png";
   const welcomeText = school.welcome_message || `Welcome to the official ${school.name} Exam Preparation Portal. Powered by best-in-class technology to help you succeed.`;
 
   return (
