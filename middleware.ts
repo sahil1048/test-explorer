@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
   
   // ADD YOUR VERCEL DOMAIN HERE to prevent it from being treated as a school subdomain
   // e.g. ["localhost:3000", "testexplorer.com", "your-app-name.vercel.app"]
-  const allowedDomains = ["localhost:3000", "testexplorer.com"]
+  const allowedDomains = ["localhost:3000", "testexplorer.com", "test-explorer1.vercel.app"]
   
   const isSubdomain = !allowedDomains.includes(hostname) && !hostname.startsWith('www.')
 
