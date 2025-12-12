@@ -1,39 +1,77 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { TrendingUp, Clock, Target, Calendar } from 'lucide-react'
+import { TrendingUp, Clock, Target, Calendar, ArrowRight, PlayCircle, Trophy } from 'lucide-react'
 
-export default async function StudentDashboard() {
+export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) return redirect('/login')
 
-  // Example: Fetch generic stats (You'll replace this with real query counts later)
-  const stats = [
-    { label: 'Tests Taken', value: '0', icon: Target, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Avg. Score', value: '0%', icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Hours Spent', value: '0h', icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
-  ]
+  // 1. Fetch Profile & Role
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, full_name')
+    .eq('id', user.id)
+    .single()
+
+  // 2. Redirect Super Admin (Security Check)
+  if (profile?.role === 'super_admin') {
+    redirect('/dashboard/admin')
+  }
+
+  // 3. Fetch Exam Attempts (Real Data)
+  // We join with both exams (mocks) and practice_tests to get titles
+  const { data: attempts } = await supabase
+    .from('exam_attempts')
+    .select(`
+      *,
+      exams (title),
+      practice_tests (title)
+    `)
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+
+  const totalTests = attempts?.length || 0
+  
+  // Calculate Avg Score (Percentage)
+  const avgScore = totalTests > 0 
+    ? Math.round(attempts!.reduce((acc, curr) => acc + (curr.percentage || 0), 0) / totalTests)
+    : 0
+
+  // Calculate Total Time (Seconds -> Hours)
+  const totalSeconds = attempts?.reduce((acc, curr) => acc + (curr.time_taken_seconds || 0), 0) || 0
+  const hoursSpent = (totalSeconds / 3600).toFixed(1)
+
+  // Get Recent Activity (Top 3)
+  const recentActivity = attempts?.slice(0, 3) || []
 
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex items-end justify-between mb-8">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">My Progress</h2>
-          <p className="text-gray-500 mt-1">Welcome back, keep pushing your limits!</p>
+          <h2 className="text-3xl font-bold text-gray-900">Welcome back, {profile?.full_name?.split(' ')[0]}!</h2>
+          <p className="text-gray-500 mt-1">Here is your preparation summary.</p>
         </div>
-        <Link 
-          href="/courses" 
-          className="bg-black text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors shadow-lg shadow-gray-200"
-        >
-          Browse Courses
-        </Link>
+        
+        {profile?.role === 'student' && (
+          <Link 
+            href="/categories" 
+            className="bg-black text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors shadow-lg shadow-gray-200"
+          >
+            Browse Courses
+          </Link>
+        )}
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        {stats.map((stat, i) => (
+        {[
+          { label: 'Tests Taken', value: totalTests, icon: Target, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Avg. Score', value: `${avgScore}%`, icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
+          { label: 'Hours Spent', value: `${hoursSpent}h`, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
+        ].map((stat, i) => (
           <div key={i} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
             <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${stat.bg} ${stat.color}`}>
               <stat.icon className="w-7 h-7" />
@@ -46,18 +84,72 @@ export default async function StudentDashboard() {
         ))}
       </div>
 
-      {/* Recent Activity / Empty State */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center">
-        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Calendar className="w-8 h-8 text-gray-400" />
+      {/* Recent Activity */}
+      <div className="bg-white rounded-3xl border border-gray-200 p-8 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+           <h3 className="text-xl font-bold text-gray-900">Recent Activity</h3>
+           <Link href="/dashboard/exams" className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1">
+             View All <ArrowRight className="w-4 h-4" />
+           </Link>
         </div>
-        <h3 className="text-lg font-bold text-gray-900 mb-2">No Recent Activity</h3>
-        <p className="text-gray-500 max-w-sm mx-auto mb-6">
-          You haven't taken any tests yet. Go to the courses section to start your first exam.
-        </p>
-        <Link href="/courses" className="text-blue-600 font-semibold hover:underline">
-          Find a Test &rarr;
-        </Link>
+
+        {recentActivity.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Calendar className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-gray-500 mb-4">You haven't taken any tests yet.</p>
+            <Link href="/categories" className="text-black font-bold hover:underline">Start a Test</Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {recentActivity.map((attempt) => {
+              // Determine Title & Type
+              const title = attempt.exams?.title || attempt.practice_tests?.title || 'Unknown Test'
+              const isMock = !!attempt.exam_id
+              const date = new Date(attempt.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+
+              return (
+                <div key={attempt.id} className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-all">
+                   <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isMock ? 'bg-purple-100 text-purple-600' : 'bg-green-100 text-green-600'}`}>
+                         {isMock ? <Trophy className="w-6 h-6" /> : <PlayCircle className="w-6 h-6" />}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900">{title}</h4>
+                        <div className="flex items-center gap-2 text-xs text-gray-500 font-medium mt-0.5">
+                           <span className="uppercase tracking-wider">{isMock ? 'Mock Test' : 'Practice'}</span>
+                           <span>•</span>
+                           <span>{date}</span>
+                        </div>
+                      </div>
+                   </div>
+
+                   <div className="flex items-center gap-6">
+                      <div className="text-right hidden sm:block">
+                        <div className="text-sm font-bold text-gray-900">{attempt.score}/{attempt.total_marks}</div>
+                        <div className="text-xs font-bold text-gray-400">Score</div>
+                      </div>
+                      <Link 
+                        // Note: Links need to reconstruct path carefully. 
+                        // Since we don't store course/subject ID in attempts, 
+                        // you might need to query them or just link to a generic result view if hierarchy is strict.
+                        // For now, assuming you can navigate purely by attempt ID if we made a global result route,
+                        // OR we assume the user navigates via the main flow.
+                        // BETTER UX: Just show "Completed" status or link to the subject page if possible.
+                        // Ideally: Store course_id/subject_id in exam_attempts for easy linking.
+                        
+                        href="#" 
+                        className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-600 hover:text-black hover:border-black transition-all"
+                      >
+                        View
+                      </Link>
+                   </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -18,15 +18,29 @@ function getAdminClient() {
   )
 }
 
+// Helper to determine redirect path based on role
+async function getRedirectPath(userId: string) {
+  const supabase = await createClient()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single()
+
+  if (profile?.role === 'super_admin') return '/dashboard/admin'
+  if (profile?.role === 'school_admin') return '/dashboard'
+  
+  // Default for students: Go to categories to start browsing
+  return '/categories'
+}
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
-  const schoolSlug = formData.get('schoolSlug') as string // Optional: for redirecting back
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
@@ -36,29 +50,26 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  // If logged in from a school site, we keep them there but go to dashboard
-  redirect('/courses') 
+  
+  // Smart Redirect
+  const destination = await getRedirectPath(data.user.id)
+  redirect(destination)
 }
 
 export async function signup(formData: FormData) {
-  const supabase = await createClient() // Standard client for Auth
-  const adminClient = getAdminClient()  // Admin client for DB Lookup/Writes
+  const supabase = await createClient() 
+  const adminClient = getAdminClient() 
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const fullName = formData.get('fullName') as string
   const phone = formData.get('phone') as string
   
-  // Clean the slug
   const rawSlug = formData.get('schoolSlug') as string
   const schoolSlug = rawSlug ? rawSlug.trim().toLowerCase() : null
   
-  console.log('Signup Attempt:', { email, schoolSlug }) // Debug Log
-
   let organizationId = null
 
-  // 1. Resolve School Slug to ID using ADMIN CLIENT
-  // This ensures we find the school even if RLS policies are strict
   if (schoolSlug) {
     const { data: org, error } = await adminClient
       .from('organizations')
@@ -68,13 +79,9 @@ export async function signup(formData: FormData) {
     
     if (org) {
       organizationId = org.id
-      console.log('Found Organization ID:', organizationId)
-    } else {
-      console.error('Organization Lookup Failed:', error)
     }
   }
 
-  // 2. Sign up the user (Standard Client)
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -90,31 +97,24 @@ export async function signup(formData: FormData) {
     return { error: error.message }
   }
 
-  // 3. Create/Update Profile (Using ADMIN CLIENT)
-  // We use adminClient here to guarantee the write happens even if RLS is tricky
   if (data.user) {
-    const { error: profileError } = await adminClient
+    await adminClient
       .from('profiles')
       .upsert({ 
         id: data.user.id,
         full_name: fullName,
         phone: phone,
         role: 'student',
-        organization_id: organizationId, // This will now be set correctly
+        organization_id: organizationId,
       })
-
-    if (profileError) {
-      console.error('Profile creation failed:', profileError)
-    }
   }
 
   revalidatePath('/', 'layout')
   
-  // 4. Smart Redirect
-  // If they signed up for a specific school, keep them on the Dashboard
-  // The middleware will ensure they see the school's version
-  redirect('/courses')
+  // Smart Redirect (New users usually want to browse immediately)
+  redirect('/categories')
 }
+
 export async function signout() {
   const supabase = await createClient()
   await supabase.auth.signOut()

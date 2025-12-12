@@ -6,7 +6,11 @@ import {
   BookOpen, 
   Settings, 
   Users, 
-  ShieldAlert 
+  ShieldAlert, 
+  FileText,
+  Building2,
+  Library,
+  Layers
 } from 'lucide-react'
 import UserNav from '@/components/Navbar/UserNav' // Reusing your existing component
 
@@ -32,23 +36,32 @@ export default async function DashboardLayout({
 
   // 3. Define Navigation based on Role
   const navItems = [
+    // --- Student Links ---
     {
       label: 'My Stats',
       href: '/dashboard',
       icon: LayoutDashboard,
-      roles: ['student', 'school_admin', 'super_admin']
+      roles: ['student']
     },
     {
-      label: 'Browse Courses', // Links OUT of dashboard
-      href: '/courses', // Absolute path
+      label: 'Browse Courses', 
+      href: '/categories', // <--- CHANGED FROM /courses TO /categories
       icon: BookOpen,
       roles: ['student']
     },
     {
       label: 'My Exams',
       href: '/dashboard/exams',
-      icon: BookOpen,
+      icon: FileText,
       roles: ['student']
+    },
+
+    // --- School Admin Links ---
+    {
+      label: 'Overview',
+      href: '/dashboard', 
+      icon: LayoutDashboard,
+      roles: ['school_admin']
     },
     {
       label: 'School Settings',
@@ -62,18 +75,50 @@ export default async function DashboardLayout({
       icon: Users,
       roles: ['school_admin']
     },
+
+    // --- Super Admin Links ---
     {
-      label: 'Students',
+      label: 'Overview',
+      href: '/dashboard/admin',
+      icon: LayoutDashboard,
+      roles: ['super_admin']
+    },
+    {
+      label: 'Schools',
+      href: '/dashboard/admin/schools',
+      icon: Building2, 
+      roles: ['super_admin']
+    },
+    {
+      label: 'Streams', // <--- NEW LINK
+      href: '/dashboard/admin/streams',
+      icon: Layers, 
+      roles: ['super_admin']
+    },
+    {
+      label: 'Courses',
+      href: '/dashboard/admin/courses',
+      icon: BookOpen,
+      roles: ['super_admin']
+    },
+    {
+      label: 'Subjects',
+      href: '/dashboard/admin/subjects',
+      icon: Library,
+      roles: ['super_admin']
+    },
+    {
+      label: 'Exams',
+      href: '/dashboard/admin/exams',
+      icon: FileText,
+      roles: ['super_admin']
+    },
+    {
+      label: 'Users',
       href: '/dashboard/admin/users',
       icon: Users,
       roles: ['super_admin']
     },
-    {
-      label: 'Platform Admin',
-      href: '/dashboard/admin',
-      icon: ShieldAlert,
-      roles: ['super_admin']
-    }
   ]
 
   // Filter items visible to this user
@@ -84,7 +129,7 @@ export default async function DashboardLayout({
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col">
         <div className="h-16 flex items-center px-6 border-b border-gray-100">
-          <span className="font-bold text-xl text-blue-600">Test Explorer</span>
+          <Link href="/" className="text-xl font-black tracking-tighter text-blue-600">Test Explorer</Link>
         </div>
         
         <nav className="flex-1 p-4 space-y-1">
@@ -117,7 +162,7 @@ export default async function DashboardLayout({
       <main className="flex-1 flex flex-col">
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8">
           <h1 className="font-semibold text-gray-800">Dashboard</h1>
-          <UserNav profile={profile} />
+          <UserNav profile={profile} email={user.email} />
         </header>
         <div className="flex-1 p-4 md:p-8 overflow-auto">
           {children}

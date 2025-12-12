@@ -22,27 +22,12 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
   // 2. AWAIT the params before using them (Crucial for Next.js 15)
   const { schoolSlug } = await params;
 
-  console.log("------------------------------------------------");
-  console.log("🔍 Looking for slug:", schoolSlug);
-
   // 3. Fetch School Branding
   const { data: school, error } = await supabase
     .from('organizations')
     .select('*')
     .eq('slug', schoolSlug)
     .single();
-
-  if (error) {
-    console.error("❌ Supabase Error:", error.message);
-    console.error("   Details:", error.details);
-  }
-
-  if (!school) {
-    console.error("⚠️ No data returned. Check RLS policies or Slug typo.");
-  } else {
-    console.log("✅ School found:", school.name);
-  }
-  console.log("------------------------------------------------");
 
   if (error || !school) {
     return notFound();
@@ -188,7 +173,7 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
               <div className="w-full md:w-1/2">
                 <h3 className="text-3xl font-bold text-gray-900 mb-6">
                   Comprehensive Preparation <br/>
-                  Provided by <span className="text-blue-600">Test Explorer</span>
+                  Provided by <Link href="/" className="text-blue-600">Test Explorer</Link>
                 </h3>
                 <p className="text-gray-600 text-lg mb-8 leading-relaxed">
                   As a student of {school.name}, you get exclusive access to our central question bank. 

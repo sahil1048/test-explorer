@@ -5,26 +5,27 @@ export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
-    let profile = null;
+  let profile = null;
 
-     if (user) {
-    // 3. Fetch Profile Data
+  if (user) {
+    // FIXED: Use select('*') to avoid "column not found" errors
     const { data } = await supabase
       .from('profiles')
-      .select('full_name, role, school_id')
+      .select('*')
       .eq('id', user.id)
       .single();
     
     // If profile exists, use it. 
-    // If not (rare case), we create a temporary fallback so they see the Avatar, not "Login"
+    // Fallback only if data is null (shouldn't happen now)
     profile = data || { 
       full_name: user.email?.split('@')[0] || 'Student', 
       role: 'student', 
-      school_id: null 
+      organization_id: null // Updated from school_id to match DB
     };
   }
 
-  return <LandingPage profile={profile} />;
+  // Pass user.email explicitly so UserNav can display it
+  return <LandingPage profile={profile} email={user?.email} />;
 }
