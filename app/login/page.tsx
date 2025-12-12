@@ -53,7 +53,7 @@ export default function LoginPage() {
       {/* --- Left Side: Visuals (The Orange Blob) --- */}
       <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center">
         {/* The Big Orange Circle Background */}
-        <div className="absolute left-[-10%] w-[120%] h-[140%] bg-gradient-to-br from-[#F4A261] to-[#E76F51] rounded-full -z-10 opacity-90 scale-90 translate-y-10" />
+        <div className="absolute left-[-10%] w-[120%] h-[140%] bg-linear-to-br from-[#F4A261] to-[#E76F51] rounded-full -z-10 opacity-90 scale-90 translate-y-10" />
         
         <div className="relative z-10 w-[450px] mt-20">
           {/* Illustration: Person sitting on stool */}

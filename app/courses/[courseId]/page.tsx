@@ -71,7 +71,7 @@ export default async function CourseSubjectsPage({
         {/* --- Subjects List --- */}
         <div className="grid gap-6">
           {(!subjects || subjects.length === 0) ? (
-            <div className="p-12 text-center border-3 border-dashed border-gray-200 rounded-[2rem] bg-gray-50">
+            <div className="p-12 text-center border-3 border-dashed border-gray-200 rounded-4xl bg-gray-50">
               <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 font-medium">No subjects have been added to this course yet.</p>
             </div>
@@ -90,7 +90,7 @@ export default async function CourseSubjectsPage({
                 >
                   <div className={`
                     relative z-10 flex flex-col md:flex-row md:items-center justify-between 
-                    p-6 md:p-8 rounded-[2rem] border-2 border-black bg-white
+                    p-6 md:p-8 rounded-4xl border-2 border-black bg-white
                     transition-all duration-300 ease-out
                     group-hover:-translate-y-1 group-hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
                   `}>

@@ -74,7 +74,7 @@ export default function ReviewInterface({
           <div className="max-w-4xl mx-auto">
             
             {/* Question Card */}
-            <div className="bg-white rounded-[2rem] p-8 md:p-10 border border-gray-200 shadow-sm relative overflow-hidden">
+            <div className="bg-white rounded-4xl p-8 md:p-10 border border-gray-200 shadow-sm relative overflow-hidden">
               
               {/* Status Badge */}
               <div className={`
@@ -86,7 +86,7 @@ export default function ReviewInterface({
               </div>
 
               <div className="flex gap-4 mb-8">
-                <div className="flex-shrink-0 w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center font-bold text-lg">
+                <div className="shrink-0 w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center font-bold text-lg">
                   {currentQIndex + 1}
                 </div>
                 <h2 className="text-xl md:text-2xl font-bold text-gray-900 leading-snug mt-1">
@@ -127,7 +127,7 @@ export default function ReviewInterface({
                         ${style}
                       `}
                     >
-                      <div className="flex-shrink-0">{icon}</div>
+                      <div className="shrink-0">{icon}</div>
                       <span className="font-medium text-lg">{opt.text}</span>
                       {isSelected && !isCorrect && (
                         <span className="ml-auto text-xs font-bold uppercase text-red-500 tracking-wider">Your Answer</span>

@@ -30,7 +30,7 @@ export default function LandingPage({ profile, email }: LandingPageProps) {
     <div className="min-h-screen flex flex-col bg-white">
       
       {/* --- Navbar --- */}
-      <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+      <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-backdrop-filter:bg-white/60">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center gap-2">
@@ -77,7 +77,7 @@ export default function LandingPage({ profile, email }: LandingPageProps) {
         {/* --- Hero Section --- */}
         <section className="relative pt-20 pb-32 overflow-hidden">
           {/* Background Decor */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-50 via-white to-white -z-10" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-blue-50 via-white to-white -z-10" />
           
           <div className="container mx-auto px-4 text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-medium mb-8 animate-fade-in-up">
@@ -118,7 +118,7 @@ export default function LandingPage({ profile, email }: LandingPageProps) {
             </div>
 
             {/* Dashboard Mockup / Hero Image */}
-            <div className="relative mx-auto max-w-5xl rounded-2xl border bg-white shadow-2xl overflow-hidden aspect-[16/9] md:aspect-[2/1]">
+            <div className="relative mx-auto max-w-5xl rounded-2xl border bg-white shadow-2xl overflow-hidden aspect-video md:aspect-2/1">
               <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-gray-400">
                 {/* Replace with actual screenshot later */}
                 <div className="text-center">

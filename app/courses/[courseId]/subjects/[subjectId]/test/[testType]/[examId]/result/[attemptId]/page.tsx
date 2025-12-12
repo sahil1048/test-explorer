@@ -102,7 +102,7 @@ export default async function ResultPage({
 
   return (
     <div className="min-h-screen bg-black/40 flex items-center justify-center p-4 backdrop-blur-sm fixed inset-0 z-50">
-      <div className="bg-[#FFF8F0] w-full max-w-5xl h-[90vh] rounded-[2rem] overflow-y-auto relative shadow-2xl">
+      <div className="bg-[#FFF8F0] w-full max-w-5xl h-[90vh] rounded-4xl overflow-y-auto relative shadow-2xl">
         
         {/* Close Button */}
         <Link 

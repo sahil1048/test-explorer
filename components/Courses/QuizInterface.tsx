@@ -35,7 +35,7 @@ export default function QuizInterface({ questions }: { questions: Question[] }) 
             
             {/* Question Header */}
             <div className="flex gap-4 mb-6">
-              <div className="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-blue-200 shadow-lg">
+              <div className="shrink-0 w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-blue-200 shadow-lg">
                 {index + 1}
               </div>
               <h3 className="text-xl font-bold text-gray-900 leading-relaxed pt-1">
@@ -80,7 +80,7 @@ export default function QuizInterface({ questions }: { questions: Question[] }) 
                       ${cardStyle}
                     `}
                   >
-                    <div className="flex-shrink-0">{icon}</div>
+                    <div className="shrink-0">{icon}</div>
                     <span className={`font-medium ${isSelected ? 'text-black' : 'text-gray-600'}`}>
                       {opt.text}
                     </span>

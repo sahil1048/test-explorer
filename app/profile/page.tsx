@@ -35,7 +35,7 @@ export default async function ProfilePage() {
         <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
           
           {/* Cover / Header Banner */}
-          <div className="h-32 bg-gradient-to-r from-blue-600 to-purple-600 relative">
+          <div className="h-32 bg-linear-to-r from-blue-600 to-purple-600 relative">
              <div className="absolute -bottom-12 left-8">
                 <div className="w-24 h-24 bg-white rounded-full p-1 shadow-lg">
                    <div className="w-full h-full bg-gray-100 rounded-full flex items-center justify-center text-2xl font-bold text-gray-400 uppercase">

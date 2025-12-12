@@ -37,7 +37,7 @@ export default function QuestionsList({
         {questions.map((q, index) => (
           <div key={q.id} className="group flex items-start justify-between gap-4 p-4 bg-white border border-gray-100 rounded-xl hover:border-red-100 hover:shadow-sm transition-all">
             <div className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-500 text-xs font-bold flex items-center justify-center rounded-full">
+              <span className="shrink-0 w-6 h-6 bg-gray-100 text-gray-500 text-xs font-bold flex items-center justify-center rounded-full">
                 {index + 1}
               </span>
               <p className="text-sm text-gray-700 font-medium line-clamp-2 leading-relaxed">
