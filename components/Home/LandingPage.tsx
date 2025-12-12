@@ -20,12 +20,12 @@ interface LandingPageProps {
   profile?: {
     full_name: string | null
     role: string
-    school_id: string | null
+    organization_id: string | null
   } | null
+  email?: string
 }
 
-export default function LandingPage({ profile }: LandingPageProps) {
-  console.log('LandingPage profile:', profile);
+export default function LandingPage({ profile, email }: LandingPageProps) {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       
@@ -33,10 +33,12 @@ export default function LandingPage({ profile }: LandingPageProps) {
       <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
               TE
             </div>
             <span className="text-xl font-bold text-gray-900 tracking-tight">Test Explorer</span>
+            </Link>
           </div>
 
           <nav className="hidden md:flex gap-8 items-center text-sm font-medium text-gray-600">
@@ -48,7 +50,7 @@ export default function LandingPage({ profile }: LandingPageProps) {
           <div className="flex items-center gap-4">
             {profile ? (
               // --- Logged In View ---
-              <UserNav profile={profile} />
+              <UserNav profile={profile} email={email}/>
             ) : (
               // --- Guest View ---
               <>
@@ -98,7 +100,7 @@ export default function LandingPage({ profile }: LandingPageProps) {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
               {profile ? (
                  <Link 
-                  href="/dashboard/my-courses" 
+                  href="/dashboard" 
                   className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold text-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200 flex items-center justify-center gap-2"
                 >
                   Go to Dashboard
@@ -177,8 +179,8 @@ export default function LandingPage({ profile }: LandingPageProps) {
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">Comprehensive Subject Coverage</h2>
                 <p className="text-gray-600">Expertly curated content for all major streams.</p>
               </div>
-              <Link href="/courses" className="text-blue-600 font-semibold hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                View All Subjects <span className="text-xl">→</span>
+              <Link href="/categories" className="text-blue-600 font-semibold hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                View All Streams <span className="text-xl">→</span>
               </Link>
             </div>
 
@@ -225,8 +227,10 @@ export default function LandingPage({ profile }: LandingPageProps) {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center gap-2 mb-4">
+                <Link href="/" className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">TE</div>
                 <span className="text-xl font-bold text-white">Test Explorer</span>
+                </Link>
               </div>
               <p className="max-w-xs">
                 Empowering students with national-level testing standards and analytics.

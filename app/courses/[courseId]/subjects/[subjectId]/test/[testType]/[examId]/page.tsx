@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import TestInterface from '@/components/Courses/TestInterface' // Update path if you moved this
+import TestInterface from '@/components/Courses/TestInterface' 
+import { submitExamAction } from './actions' // Import action here
+import MockTestInterface from '../../mock/[examId]/MockTestInterface'
 
 export default async function TestPage({ 
   params 
@@ -10,65 +12,52 @@ export default async function TestPage({
   const supabase = await createClient()
   const { courseId, subjectId, testType, examId } = await params
 
-  console.log("--- TEST PAGE DEBUG ---")
-  console.log("Type:", testType)
-  console.log("ID:", examId)
-
+  // ... (Exam Data Fetching Logic - Same as before) ...
+  // [Copy the logic from your previous TestPage file here]
+  // For brevity, assuming examData and questionsData are fetched correctly.
+  
+  // Re-fetch logic for context:
   let examData = null
   let questionsData = null
-
-  // 1. Fetch Exam Data based on Type
+  
   if (testType === 'practice') {
-    // Fetch from 'practice_tests' table
-    const { data, error } = await supabase
-      .from('practice_tests')
-      .select('*')
-      .eq('id', examId)
-      .single()
-      
-    if (error) console.error("Practice Fetch Error:", error.message)
-    examData = data
-
-    if (examData) {
-       // Fetch questions linked to practice_test_id
-       const { data: q } = await supabase
-         .from('questions')
-         .select('id, text, options:question_options(id, text)')
-         .eq('practice_test_id', examId)
-         .order('order_index')
-       questionsData = q
-    }
-
-  } else if (testType === 'mock') {
-    // Fetch from 'exams' table
-    const { data, error } = await supabase
-      .from('exams')
-      .select('*')
-      .eq('id', examId)
-      .single()
-
-    if (error) console.error("Mock Fetch Error:", error.message)
-    examData = data
-
-    if (examData) {
-       // Fetch questions linked to exam_id
-       const { data: q } = await supabase
-         .from('questions')
-         .select('id, text, options:question_options(id, text)')
-         .eq('exam_id', examId)
-         .order('order_index')
-       questionsData = q
-    }
+     const { data } = await supabase.from('practice_tests').select('*').eq('id', examId).single()
+     examData = data
+     if(data) {
+        const { data: q } = await supabase.from('questions').select('id, text, options:question_options(id, text)').eq('practice_test_id', examId).order('order_index')
+        questionsData = q
+     }
+  } else {
+     // MOCK
+     const { data } = await supabase.from('exams').select('*').eq('id', examId).single()
+     examData = data
+     if(data) {
+        const { data: q } = await supabase.from('questions').select('id, text, options:question_options(id, text)').eq('exam_id', examId).order('order_index')
+        questionsData = q
+     }
   }
 
-  // 2. If no exam found, show 404
-  if (!examData) {
-    console.error("❌ Exam Data Not Found in DB")
-    return notFound()
+  if (!examData) return notFound()
+
+    if (testType === 'mock') {
+    return (
+      <MockTestInterface 
+         exam={examData} 
+         questions={questionsData || []} 
+         courseId={courseId}
+         subjectId={subjectId}
+         examId={examId}
+      />
+    )
   }
 
-  console.log("✅ Exam Found:", examData.title)
-  console.log("❓ Questions Found:", questionsData?.length || 0)
+  // --- BIND THE ACTION ---
+  // We create a specific function for this page render that already knows the IDs
+  const bindedSubmitAction = async (answers: Record<string, string>, timeTaken: number) => {
+    'use server'
+    // Ensure we return the result from the inner function
+    return await submitExamAction(examId, courseId, subjectId, answers, timeTaken, testType)
+  }
 
   return (
     <TestInterface 
@@ -77,6 +66,7 @@ export default async function TestPage({
       courseId={courseId}
       subjectId={subjectId}
       testType={testType}
+      submitAction={bindedSubmitAction} // Pass the bound action
     />
   )
 }
