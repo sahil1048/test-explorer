@@ -33,10 +33,16 @@ export default async function DashboardLayout({
   // 3. Define Navigation based on Role
   const navItems = [
     {
-      label: 'Overview',
+      label: 'My Stats',
       href: '/dashboard',
       icon: LayoutDashboard,
       roles: ['student', 'school_admin', 'super_admin']
+    },
+    {
+      label: 'Browse Courses', // Links OUT of dashboard
+      href: '/courses', // Absolute path
+      icon: BookOpen,
+      roles: ['student']
     },
     {
       label: 'My Exams',
@@ -51,10 +57,16 @@ export default async function DashboardLayout({
       roles: ['school_admin']
     },
     {
-      label: 'Students',
+      label: 'My Students',
       href: '/dashboard/students',
       icon: Users,
-      roles: ['school_admin', 'super_admin']
+      roles: ['school_admin']
+    },
+    {
+      label: 'Students',
+      href: '/dashboard/admin/users',
+      icon: Users,
+      roles: ['super_admin']
     },
     {
       label: 'Platform Admin',

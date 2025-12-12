@@ -1,14 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
-export function createClerkSupabaseClient(clerkToken: string) {
-  return createClient(
+export function createClient() {
+  return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      global: {
-        // This is the magic. It sends the Clerk Token to Supabase
-        headers: { Authorization: `Bearer ${clerkToken}` },
-      },
-    }
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 }
