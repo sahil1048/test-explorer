@@ -8,7 +8,6 @@ import {
   Timer, 
   Trophy, 
   ArrowRight, 
-  Lock 
 } from 'lucide-react'
 
 // Types for our data
@@ -19,12 +18,19 @@ interface SubjectContentProps {
   modules: Module[]
   practiceTests: Exam[]
   mockTests: Exam[]
+  courseId: string   // <--- Added
+  subjectId: string  // <--- Added
 }
 
-export default function SubjectContent({ modules, practiceTests, mockTests }: SubjectContentProps) {
+export default function SubjectContent({ 
+  modules, 
+  practiceTests, 
+  mockTests,
+  courseId,
+  subjectId
+}: SubjectContentProps) {
   const [activeTab, setActiveTab] = useState<'prep' | 'practice' | 'mock'>('prep')
 
-  // Tab Button Helper
   const TabButton = ({ id, label, icon: Icon }: { id: typeof activeTab, label: string, icon: any }) => (
     <button
       onClick={() => setActiveTab(id)}
@@ -74,10 +80,15 @@ export default function SubjectContent({ modules, practiceTests, mockTests }: Su
                       </p>
                     </div>
                   </div>
-                  <button className="mt-4 md:mt-0 px-6 py-3 bg-white text-black font-bold rounded-xl border-2 border-black/10 hover:bg-black hover:text-white transition-all flex items-center gap-2">
+                  
+                  {/* LINK UPDATED: Now points to the nested route */}
+                  <Link 
+                    href={`/courses/${courseId}/subjects/${subjectId}/learn/${item.id}`} 
+                    className="mt-4 md:mt-0 px-6 py-3 bg-white text-black font-bold rounded-xl border-2 border-black/10 hover:bg-black hover:text-white transition-all flex items-center gap-2"
+                  >
                     Start Learning
                     <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </Link>
                 </div>
               ))
             }
@@ -105,7 +116,8 @@ export default function SubjectContent({ modules, practiceTests, mockTests }: Su
                       </div>
                     </div>
                   </div>
-                  <Link href={`/dashboard/test-engine/${exam.id}`} className="mt-4 md:mt-0 px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-200">
+                  {/* You can move this to a nested route too if you wish, e.g., /take/${exam.id} */}
+                  <Link href={`/courses/${courseId}/subjects/${subjectId}/test/practice/${exam.id}`} className="mt-4 md:mt-0 px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-200">
                     Attempt Now
                   </Link>
                 </div>
@@ -120,9 +132,6 @@ export default function SubjectContent({ modules, practiceTests, mockTests }: Su
             {mockTests.length === 0 ? <EmptyState label="Mock tests coming soon." /> : 
               mockTests.map((exam) => (
                 <div key={exam.id} className="group flex flex-col md:flex-row md:items-center justify-between p-6 bg-[#FFD4D4] rounded-3xl border-2 border-transparent hover:border-black transition-all relative overflow-hidden">
-                  {/* Decorative Lock if needed (logic to be added later) */}
-                  {/* <div className="absolute top-4 right-4"><Lock className="w-5 h-5 text-red-400" /></div> */}
-                  
                   <div className="flex gap-5 items-start relative z-10">
                     <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center border-2 border-black/10 shrink-0">
                       <Trophy className="w-6 h-6 text-red-600" />
@@ -137,7 +146,7 @@ export default function SubjectContent({ modules, practiceTests, mockTests }: Su
                       <p className="text-gray-600 font-medium text-sm">Full syllabus coverage • National Ranking</p>
                     </div>
                   </div>
-                  <Link href={`/dashboard/test-engine/${exam.id}`} className="relative z-10 mt-4 md:mt-0 px-6 py-3 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all">
+                  <Link href={`/courses/${courseId}/subjects/${subjectId}/test/mock/${exam.id}`} className="relative z-10 mt-4 md:mt-0 px-6 py-3 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all">
                     Start Mock
                   </Link>
                 </div>
