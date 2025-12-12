@@ -72,7 +72,7 @@ export default function SignupPage() {
               <label className="block text-sm font-bold text-gray-900 mb-2">Contact Number</label>
               <input 
                 name="phone" 
-                type="tel" 
+                type="text" 
                 required 
                 className="w-full px-5 py-4 rounded-xl bg-gray-100 border-2 border-transparent focus:bg-white focus:border-orange-500 outline-none transition-all placeholder-gray-400 font-medium"
                 placeholder="+91 98765 43210"

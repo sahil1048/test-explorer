@@ -1,12 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import SchoolSettingsForm from './school-settings-form'
 
 export default async function SchoolSettingsPage() {
   const supabase = await createClient()
   
   const { data: { user } } = await supabase.auth.getUser()
   
-  // 1. Get the admin's organization
+  // 1. Get the admin's organization ID
   const { data: profile } = await supabase
     .from('profiles')
     .select('organization_id')
@@ -31,63 +32,10 @@ export default async function SchoolSettingsPage() {
         <p className="text-gray-500">Manage your white-label branding and information.</p>
       </div>
 
-      <form className="space-y-8">
-        {/* Basic Info */}
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">General Information</h3>
-          <div className="grid gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">School Name</label>
-              <input 
-                type="text" 
-                defaultValue={school.name}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none" 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Subdomain Slug</label>
-              <input 
-                type="text" 
-                defaultValue={school.slug}
-                disabled
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-50 text-gray-500 cursor-not-allowed" 
-              />
-              <p className="text-xs text-gray-500 mt-1">Contact support to change your subdomain.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Branding */}
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Branding</h3>
-          <div className="grid gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Welcome Message</label>
-              <textarea 
-                defaultValue={school.welcome_message}
-                rows={3}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none" 
-              />
-            </div>
-            <div className="grid md:grid-cols-2 gap-4">
-               <div>
-                 <label className="block text-sm font-medium text-gray-700 mb-1">Logo URL</label>
-                 <input type="text" defaultValue={school.logo_url} className="w-full px-4 py-2 rounded-lg border border-gray-300" />
-               </div>
-               <div>
-                 <label className="block text-sm font-medium text-gray-700 mb-1">Hero Image URL</label>
-                 <input type="text" defaultValue={school.hero_image_url} className="w-full px-4 py-2 rounded-lg border border-gray-300" />
-               </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-end">
-          <button type="button" className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
-            Save Changes
-          </button>
-        </div>
-      </form>
+      <SchoolSettingsForm 
+        school={school} 
+        organizationId={profile.organization_id} 
+      />
     </div>
   )
 }

@@ -8,7 +8,8 @@ import {
   Users, 
   ArrowRight, 
   Layout, 
-  CheckCircle2 
+  CheckCircle2, 
+  LogIn
 } from 'lucide-react';
 
 // Force dynamic rendering
@@ -61,11 +62,10 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
           <div className="flex items-center gap-3">
             {school.logo_url ? (
               <div className="relative w-12 h-12 md:w-14 md:h-14">
-                <Image 
+                <img // Changed to img for simplicity with external urls, or use Image if configured
                   src={school.logo_url} 
                   alt={`${school.name} Logo`} 
-                  fill
-                  className="object-contain"
+                  className="object-contain w-full h-full"
                 />
               </div>
             ) : (
@@ -79,13 +79,25 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
             </div>
           </div>
 
-          <Link 
-            href="/sign-in"
-            className="group flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-md hover:shadow-lg"
-          >
-            Student Login
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
+          <div className="flex items-center gap-4">
+            {/* Login Button */}
+            <Link 
+              href="/login" // Middleware rewrites this to /school/[slug]/login
+              className="text-sm font-bold text-gray-600 hover:text-black transition-colors flex items-center gap-2"
+            >
+              <LogIn className="w-4 h-4" />
+              Login
+            </Link>
+
+            {/* Get Started (Signup) Button */}
+            <Link 
+              href="/signup" // Middleware rewrites this to /school/[slug]/signup
+              className="group flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-full text-sm font-medium transition-all shadow-md hover:shadow-lg"
+            >
+              Get Started
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
       </header>
 
