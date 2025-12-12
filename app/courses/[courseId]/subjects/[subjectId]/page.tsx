@@ -13,7 +13,6 @@ export default async function SubjectDetailsPage({
   const { courseId, subjectId } = await params
 
   // 1. Fetch Subject & Course Info
-  // We perform the join 'course:courses(title)' to get the parent course title
   const { data: subject } = await supabase
     .from('subjects')
     .select('title, course:courses(title)')
@@ -22,22 +21,35 @@ export default async function SubjectDetailsPage({
 
   if (!subject) return notFound()
 
-  // FIX: Supabase might return 'course' as an array or an object depending on version/types.
-  // We handle both cases here safely.
-  // @ts-ignore - Suppress TS warning if types aren't perfectly generated
+  // @ts-ignore
   const courseTitle = Array.isArray(subject.course) 
     ? subject.course[0]?.title 
     // @ts-ignore
     : subject.course?.title
 
-  // 2. Fetch Data for Tabs (Parallel Requests)
+  // 2. Fetch Data for Tabs (UPDATED QUERIES)
   const [modulesRes, practiceRes, mockRes] = await Promise.all([
     // A. Prep Modules
-    supabase.from('prep_modules').select('*').eq('subject_id', subjectId).eq('is_published', true),
-    // B. Practice Tests
-    supabase.from('exams').select('*').eq('subject_id', subjectId).eq('category', 'practice').eq('is_published', true),
-    // C. Mock Tests
-    supabase.from('exams').select('*').eq('subject_id', subjectId).eq('category', 'mock').eq('is_published', true)
+    supabase
+      .from('prep_modules')
+      .select('*')
+      .eq('subject_id', subjectId)
+      .eq('is_published', true),
+      
+    // B. Practice Tests (NOW FETCHING FROM 'practice_tests' TABLE)
+    supabase
+      .from('practice_tests') // <--- CHANGED THIS
+      .select('*')
+      .eq('subject_id', subjectId)
+      .eq('is_published', true),
+      
+    // C. Mock Tests (Still fetching from 'exams' table with category 'mock')
+    supabase
+      .from('exams')
+      .select('*')
+      .eq('subject_id', subjectId)
+      .eq('category', 'mock')
+      .eq('is_published', true)
   ])
 
   return (
@@ -56,7 +68,6 @@ export default async function SubjectDetailsPage({
       </header>
 
       <main className="container mx-auto px-6 py-12 max-w-5xl">
-        {/* Header */}
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-blue-50 rounded-lg">
@@ -69,11 +80,12 @@ export default async function SubjectDetailsPage({
           </h1>
         </div>
 
-        {/* Client Component for Tabs & Content */}
         <SubjectContent 
           modules={modulesRes.data || []}
           practiceTests={practiceRes.data || []}
           mockTests={mockRes.data || []}
+          courseId={courseId}
+          subjectId={subjectId}
         />
       </main>
     </div>
