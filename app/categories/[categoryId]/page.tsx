@@ -65,7 +65,7 @@ export default async function CategoryExamsPage({
                 href={`/courses/${exam.id}`} 
                 className="group block relative"
               >
-                <div className="relative z-10 p-8 rounded-[2rem] border-2 border-black bg-white transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+                <div className="relative z-10 p-8 rounded-4xl border-2 border-black bg-white transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
                   <div className="flex justify-between items-start mb-6">
                     <div className="bg-blue-50 text-blue-700 p-3 rounded-xl">
                       <BookOpen className="w-6 h-6" />

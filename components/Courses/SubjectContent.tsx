@@ -162,7 +162,7 @@ export default function SubjectContent({
 
 function EmptyState({ label }: { label: string }) {
   return (
-    <div className="p-12 text-center border-3 border-dashed border-gray-200 rounded-[2rem] bg-gray-50">
+    <div className="p-12 text-center border-3 border-dashed border-gray-200 rounded-4xl bg-gray-50">
       <p className="text-gray-400 font-bold text-lg">{label}</p>
     </div>
   )

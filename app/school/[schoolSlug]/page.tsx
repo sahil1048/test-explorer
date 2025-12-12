@@ -97,7 +97,7 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
               className="object-cover"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-r from-slate-900/90 via-slate-900/70 to-transparent" />
           </div>
 
           <div className="container mx-auto px-4 md:px-8 relative z-10">
@@ -188,7 +188,7 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
                     "Instant Doubt Resolution"
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-3 text-gray-700 font-medium">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+                      <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
                       {item}
                     </li>
                   ))}
