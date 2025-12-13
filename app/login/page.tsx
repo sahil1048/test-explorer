@@ -24,36 +24,12 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-white relative overflow-hidden flex flex-col lg:flex-row">
-      
-      {/* --- Top Navigation (Absolute) --- */}
-      <nav className="absolute top-0 w-full p-6 flex justify-between items-center z-20">
-        {/* Logo */}
-        <div className="flex items-center gap-2">
-           {/* Replace with your actual Logo Image */}
-           <div className="w-8 h-8 relative">
-             <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8">
-               <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="#EA580C" stroke="#EA580C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-             </svg>
-           </div>
-           <span className="text-xl font-bold text-gray-900">CUET-Test Explorer</span>
-        </div>
-
-        {/* Top Right Signup Button */}
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold text-gray-700 hidden sm:block">Don't have an account?</span>
-          <Link 
-            href="/signup"
-            className="bg-[#FF6B6B] hover:bg-[#ff5252] text-white px-6 py-2 rounded-full font-bold text-sm shadow-sm transition-colors"
-          >
-            Sign Up
-          </Link>
-        </div>
-      </nav>
-
       {/* --- Left Side: Visuals (The Orange Blob) --- */}
       <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center">
         {/* The Big Orange Circle Background */}
+        
         <div className="absolute left-[-10%] w-[120%] h-[140%] bg-linear-to-br from-[#F4A261] to-[#E76F51] rounded-full -z-10 opacity-90 scale-90 translate-y-10" />
+        
         
         <div className="relative z-10 w-[450px] mt-20">
           {/* Illustration: Person sitting on stool */}
@@ -80,7 +56,10 @@ export default function LoginPage() {
       <div className="w-full lg:w-1/2 flex items-center justify-center px-8 py-20 lg:py-0 mt-16 lg:mt-0">
         <div className="w-full max-w-md">
           
-          <h1 className="text-4xl font-bold text-[#EA580C] mb-10">Login</h1>
+          <div className="mb-10">
+            <h1 className="text-5xl font-extrabold text-orange-600 mb-3 tracking-tight">Login</h1>
+            <p className="text-gray-500 text-lg">Welcome back to you account.</p>
+          </div>
 
           <form action={handleSubmit} className="space-y-6">
             {/* Email Field */}
@@ -159,7 +138,17 @@ export default function LoginPage() {
               </svg>
               Sign in with Google
             </button>
+            <div className="flex items-center gap-3 justify-center">
+          <span className="text-sm font-semibold text-gray-700 hidden sm:block">Don't have an account?</span>
+          <Link 
+                  href="/signup" 
+                  className="inline-block ml-2 text-orange-600 hover:text-orange-700 font-bold transition-colors"
+                >
+                  Sign Up →
+                </Link>
+        </div>
           </form>
+          
         </div>
       </div>
     </div>

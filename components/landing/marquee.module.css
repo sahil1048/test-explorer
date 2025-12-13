@@ -1,0 +1,45 @@
+.scrollContainer {
+  /* This ensures the content is taller than the container */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  /* The animation */
+  animation: scrollUp 20s linear infinite;
+}
+
+/* Pause animation on hover */
+.scrollContainer:hover {
+  animation-play-state: paused;
+}
+
+@keyframes scrollUp {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    /* Move up by 50% because we duplicated the list */
+    transform: translateY(-50%);
+  }
+}
+
+.track {
+  display: flex;
+  gap: 2rem; /* Space between cards */
+  width: max-content;
+  animation: scrollLeft 40s linear infinite; /* Adjust speed here (higher = slower) */
+}
+
+/* Pause on hover so users can read */
+.track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes scrollLeft {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    /* Move left by 50% because we duplicated the list */
+    transform: translateX(-50%);
+  }
+}

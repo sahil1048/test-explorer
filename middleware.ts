@@ -2,10 +2,12 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
+  // 1. Initialize Response
   let response = NextResponse.next({
     request: { headers: request.headers },
   })
 
+  // 2. Refresh Supabase Session (Crucial for Auth)
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -20,43 +22,42 @@ export async function middleware(request: NextRequest) {
       },
     }
   )
-  await supabase.auth.getUser()
+
+  const { data: { user } } = await supabase.auth.getUser()
 
   const url = request.nextUrl
-  const hostname = request.headers.get("host") || ""
+  const path = url.pathname
   
-  // ADD YOUR VERCEL DOMAIN HERE to prevent it from being treated as a school subdomain
-  // e.g. ["localhost:3000", "testexplorer.com", "your-app-name.vercel.app"]
-  const allowedDomains = ["localhost:3000", "testexplorer.com", "test-explorer1.vercel.app"]
-  
-  const isSubdomain = !allowedDomains.includes(hostname) && !hostname.startsWith('www.')
-
-  if (isSubdomain) {
-    const subdomain = hostname.split('.')[0]
-
-    // --- FIX IS HERE ---
-    const coreRoutes = [
-      '/dashboard', 
-      '/courses', 
-      '/categories', // <--- ADD THIS
-      '/exams', 
-      '/profile', 
-      '/api',
-      '/settings',
-      '/login', // Optional: if you want a global login page
-      '/signup' // Optional: if you want a global signup page
-    ]
-
-    if (coreRoutes.some(route => url.pathname.startsWith(route))) {
-      return response 
-    }
-
-    if (url.pathname.includes('.') || url.pathname.startsWith('/_next')) {
-      return response
-    }
-
-    return NextResponse.rewrite(new URL(`/school/${subdomain}${url.pathname}`, request.url))
+  // 3. Redirect Logged-In Users away from Auth pages
+  const authRoutes = ['/login', '/signup', '/forgot-password', '/update-password']
+  if (user && authRoutes.some(route => path.startsWith(route))) {
+    return NextResponse.redirect(new URL('/categories', request.url))
   }
+
+  // 4. Define Public Paths (No Login Required)
+  const isPublicPath = 
+    path === '/' ||                       
+    path.startsWith('/login') ||          
+    path.startsWith('/signup') ||         
+    path.startsWith('/about') ||         
+    path.startsWith('/contact') || 
+    path.startsWith('/streams') ||    
+    path.startsWith('/categories') || // You might want this public or private depending on your logic        
+    path.startsWith('/blogs') ||         
+    path.startsWith('/forgot-password') ||
+    path.startsWith('/auth') ||           
+    path.startsWith('/api/auth') ||       
+    path.includes('.') // file extensions like .png, .css
+
+  // 5. Protect Private Routes
+  if (!user && !isPublicPath) {
+    const loginUrl = new URL('/login', request.url)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  // --- REMOVED SUBDOMAIN REWRITE LOGIC HERE ---
+  // We removed it because app/page.tsx now handles the school logic dynamically.
+  // This prevents the 404 error looking for the deleted /school folder.
 
   return response
 }

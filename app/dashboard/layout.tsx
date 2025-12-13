@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import Link from 'next/link'
+import { getSchoolBySubdomain } from '@/lib/db/school' // Ensure this path is correct
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -10,9 +12,10 @@ import {
   FileText,
   Building2,
   Library,
-  Layers
+  Layers,
+  Megaphone
 } from 'lucide-react'
-import UserNav from '@/components/Navbar/UserNav' // Reusing your existing component
+import UserNav from '@/components/Navbar/UserNav' 
 
 export default async function DashboardLayout({
   children,
@@ -34,7 +37,22 @@ export default async function DashboardLayout({
 
   if (!profile) return redirect('/')
 
-  // 3. Define Navigation based on Role
+  // 3. Detect School / Tenant (Subdomain Logic)
+  const headersList = await headers()
+  const hostname = headersList.get("host") || ""
+  let schoolData = null
+
+  // Check if we are on a subdomain (excluding localhost root or main domain)
+  // Adjust "testexplorer.com" to your actual production domain
+  const isSubdomain = hostname.includes('.') && !hostname.startsWith('www.') && !hostname.startsWith('test-explorer')
+  
+  if (isSubdomain) {
+    const subdomain = hostname.split('.')[0]
+    // Fetch school details to show in Sidebar
+    schoolData = await getSchoolBySubdomain(subdomain)
+  }
+
+  // 4. Define Navigation based on Role
   const navItems = [
     // --- Student Links ---
     {
@@ -45,7 +63,7 @@ export default async function DashboardLayout({
     },
     {
       label: 'Browse Courses', 
-      href: '/categories', // <--- CHANGED FROM /courses TO /categories
+      href: '/categories',
       icon: BookOpen,
       roles: ['student']
     },
@@ -69,6 +87,12 @@ export default async function DashboardLayout({
       icon: Settings,
       roles: ['school_admin']
     },
+    { 
+      label: 'Announcements', 
+      href: '/dashboard/announcements', 
+      icon: Megaphone, 
+      roles: ['school_admin'] 
+    },
     {
       label: 'My Students',
       href: '/dashboard/students',
@@ -90,7 +114,7 @@ export default async function DashboardLayout({
       roles: ['super_admin']
     },
     {
-      label: 'Streams', // <--- NEW LINK
+      label: 'Streams', 
       href: '/dashboard/admin/streams',
       icon: Layers, 
       roles: ['super_admin']
@@ -126,44 +150,96 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col">
+      
+      {/* ================= SIDEBAR ================= */}
+      <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col fixed inset-y-0 left-0 z-50">
+        
+        {/* --- BRANDING HEADER --- */}
         <div className="h-16 flex items-center px-6 border-b border-gray-100">
-          <Link href="/" className="text-xl font-black tracking-tighter text-blue-600">Test Explorer</Link>
+          {schoolData ? (
+            // SCHOOL BRANDING
+            <Link href="/" className="flex items-center gap-3 group">
+              {schoolData.logo_url ? (
+                <div className="w-8 h-8 relative shrink-0">
+                  <img 
+                    src={schoolData.logo_url} 
+                    alt={schoolData.name} 
+                    className="w-full h-full object-contain rounded-lg"
+                  />
+                </div>
+              ) : (
+                <div className="w-8 h-8 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center font-bold text-sm shrink-0">
+                  {schoolData.name.substring(0, 2).toUpperCase()}
+                </div>
+              )}
+              <span className="font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                {schoolData.name}
+              </span>
+            </Link>
+          ) : (
+            // TEST EXPLORER BRANDING
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                TE
+              </div>
+              <span className="text-xl font-black tracking-tighter text-blue-600">
+                Test Explorer
+              </span>
+            </Link>
+          )}
         </div>
         
-        <nav className="flex-1 p-4 space-y-1">
+        {/* --- NAVIGATION LINKS --- */}
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {visibleItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+              className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors group"
             >
-              <item.icon className="w-5 h-5" />
+              <item.icon className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
               {item.label}
             </Link>
           ))}
         </nav>
 
+        {/* --- USER FOOTER --- */}
         <div className="p-4 border-t border-gray-100">
-          <div className="flex items-center gap-3 px-4 py-3">
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
-              {profile.role === 'super_admin' ? 'SA' : profile.role === 'school_admin' ? 'AD' : 'ST'}
+          <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white ${
+              profile.role === 'super_admin' ? 'bg-purple-600' : 
+              profile.role === 'school_admin' ? 'bg-black' : 'bg-blue-600'
+            }`}>
+              {profile.full_name ? profile.full_name[0].toUpperCase() : 'U'}
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900 line-clamp-1">{profile.full_name}</p>
-              <p className="text-xs text-gray-500 capitalize">{profile.role.replace('_', ' ')}</p>
+            <div className="overflow-hidden">
+              <p className="text-sm font-bold text-gray-900 truncate">{profile.full_name}</p>
+              <p className="text-xs text-gray-500 capitalize truncate">
+                {profile.role.replace('_', ' ')}
+              </p>
             </div>
           </div>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col">
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8">
-          <h1 className="font-semibold text-gray-800">Dashboard</h1>
-          <UserNav profile={profile} email={user.email} />
+      {/* ================= MAIN CONTENT ================= */}
+      {/* Added ml-64 to push content right because sidebar is fixed */}
+      <main className="flex-1 flex flex-col md:ml-64 min-h-screen">
+        
+        {/* Top Header */}
+        <header className="h-16 bg-white border-b border-gray-200 sticky top-0 z-40 flex items-center justify-between px-4 md:px-8">
+          <div className="flex items-center gap-4">
+             {/* Mobile Menu Toggle could go here later */}
+             <h1 className="font-bold text-lg text-gray-800">Dashboard</h1>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            {/* You can add a notification bell here if needed */}
+            <UserNav profile={profile} email={user.email} />
+          </div>
         </header>
+
+        {/* Page Body */}
         <div className="flex-1 p-4 md:p-8 overflow-auto">
           {children}
         </div>

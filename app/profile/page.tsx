@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, User, Mail, Phone, Save } from 'lucide-react'
-import ProfileForm from './profile-form' // We'll create this next
+import { ArrowLeft, Lock } from 'lucide-react' // Added Lock icon
+import ProfileForm from './profile-form'
 
 export default async function ProfilePage() {
   const supabase = await createClient()
@@ -10,7 +10,6 @@ export default async function ProfilePage() {
 
   if (!user) return redirect('/login')
 
-  // Fetch Profile
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
@@ -22,18 +21,27 @@ export default async function ProfilePage() {
       <div className="max-w-3xl mx-auto">
         
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Link 
+              href="/dashboard" 
+              className="p-2 bg-white rounded-full border border-gray-200 text-gray-500 hover:text-black transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <h1 className="text-3xl font-black text-gray-900">My Profile</h1>
+          </div>
+          
+          {/* Change Password Button */}
           <Link 
-            href="/dashboard" 
-            className="p-2 bg-white rounded-full border border-gray-200 text-gray-500 hover:text-black transition-colors"
+            href="/update-password" 
+            className="flex items-center gap-2 bg-white border border-gray-200 px-4 py-2 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-black transition-all shadow-sm"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <Lock className="w-4 h-4" /> Change Password
           </Link>
-          <h1 className="text-3xl font-black text-gray-900">My Profile</h1>
         </div>
 
         <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
-          
           {/* Cover / Header Banner */}
           <div className="h-32 bg-linear-to-r from-blue-600 to-purple-600 relative">
              <div className="absolute -bottom-12 left-8">
