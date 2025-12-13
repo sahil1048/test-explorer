@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
-import { Mail, Phone, Building2, User } from 'lucide-react'
+import { Phone, Building2, User } from 'lucide-react'
 import StudentsFilter from './students-filter'
+import EnrollmentManager from '@/components/admin/enrollment-manager' // Import the new component
 
 export default async function StudentsPage({
   searchParams,
@@ -14,7 +14,6 @@ export default async function StudentsPage({
   const sort = params.sort || 'newest'
 
   // 1. Fetch Students (Join with Organizations)
-  // We use !inner if we wanted to filter by school name too, but left join is fine here
   let dbQuery = supabase
     .from('profiles')
     .select('*, organizations(name, slug)')
@@ -25,11 +24,16 @@ export default async function StudentsPage({
     dbQuery = dbQuery.ilike('full_name', `%${query}%`)
   }
 
+  // 3. Fetch All Available Subjects (To pass to the Enrollment Manager)
+  // This avoids fetching subjects repeatedly for every row
+  const { data: allSubjects } = await supabase
+    .from('subjects')
+    .select('id, title, courses(title)')
+    .order('title')
+
   const { data: rawStudents } = await dbQuery
 
-  // 3. Handle Sorting in Memory
-  // (Sorting by joined table columns "organizations.name" is complex in basic SQL APIs, 
-  // so JS sorting is cleaner for dashboard views < 1000 records)
+  // 4. Handle Sorting in Memory
   let students = rawStudents || []
 
   switch (sort) {
@@ -62,7 +66,6 @@ export default async function StudentsPage({
       break
     case 'newest':
     default:
-      // Default Supabase return is usually by ID or insertion, but let's ensure newest
       students.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       break
   }
@@ -89,7 +92,7 @@ export default async function StudentsPage({
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Student Name</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Contact Info</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">School / Organization</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Joined</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Enrollments</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -103,15 +106,13 @@ export default async function StudentsPage({
                 students.map((student) => {
                     // @ts-ignore
                     const schoolName = student.organizations?.name
-                    // @ts-ignore
-                    const schoolSlug = student.organizations?.slug
 
                     return (
                     <tr key={student.id} className="hover:bg-gray-50/50 transition-colors group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full flex items-center justify-center text-blue-600 border border-blue-100 font-bold">
-                            {student.full_name.charAt(0).toUpperCase()}
+                            {student.full_name?.charAt(0).toUpperCase() || 'U'}
                           </div>
                           <span className="font-bold text-gray-900">{student.full_name}</span>
                         </div>
@@ -119,15 +120,10 @@ export default async function StudentsPage({
                       
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-1">
-                           {/* Phone */}
                            <div className="flex items-center gap-2 text-sm text-gray-600">
                              <Phone className="w-3.5 h-3.5 text-gray-400" />
                              {student.phone || <span className="text-gray-300 italic">No phone</span>}
                            </div>
-                           {/* You can allow admin to click this to email in future */}
-                           {/* <div className="flex items-center gap-2 text-xs text-gray-400">
-                             <Mail className="w-3 h-3" /> email@placeholder.com
-                           </div> */}
                         </div>
                       </td>
 
@@ -145,8 +141,13 @@ export default async function StudentsPage({
                         )}
                       </td>
 
-                      <td className="px-6 py-4 text-right text-sm text-gray-500 font-medium tabular-nums">
-                        {new Date(student.created_at).toLocaleDateString()}
+                      {/* ENROLLMENT COLUMN */}
+                      <td className="px-6 py-4 text-right">
+                        <EnrollmentManager 
+                          studentId={student.id}
+                          studentName={student.full_name}
+                          allSubjects={allSubjects || []} 
+                        />
                       </td>
                     </tr>
                   )})
