@@ -3,6 +3,9 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { TrendingUp, Clock, Target, Calendar, ArrowRight, PlayCircle, Trophy } from 'lucide-react'
 
+// Import the new School Component
+import SchoolAdminOverview from '@/components/dashboard/school-overview'
+
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -12,17 +15,24 @@ export default async function DashboardPage() {
   // 1. Fetch Profile & Role
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, full_name')
+    .select('*, organization_id') // Ensure organization_id is fetched
     .eq('id', user.id)
     .single()
 
-  // 2. Redirect Super Admin (Security Check)
+  // 2. Redirect Super Admin
   if (profile?.role === 'super_admin') {
     redirect('/dashboard/admin')
   }
 
-  // 3. Fetch Exam Attempts (Real Data)
-  // We join with both exams (mocks) and practice_tests to get titles
+  // 3. SHOW SCHOOL ADMIN VIEW
+  if (profile?.role === 'school_admin') {
+    return <SchoolAdminOverview profile={profile} />
+  }
+
+  // =========================================================
+  // 4. STUDENT VIEW (Existing Code Below)
+  // =========================================================
+  
   const { data: attempts } = await supabase
     .from('exam_attempts')
     .select(`
@@ -35,16 +45,13 @@ export default async function DashboardPage() {
 
   const totalTests = attempts?.length || 0
   
-  // Calculate Avg Score (Percentage)
   const avgScore = totalTests > 0 
     ? Math.round(attempts!.reduce((acc, curr) => acc + (curr.percentage || 0), 0) / totalTests)
     : 0
 
-  // Calculate Total Time (Seconds -> Hours)
   const totalSeconds = attempts?.reduce((acc, curr) => acc + (curr.time_taken_seconds || 0), 0) || 0
   const hoursSpent = (totalSeconds / 3600).toFixed(1)
 
-  // Get Recent Activity (Top 3)
   const recentActivity = attempts?.slice(0, 3) || []
 
   return (
@@ -55,14 +62,12 @@ export default async function DashboardPage() {
           <p className="text-gray-500 mt-1">Here is your preparation summary.</p>
         </div>
         
-        {profile?.role === 'student' && (
-          <Link 
-            href="/categories" 
-            className="bg-black text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors shadow-lg shadow-gray-200"
-          >
-            Browse Courses
-          </Link>
-        )}
+        <Link 
+          href="/categories" 
+          className="bg-black text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors shadow-lg shadow-gray-200"
+        >
+          Browse Courses
+        </Link>
       </div>
 
       {/* Stats Grid */}
@@ -104,7 +109,6 @@ export default async function DashboardPage() {
         ) : (
           <div className="space-y-4">
             {recentActivity.map((attempt) => {
-              // Determine Title & Type
               const title = attempt.exams?.title || attempt.practice_tests?.title || 'Unknown Test'
               const isMock = !!attempt.exam_id
               const date = new Date(attempt.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -130,20 +134,6 @@ export default async function DashboardPage() {
                         <div className="text-sm font-bold text-gray-900">{attempt.score}/{attempt.total_marks}</div>
                         <div className="text-xs font-bold text-gray-400">Score</div>
                       </div>
-                      <Link 
-                        // Note: Links need to reconstruct path carefully. 
-                        // Since we don't store course/subject ID in attempts, 
-                        // you might need to query them or just link to a generic result view if hierarchy is strict.
-                        // For now, assuming you can navigate purely by attempt ID if we made a global result route,
-                        // OR we assume the user navigates via the main flow.
-                        // BETTER UX: Just show "Completed" status or link to the subject page if possible.
-                        // Ideally: Store course_id/subject_id in exam_attempts for easy linking.
-                        
-                        href="#" 
-                        className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-600 hover:text-black hover:border-black transition-all"
-                      >
-                        View
-                      </Link>
                    </div>
                 </div>
               )

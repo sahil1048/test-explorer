@@ -11,6 +11,7 @@ import {
   Globe 
 } from 'lucide-react'
 import UserNav from '@/components/Navbar/UserNav' // Import UserNav
+import { getBranding } from '@/lib/get-branding'
 
 // Map string keys from DB to actual components
 const ICON_MAP: Record<string, any> = {
@@ -19,6 +20,8 @@ const ICON_MAP: Record<string, any> = {
 
 export default async function CategoriesPage() {
   const supabase = await createClient()
+
+  const branding = await getBranding()
 
   // 1. Fetch User Session & Profile (For Navbar)
   const { data: { user } } = await supabase.auth.getUser()
@@ -47,26 +50,6 @@ export default async function CategoriesPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="px-6 h-20 flex items-center justify-between border-b border-gray-100 sticky top-0 bg-white/90 backdrop-blur z-50">
-        <Link href="/" className="text-xl font-black tracking-tighter">Test Explorer</Link>
-        
-        {/* Dynamic Nav: Show Avatar if logged in, Login button if not */}
-        <div className="flex items-center gap-4">
-          {user && profile ? (
-            <>
-              <Link href="/dashboard" className="text-sm font-bold text-gray-500 hover:text-black hidden sm:block">
-                My Dashboard
-              </Link>
-              <UserNav profile={profile} email={user.email} />
-            </>
-          ) : (
-            <Link href="/login" className="text-sm font-bold text-gray-500 hover:text-black">
-              Login
-            </Link>
-          )}
-        </div>
-      </header>
 
       <main className="container mx-auto px-6 py-16">
         

@@ -27,5 +27,5 @@ export default async function Home() {
   }
 
   // Pass user.email explicitly so UserNav can display it
-  return <LandingPage profile={profile} email={user?.email} />;
+  return <LandingPage />;
 }

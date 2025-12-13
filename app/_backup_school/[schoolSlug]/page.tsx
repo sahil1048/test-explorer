@@ -11,23 +11,53 @@ import {
   CheckCircle2, 
   LogIn
 } from 'lucide-react';
+import AnnouncementsCard from './announcements-card';
+import UserNav from '@/components/Navbar/UserNav'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
 // 1. Update the Props Type to be a Promise
-export default async function SchoolLandingPage({ params }: { params: Promise<{ schoolSlug: string }> }) {
+export default async function SchoolLandingPage({ 
+  params 
+}: { 
+  params: Promise<{ schoolSlug: string }> 
+}) {
   const supabase = await createClient();
+  const { schoolSlug } = await params;  
   
-  // 2. AWAIT the params before using them (Crucial for Next.js 15)
-  const { schoolSlug } = await params;
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  let profile = null
+  
+  // 2. If User exists, fetch Profile
+  if (user) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+    
+    profile = data
+  }
 
-  // 3. Fetch School Branding
+  // 2. AWAIT the params before using them (Crucial for Next.js 15)
+  // 1. Fetch School
   const { data: school, error } = await supabase
     .from('organizations')
     .select('*')
     .eq('slug', schoolSlug)
-    .single();
+    .single()
+
+  if (!school) return notFound()
+
+  // 2. Fetch Announcements
+  const { data: announcements } = await supabase
+    .from('school_announcements')
+    .select('*')
+    .eq('organization_id', school.id)
+    .order('created_at', { ascending: false })
+    .limit(5) // Get top 5
 
   if (error || !school) {
     return notFound();
@@ -39,52 +69,6 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
 
   return (
     <div className="min-h-screen flex flex-col bg-white font-sans">
-      
-      {/* --- School Navbar --- */}
-      <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur border-b border-gray-100 shadow-sm">
-        <div className="container mx-auto px-4 md:px-8 h-20 flex justify-between items-center">
-          
-          <div className="flex items-center gap-3">
-            {school.logo_url ? (
-              <div className="relative w-12 h-12 md:w-14 md:h-14">
-                <img // Changed to img for simplicity with external urls, or use Image if configured
-                  src={school.logo_url} 
-                  alt={`${school.name} Logo`} 
-                  className="object-contain w-full h-full"
-                />
-              </div>
-            ) : (
-              <div className="w-12 h-12 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center font-bold text-xl">
-                {school.name.substring(0, 2).toUpperCase()}
-              </div>
-            )}
-            <div className="hidden md:block">
-              <h1 className="text-lg font-bold text-gray-900 leading-tight">{school.name}</h1>
-              <p className="text-xs text-gray-500 font-medium">Official Exam Portal</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {/* Login Button */}
-            <Link 
-              href="/login" // Middleware rewrites this to /school/[slug]/login
-              className="text-sm font-bold text-gray-600 hover:text-black transition-colors flex items-center gap-2"
-            >
-              <LogIn className="w-4 h-4" />
-              Login
-            </Link>
-
-            {/* Get Started (Signup) Button */}
-            <Link 
-              href="/signup" // Middleware rewrites this to /school/[slug]/signup
-              className="group flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-full text-sm font-medium transition-all shadow-md hover:shadow-lg"
-            >
-              Get Started
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-        </div>
-      </header>
 
       <main className="flex-1">
         {/* Hero Section */}
@@ -158,16 +142,9 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
           <div className="container mx-auto px-4 md:px-8">
             <div className="flex flex-col md:flex-row gap-16 items-center">
               <div className="w-full md:w-1/2 relative">
-                <div className="absolute inset-0 bg-blue-600 rounded-3xl rotate-3 opacity-10"></div>
-                <div className="relative h-[400px] bg-slate-100 rounded-3xl border border-gray-200 overflow-hidden shadow-2xl flex items-center justify-center">
-                   <div className="text-center p-8">
-                     <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
-                        <Layout className="w-10 h-10" />
-                     </div>
-                     <h3 className="text-xl font-bold text-gray-800 mb-2">Real Exam Interface</h3>
-                     <p className="text-gray-500">Practice exactly how you play.</p>
-                   </div>
-                </div>
+                <div className="md:col-span-1">
+               <AnnouncementsCard announcements={announcements || []} />
+            </div>
               </div>
 
               <div className="w-full md:w-1/2">
