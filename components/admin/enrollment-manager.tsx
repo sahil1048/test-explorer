@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { BookOpen, Check, Loader2, Save, Search, X } from "lucide-react";
+import { toast } from "sonner";
 
 // Types for props
 interface CourseRelation {
@@ -81,10 +82,8 @@ export default function EnrollmentManager({
   const handleSave = async () => {
     setSaving(true);
     try {
-      // A. Delete old enrollments
       await supabase.from("student_enrollments").delete().eq("user_id", studentId);
 
-      // B. Insert new enrollments
       if (selectedIds.length > 0) {
         const inserts = selectedIds.map((subject_id) => ({
           user_id: studentId,
@@ -93,10 +92,17 @@ export default function EnrollmentManager({
         await supabase.from("student_enrollments").insert(inserts);
       }
       setIsOpen(false);
-      alert("Enrollments updated successfully!");
+      
+      // REPLACED ALERT WITH TOAST
+      toast.success("Enrollments updated successfully", {
+        description: `Granted access to ${selectedIds.length} subjects.`
+      });
+
     } catch (error) {
       console.error(error);
-      alert("Failed to save enrollments.");
+      toast.error("Failed to save enrollments", {
+        description: "Please try again later."
+      });
     } finally {
       setSaving(false);
     }

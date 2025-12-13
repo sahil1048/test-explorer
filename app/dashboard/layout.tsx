@@ -2,18 +2,18 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import Link from 'next/link'
-import { getSchoolBySubdomain } from '@/lib/db/school' // Ensure this path is correct
+import { getSchoolBySubdomain } from '@/lib/db/school'
 import { 
   LayoutDashboard, 
   BookOpen, 
   Settings, 
   Users, 
-  ShieldAlert, 
   FileText,
   Building2,
   Library,
   Layers,
-  Megaphone
+  Megaphone,
+  GraduationCap
 } from 'lucide-react'
 import UserNav from '@/components/Navbar/UserNav' 
 
@@ -37,22 +37,37 @@ export default async function DashboardLayout({
 
   if (!profile) return redirect('/')
 
-  // 3. Detect School / Tenant (Subdomain Logic)
+  // 3. --- UPDATED: Robust Domain Detection (Flicker Fix) ---
   const headersList = await headers()
-  const hostname = headersList.get("host") || ""
-  let schoolData = null
-
-  // Check if we are on a subdomain (excluding localhost root or main domain)
-  // Adjust "testexplorer.com" to your actual production domain
-  const isSubdomain = hostname.includes('.') && !hostname.startsWith('www.') && !hostname.startsWith('test-explorer')
   
-  if (isSubdomain) {
-    const subdomain = hostname.split('.')[0]
-    // Fetch school details to show in Sidebar
+  // Read custom header from middleware FIRST
+  const domain = headersList.get("x-current-domain") || 
+                 headersList.get("x-forwarded-host") || 
+                 headersList.get("host") || ""
+
+  let schoolData = null
+  let subdomain = null
+  
+  // Handle localhost vs production
+  if (domain.includes("localhost")) {
+    const parts = domain.split(".")
+    if (parts.length >= 2) {
+      subdomain = parts[0]
+    }
+  } else {
+    // Production (e.g., school.testexplorer.com)
+    const parts = domain.split(".")
+    if (parts.length >= 3) {
+      subdomain = parts[0]
+    }
+  }
+
+  // Fetch School Data if Subdomain exists
+  if (subdomain && subdomain !== "www" && subdomain !== "test-explorer") {
     schoolData = await getSchoolBySubdomain(subdomain)
   }
 
-  // 4. Define Navigation based on Role
+  // 4. Define Navigation
   const navItems = [
     // --- Student Links ---
     {
@@ -62,9 +77,9 @@ export default async function DashboardLayout({
       roles: ['student']
     },
     {
-      label: 'Browse Courses', 
-      href: '/categories',
-      icon: BookOpen,
+      label: 'My Courses',
+      href: '/dashboard/my-courses',
+      icon: GraduationCap,
       roles: ['student']
     },
     {
@@ -87,17 +102,17 @@ export default async function DashboardLayout({
       icon: Settings,
       roles: ['school_admin']
     },
-    { 
-      label: 'Announcements', 
-      href: '/dashboard/announcements', 
-      icon: Megaphone, 
-      roles: ['school_admin'] 
-    },
     {
       label: 'My Students',
       href: '/dashboard/students',
       icon: Users,
       roles: ['school_admin']
+    },
+    { 
+      label: 'Announcements', 
+      href: '/dashboard/announcements', 
+      icon: Megaphone, 
+      roles: ['school_admin'] 
     },
 
     // --- Super Admin Links ---
@@ -145,19 +160,17 @@ export default async function DashboardLayout({
     },
   ]
 
-  // Filter items visible to this user
   const visibleItems = navItems.filter(item => item.roles.includes(profile.role))
 
   return (
     <div className="min-h-screen flex bg-gray-50">
       
-      {/* ================= SIDEBAR ================= */}
+      {/* SIDEBAR */}
       <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col fixed inset-y-0 left-0 z-50">
         
-        {/* --- BRANDING HEADER --- */}
+        {/* BRANDING - Uses the robust schoolData */}
         <div className="h-16 flex items-center px-6 border-b border-gray-100">
           {schoolData ? (
-            // SCHOOL BRANDING
             <Link href="/" className="flex items-center gap-3 group">
               {schoolData.logo_url ? (
                 <div className="w-8 h-8 relative shrink-0">
@@ -177,7 +190,6 @@ export default async function DashboardLayout({
               </span>
             </Link>
           ) : (
-            // TEST EXPLORER BRANDING
             <Link href="/" className="flex items-center gap-2">
               <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
                 TE
@@ -189,7 +201,7 @@ export default async function DashboardLayout({
           )}
         </div>
         
-        {/* --- NAVIGATION LINKS --- */}
+        {/* NAV LINKS */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {visibleItems.map((item) => (
             <Link
@@ -203,7 +215,7 @@ export default async function DashboardLayout({
           ))}
         </nav>
 
-        {/* --- USER FOOTER --- */}
+        {/* USER FOOTER */}
         <div className="p-4 border-t border-gray-100">
           <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white ${
@@ -222,24 +234,13 @@ export default async function DashboardLayout({
         </div>
       </aside>
 
-      {/* ================= MAIN CONTENT ================= */}
-      {/* Added ml-64 to push content right because sidebar is fixed */}
+      {/* MAIN CONTENT */}
       <main className="flex-1 flex flex-col md:ml-64 min-h-screen">
-        
-        {/* Top Header */}
         <header className="h-16 bg-white border-b border-gray-200 sticky top-0 z-40 flex items-center justify-between px-4 md:px-8">
-          <div className="flex items-center gap-4">
-             {/* Mobile Menu Toggle could go here later */}
-             <h1 className="font-bold text-lg text-gray-800">Dashboard</h1>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {/* You can add a notification bell here if needed */}
-            <UserNav profile={profile} email={user.email} />
-          </div>
+          <h1 className="font-bold text-lg text-gray-800">Dashboard</h1>
+          <UserNav profile={profile} email={user.email} />
         </header>
 
-        {/* Page Body */}
         <div className="flex-1 p-4 md:p-8 overflow-auto">
           {children}
         </div>

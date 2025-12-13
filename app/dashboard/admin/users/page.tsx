@@ -1,160 +1,75 @@
 import { createClient } from '@/lib/supabase/server'
-import { Phone, Building2, User } from 'lucide-react'
-import StudentsFilter from './students-filter'
-import EnrollmentManager from '@/components/admin/enrollment-manager' // Import the new component
+import Link from 'next/link'
+import { Building2, Users, ArrowRight, User } from 'lucide-react'
 
-export default async function StudentsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ search?: string; sort?: string }>
-}) {
+export default async function AdminUsersPage() {
   const supabase = await createClient()
-  const params = await searchParams
-  const query = params.search || ''
-  const sort = params.sort || 'newest'
 
-  // 1. Fetch Students (Join with Organizations)
-  let dbQuery = supabase
-    .from('profiles')
-    .select('*, organizations(name, slug)')
-    .eq('role', 'student')
+  // 1. Fetch Organizations (Schools)
+  const { data: schools } = await supabase
+    .from('organizations') // Assuming table name is 'organizations' or 'schools'
+    .select('id, name, slug, logo_url')
+    .order('name')
 
-  // 2. Apply Search Filter
-  if (query) {
-    dbQuery = dbQuery.ilike('full_name', `%${query}%`)
-  }
-
-  // 3. Fetch All Available Subjects (To pass to the Enrollment Manager)
-  // This avoids fetching subjects repeatedly for every row
-  const { data: allSubjects } = await supabase
-    .from('subjects')
-    .select('id, title, courses(title)')
-    .order('title')
-
-  const { data: rawStudents } = await dbQuery
-
-  // 4. Handle Sorting in Memory
-  let students = rawStudents || []
-
-  switch (sort) {
-    case 'name_asc':
-      students.sort((a, b) => a.full_name.localeCompare(b.full_name))
-      break
-    case 'name_desc':
-      students.sort((a, b) => b.full_name.localeCompare(a.full_name))
-      break
-    case 'school_asc':
-      students.sort((a, b) => {
-        // @ts-ignore
-        const schoolA = a.organizations?.name || 'Ind'
-        // @ts-ignore
-        const schoolB = b.organizations?.name || 'Ind'
-        return schoolA.localeCompare(schoolB)
-      })
-      break
-    case 'school_desc':
-      students.sort((a, b) => {
-        // @ts-ignore
-        const schoolA = a.organizations?.name || 'Ind'
-        // @ts-ignore
-        const schoolB = b.organizations?.name || 'Ind'
-        return schoolB.localeCompare(schoolA)
-      })
-      break
-    case 'oldest':
-      students.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-      break
-    case 'newest':
-    default:
-      students.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      break
-  }
-
+  // 2. Fetch Student Counts (Optional optimization: create a view for this)
+  // For now, we'll just link to the pages.
+  
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Students</h1>
-          <p className="text-gray-500 font-medium">View and manage registered students.</p>
-        </div>
-        <div className="bg-black text-white px-4 py-1.5 rounded-full text-sm font-bold">
-          Total: {students.length}
-        </div>
+    <div className="max-w-7xl mx-auto space-y-8">
+      
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-black text-gray-900 tracking-tight">User Management</h1>
+        <p className="text-gray-500 font-medium text-lg">Select a school to manage its students.</p>
       </div>
 
-      <StudentsFilter />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        
+        {/* --- Public / Individual Students Card --- */}
+        <Link 
+          href="/dashboard/admin/users/public"
+          className="group relative flex flex-col justify-between p-6 bg-white border border-gray-200 rounded-3xl shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300"
+        >
+          <div>
+            <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-black group-hover:text-white transition-colors">
+               <User className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-1">Individual Students</h3>
+            <p className="text-sm text-gray-500">Students not enrolled in any organization.</p>
+          </div>
+          
+          <div className="mt-6 flex items-center text-sm font-bold text-gray-400 group-hover:text-black transition-colors">
+            View List <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+          </div>
+        </Link>
 
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Student Name</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Contact Info</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">School / Organization</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Enrollments</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {students.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
-                    No students found matching your search.
-                  </td>
-                </tr>
+        {/* --- School Cards --- */}
+        {schools?.map((school) => (
+          <Link 
+            key={school.id} 
+            href={`/dashboard/admin/users/${school.id}`}
+            className="group relative flex flex-col justify-between p-6 bg-white border border-gray-200 rounded-3xl shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300"
+          >
+            <div>
+              {school.logo_url ? (
+                <div className="w-12 h-12 rounded-2xl mb-4 overflow-hidden border border-gray-100 bg-gray-50">
+                  <img src={school.logo_url} alt={school.name} className="w-full h-full object-contain" />
+                </div>
               ) : (
-                students.map((student) => {
-                    // @ts-ignore
-                    const schoolName = student.organizations?.name
-
-                    return (
-                    <tr key={student.id} className="hover:bg-gray-50/50 transition-colors group">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full flex items-center justify-center text-blue-600 border border-blue-100 font-bold">
-                            {student.full_name?.charAt(0).toUpperCase() || 'U'}
-                          </div>
-                          <span className="font-bold text-gray-900">{student.full_name}</span>
-                        </div>
-                      </td>
-                      
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col gap-1">
-                           <div className="flex items-center gap-2 text-sm text-gray-600">
-                             <Phone className="w-3.5 h-3.5 text-gray-400" />
-                             {student.phone || <span className="text-gray-300 italic">No phone</span>}
-                           </div>
-                        </div>
-                      </td>
-
-                      <td className="px-6 py-4">
-                        {schoolName ? (
-                          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm font-semibold border border-blue-100">
-                            <Building2 className="w-3.5 h-3.5" />
-                            {schoolName}
-                          </div>
-                        ) : (
-                          <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium border border-gray-200">
-                            <User className="w-3.5 h-3.5" />
-                            Individual
-                          </div>
-                        )}
-                      </td>
-
-                      {/* ENROLLMENT COLUMN */}
-                      <td className="px-6 py-4 text-right">
-                        <EnrollmentManager 
-                          studentId={student.id}
-                          studentName={student.full_name}
-                          allSubjects={allSubjects || []} 
-                        />
-                      </td>
-                    </tr>
-                  )})
+                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  <Building2 className="w-6 h-6" />
+                </div>
               )}
-            </tbody>
-          </table>
-        </div>
+              
+              <h3 className="text-xl font-bold text-gray-900 mb-1 line-clamp-1">{school.name}</h3>
+              <p className="text-sm text-gray-500">Manage students & enrollments.</p>
+            </div>
+            
+            <div className="mt-6 flex items-center text-sm font-bold text-gray-400 group-hover:text-blue-600 transition-colors">
+              View Students <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+        ))}
+
       </div>
     </div>
   )

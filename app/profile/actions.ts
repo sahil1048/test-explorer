@@ -13,6 +13,7 @@ export async function updateProfileAction(formData: FormData) {
 
   const fullName = formData.get('fullName') as string
   const phone = formData.get('phone') as string
+  const address = formData.get('address') as string
   
   // Update Profile
   const { error } = await supabase
@@ -20,6 +21,7 @@ export async function updateProfileAction(formData: FormData) {
     .update({ 
       full_name: fullName,
       phone: phone,
+      address: address,
       updated_at: new Date().toISOString()
     })
     .eq('id', user.id)
@@ -30,5 +32,6 @@ export async function updateProfileAction(formData: FormData) {
   }
 
   revalidatePath('/profile')
+  revalidatePath('/dashboard')
   return { success: true }
 }

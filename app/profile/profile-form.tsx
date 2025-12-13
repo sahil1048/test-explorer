@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { updateProfileAction } from './actions'
-import { Save, Loader2, User, Phone, Mail, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Save, Loader2, User, Phone, Mail, AlertCircle, CheckCircle2, MapPin } from 'lucide-react'
+import { toast } from "sonner"
 
 export default function ProfileForm({ profile, email }: { profile: any, email?: string }) {
   const [loading, setLoading] = useState(false)
@@ -10,15 +11,15 @@ export default function ProfileForm({ profile, email }: { profile: any, email?: 
 
   const handleSubmit = async (formData: FormData) => {
     setLoading(true)
-    setMessage(null)
 
-    // Call the server action
     const result = await updateProfileAction(formData)
 
     if (result?.error) {
-      setMessage({ type: 'error', text: result.error })
+      // REPLACED INLINE ERROR
+      toast.error(result.error)
     } else {
-      setMessage({ type: 'success', text: 'Profile updated successfully!' })
+      // REPLACED INLINE SUCCESS
+      toast.success('Profile updated successfully!')
     }
     
     setLoading(false)
@@ -26,18 +27,6 @@ export default function ProfileForm({ profile, email }: { profile: any, email?: 
 
   return (
     <form action={handleSubmit} className="space-y-6 max-w-xl">
-      
-      {/* Feedback Message */}
-      {message && (
-        <div className={`p-4 rounded-xl flex items-center gap-3 text-sm font-medium ${
-          message.type === 'success' 
-            ? 'bg-green-50 text-green-700 border border-green-200' 
-            : 'bg-red-50 text-red-700 border border-red-200'
-        }`}>
-          {message.type === 'success' ? <CheckCircle2 className="w-5 h-5"/> : <AlertCircle className="w-5 h-5"/>}
-          {message.text}
-        </div>
-      )}
 
       {/* Full Name */}
       <div>
@@ -79,6 +68,20 @@ export default function ProfileForm({ profile, email }: { profile: any, email?: 
             type="tel" 
             placeholder="+91..."
             className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-black outline-none transition-all"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-bold text-gray-700 mb-2">Address</label>
+        <div className="relative">
+          <MapPin className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+          <textarea 
+            name="address" 
+            defaultValue={profile?.address || ''} 
+            placeholder="Enter your full address..."
+            rows={3}
+            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-black outline-none transition-all resize-none"
           />
         </div>
       </div>

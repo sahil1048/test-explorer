@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { Check, ChevronsUpDown, School, Plus } from 'lucide-react'
+import { School, Plus, Lock } from 'lucide-react' // Added Lock icon
 import { createClient } from '@/lib/supabase/client'
 
 type SchoolOption = {
@@ -8,16 +8,32 @@ type SchoolOption = {
   name: string
 }
 
-export default function SchoolSearchInput() {
+interface SchoolSearchInputProps {
+  prefilledSchool?: SchoolOption | null
+  readOnly?: boolean
+}
+
+export default function SchoolSearchInput({ prefilledSchool, readOnly = false }: SchoolSearchInputProps) {
   const supabase = createClient()
   const [query, setQuery] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [options, setOptions] = useState<SchoolOption[]>([])
-  const [selectedSchool, setSelectedSchool] = useState<SchoolOption | null>(null)
+  
+  // Initialize with prefilled school if available
+  const [selectedSchool, setSelectedSchool] = useState<SchoolOption | null>(prefilledSchool || null)
   const wrapperRef = useRef<HTMLDivElement>(null)
 
-  // 1. Fetch schools when user types
+  // Update if prop changes (e.g. initial load)
   useEffect(() => {
+    if (prefilledSchool) {
+      setSelectedSchool(prefilledSchool)
+    }
+  }, [prefilledSchool])
+
+  // Fetch schools when user types (Only if NOT readOnly)
+  useEffect(() => {
+    if (readOnly) return; 
+
     const fetchSchools = async () => {
       if (query.length < 2) return
       
@@ -30,11 +46,10 @@ export default function SchoolSearchInput() {
       if (data) setOptions(data)
     }
 
-    const timeoutId = setTimeout(fetchSchools, 300) // Debounce
+    const timeoutId = setTimeout(fetchSchools, 300)
     return () => clearTimeout(timeoutId)
-  }, [query, supabase])
+  }, [query, supabase, readOnly])
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
@@ -48,27 +63,36 @@ export default function SchoolSearchInput() {
   return (
     <div className="relative" ref={wrapperRef}>
       <input type="hidden" name="schoolId" value={selectedSchool?.id || ''} />
-      <input type="hidden" name="manualSchoolName" value={!selectedSchool ? query : ''} />
-
-      <label className="block text-sm font-bold text-gray-800 mb-1">School / Institute</label>
+      
+      {/* If ReadOnly (Subdomain), show label indicating it's fixed */}
+      <div className="flex justify-between items-center mb-1">
+        <label className="block text-sm font-bold text-gray-900">School / Institute</label>
+        {readOnly && <span className="text-xs font-medium text-orange-600 flex items-center gap-1"><Lock className="w-3 h-3"/> Locked to Institute</span>}
+      </div>
       
       <div className="relative">
         <input
           type="text"
-          className="w-full px-5 py-3 rounded-xl bg-gray-200 border-transparent focus:bg-white focus:ring-2 focus:ring-orange-400 outline-none transition-all placeholder-gray-500"
-          placeholder="Type your school name..."
+          className={`w-full px-5 py-4 rounded-xl border-2 outline-none transition-all font-medium
+            ${readOnly 
+              ? 'bg-orange-50/50 border-orange-100 text-gray-500 cursor-not-allowed' 
+              : 'bg-gray-100 border-transparent focus:bg-white focus:border-orange-500 placeholder-gray-400'
+            }`}
+          placeholder={readOnly ? "" : "Search your school (Optional)..."}
           value={selectedSchool ? selectedSchool.name : query}
           onChange={(e) => {
+            if (readOnly) return; // Prevent typing
             setQuery(e.target.value)
-            setSelectedSchool(null) // Reset selection if typing
+            setSelectedSchool(null)
             setIsOpen(true)
           }}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => !readOnly && setIsOpen(true)}
+          readOnly={readOnly}
           autoComplete="off"
         />
         
-        {/* Dropdown Suggestions */}
-        {isOpen && query.length > 0 && !selectedSchool && (
+        {/* Dropdown Suggestions (Only if NOT readOnly) */}
+        {!readOnly && isOpen && query.length > 0 && !selectedSchool && (
           <div className="absolute z-50 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 max-h-60 overflow-auto">
             {options.length > 0 ? (
               <>
@@ -90,27 +114,11 @@ export default function SchoolSearchInput() {
                   </button>
                 ))}
               </>
-            ) : null}
-
-            {/* The "Other" Option */}
-            <div className="border-t border-gray-100 p-2">
-              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 px-2">
-                Not listed?
-              </div>
-              <button
-                type="button"
-                className="w-full text-left px-2 py-2 hover:bg-gray-50 rounded-lg flex items-center gap-3 transition-colors"
-                onClick={() => {
-                  // We just keep the query as the manual name and close dropdown
-                  setIsOpen(false)
-                }}
-              >
-                <Plus className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-600">
-                  Use "{query}" as my school
-                </span>
-              </button>
-            </div>
+            ) : (
+                <div className="p-4 text-sm text-gray-500 text-center">
+                   No schools found. Leave blank if independent.
+                </div>
+            )}
           </div>
         )}
       </div>

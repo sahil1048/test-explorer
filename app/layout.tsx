@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSchoolBySubdomain } from "@/lib/db/school"; 
 import { SiteHeader } from "@/components/layout/site-header";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
 
 export default async function RootLayout({
   children,
@@ -25,6 +26,7 @@ export default async function RootLayout({
 
   // 2. ROBUST SUBDOMAIN DETECTION
   const headersList = await headers();
+  const domain = headersList.get("x-current-domain") || headersList.get("host") || "";
   const hostname = headersList.get("host") || "";
   
   let schoolData = null;
@@ -33,15 +35,13 @@ export default async function RootLayout({
   // Split hostname into parts (e.g., "school.localhost:3000" -> ["school", "localhost:3000"])
   const parts = hostname.split(".");
 
-  // LOGIC: Determine if there is a subdomain
-  if (hostname.includes("localhost")) {
-    // Localhost: school.localhost:3000 (needs at least 2 parts)
+  if (domain.includes("localhost")) {
+    const parts = domain.split(".");
     if (parts.length >= 2) {
       subdomain = parts[0];
     }
   } else {
-    // Production: school.testexplorer.com (needs at least 3 parts)
-    // If you use a custom domain like school.com, adjust logic to check parts.length === 2
+    const parts = domain.split(".");
     if (parts.length >= 3) {
       subdomain = parts[0];
     }
@@ -54,7 +54,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className="min-h-screen bg-gray-50 font-sans antialiased">
+      <body className="min-h-screen bg-gray-50 font-sans antialiased" suppressHydrationWarning={true}>
         
         {/* Pass schoolData. If found, SiteHeader shows School Logo. If null, it shows Test Explorer. */}
         <SiteHeader 
@@ -64,6 +64,8 @@ export default async function RootLayout({
         />
 
         <main>{children}</main>
+
+        <Toaster />
         
       </body>
     </html>

@@ -1,8 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { ArrowLeft, BookOpen } from 'lucide-react'
-import { notFound } from 'next/navigation'
-// Ensure this import path matches where you put your component
+import { ArrowLeft, BookOpen, CheckCircle, ChevronRight, List } from 'lucide-react'
+import { notFound, redirect } from 'next/navigation'
 import QuizInterface from '@/components/Courses/QuizInterface' 
 
 export default async function PrepModulePage({ 
@@ -12,8 +11,8 @@ export default async function PrepModulePage({
 }) {
   const supabase = await createClient()
   const { courseId, subjectId, moduleId } = await params
-
-  // 1. Fetch Module Details
+  
+  // 1. Fetch Current Module Details
   const { data: moduleData } = await supabase
     .from('prep_modules')
     .select('title, description')
@@ -34,41 +33,97 @@ export default async function PrepModulePage({
     .eq('module_id', moduleId)
     .order('order_index', { ascending: true })
 
+  // 3. NEW: Fetch All Modules for Sidebar Navigation
+  const { data: allModules } = await supabase
+    .from('prep_modules')
+    .select('id, title')
+    .eq('subject_id', subjectId)
+    .eq('is_published', true)
+    .order('created_at', { ascending: true })
+
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-gray-50">
       
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="container mx-auto px-6 h-20 flex flex-col justify-center">
-          {/* Breadcrumb / Back Link */}
-          <Link 
-            href={`/courses/${courseId}/subjects/${subjectId}`} 
-            className="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-black uppercase tracking-widest mb-1 transition-colors w-fit"
-          >
-            <ArrowLeft className="w-3 h-3" /> Back to Subject
-          </Link>
-          <div className="flex items-center gap-3">
-             <BookOpen className="w-5 h-5 text-orange-500" />
-             <h1 className="text-xl font-black text-gray-900 truncate">
-               {moduleData.title}
-             </h1>
+        <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+             <Link 
+                href={`/courses/${courseId}/subjects/${subjectId}`} 
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-black"
+                title="Back to Subject"
+             >
+                <ArrowLeft className="w-5 h-5" />
+             </Link>
+             <div className="flex items-center gap-2">
+                 <div className="bg-orange-100 p-2 rounded-lg">
+                    <BookOpen className="w-5 h-5 text-orange-600" />
+                 </div>
+                 <h1 className="text-lg font-bold text-gray-900 truncate max-w-[200px] md:max-w-md">
+                   {moduleData.title}
+                 </h1>
+             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 md:px-6 py-12">
-        {(!questions || questions.length === 0) ? (
-          <div className="max-w-2xl mx-auto text-center py-20">
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-gray-100">
-               <span className="text-4xl">😴</span>
+      <div className="container mx-auto px-4 md:px-6 py-8 flex items-start gap-8">
+        
+        {/* --- LEFT SIDEBAR (Module List) --- */}
+        <aside className="hidden lg:block w-80 sticky top-24 shrink-0">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            
+            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
+               <List className="w-4 h-4 text-gray-500" />
+               <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wider">Module List</h3>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">No Questions Yet</h2>
-            <p className="text-gray-500">This module is currently being updated. Check back later!</p>
+
+            <div className="max-h-[calc(100vh-200px)] overflow-y-auto p-2 space-y-1">
+              {allModules?.map((mod, index) => {
+                const isActive = mod.id === moduleId
+                return (
+                  <Link 
+                    key={mod.id} 
+                    href={`/courses/${courseId}/subjects/${subjectId}/learn/${mod.id}`}
+                    className={`group flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      isActive 
+                        ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' 
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
+                         isActive ? 'bg-blue-200 text-blue-700' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
+                      }`}>
+                        {index + 1}
+                      </span>
+                      <span className="line-clamp-1">{mod.title}</span>
+                    </div>
+                    {isActive && <ChevronRight className="w-4 h-4 text-blue-500" />}
+                  </Link>
+                )
+              })}
+            </div>
+
           </div>
-        ) : (
-          <QuizInterface questions={questions} />
-        )}
-      </main>
+        </aside>
+
+        {/* --- MAIN CONTENT (Quiz) --- */}
+        <main className="flex-1 min-w-0">
+          {(!questions || questions.length === 0) ? (
+            <div className="bg-white rounded-3xl p-12 text-center border border-gray-200 shadow-sm">
+              <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                 <span className="text-4xl">🚧</span>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">No Questions Yet</h2>
+              <p className="text-gray-500">This module is currently being updated. Please check the sidebar for other modules.</p>
+            </div>
+          ) : (
+            <QuizInterface questions={questions} />
+          )}
+        </main>
+
+      </div>
     </div>
   )
 }
