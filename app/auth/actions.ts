@@ -30,7 +30,6 @@ async function getRedirectPath(userId: string) {
   if (profile?.role === 'super_admin') return '/dashboard/admin'
   if (profile?.role === 'school_admin') return '/dashboard'
   
-  // Default for students: Go to categories to start browsing
   return '/categories'
 }
 
@@ -50,8 +49,6 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  
-  // Smart Redirect
   const destination = await getRedirectPath(data.user.id)
   redirect(destination)
 }
@@ -64,22 +61,14 @@ export async function signup(formData: FormData) {
   const password = formData.get('password') as string
   const fullName = formData.get('fullName') as string
   const phone = formData.get('phone') as string
+  const address = formData.get('address') as string // <--- NEW: Get Address
   
-  const rawSlug = formData.get('schoolSlug') as string
-  const schoolSlug = rawSlug ? rawSlug.trim().toLowerCase() : null
+  // Logic Changed: Prefer 'schoolId' (UUID) from the hidden input in SchoolSearchInput
+  const schoolId = formData.get('schoolId') as string
   
   let organizationId = null
-
-  if (schoolSlug) {
-    const { data: org, error } = await adminClient
-      .from('organizations')
-      .select('id')
-      .eq('slug', schoolSlug)
-      .single()
-    
-    if (org) {
-      organizationId = org.id
-    }
+  if (schoolId && schoolId.trim() !== '') {
+    organizationId = schoolId
   }
 
   const { data, error } = await supabase.auth.signUp({
@@ -104,14 +93,13 @@ export async function signup(formData: FormData) {
         id: data.user.id,
         full_name: fullName,
         phone: phone,
+        address: address, // <--- NEW: Save Address
         role: 'student',
         organization_id: organizationId,
       })
   }
 
   revalidatePath('/', 'layout')
-  
-  // Smart Redirect (New users usually want to browse immediately)
   redirect('/categories')
 }
 

@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import ImageUpload from '@/components/ui/ImageUpload'
 import { updateSchoolSettingsAction } from './actions'
+import { toast } from "sonner"
+import { Loader2 } from "lucide-react"
 
 interface SchoolSettingsFormProps {
   school: any
@@ -22,7 +24,7 @@ export default function SchoolSettingsForm({ school, organizationId }: SchoolSet
     
     await updateSchoolSettingsAction(formData)
     setIsSaving(false)
-    alert('Settings Saved Successfully!')
+    toast.success("Settings saved successfully!")
   }
 
   return (
@@ -88,6 +90,7 @@ export default function SchoolSettingsForm({ school, organizationId }: SchoolSet
           disabled={isSaving}
           className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
         >
+          {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
           {isSaving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>

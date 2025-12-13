@@ -6,14 +6,18 @@ import SubjectContent from '@/components/Courses/SubjectContent'
 import AccessDenied from '@/components/ui/access-denied' // Ensure this path matches where you saved the component
 
 export default async function SubjectDetailsPage({ 
-  params 
+  params,
+  searchParams
 }: { 
   params: Promise<{ courseId: string; subjectId: string }> 
+  searchParams: Promise<{ from?: string }>
 }) {
   const supabase = await createClient()
   
   // 1. Resolve Params & Authenticate User
   const { courseId, subjectId } = await params
+  const { from } = await searchParams
+
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return redirect('/login')
@@ -92,17 +96,25 @@ export default async function SubjectDetailsPage({
       .order('created_at', { ascending: false })
   ])
 
+  const backLink = from === 'dashboard' 
+    ? '/dashboard/my-courses' 
+    : `/courses/${courseId}`
+    
+  const backLabel = from === 'dashboard'
+    ? 'Back to Dashboard'
+    : `Back to ${courseTitle || 'Course'}`
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navbar Stub */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="container mx-auto px-6 h-16 flex items-center gap-4">
           <Link 
-            href={`/courses/${courseId}`} 
+            href={backLink} 
             className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-black transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to {courseTitle || 'Course'}
+            {backLabel}
           </Link>
         </div>
       </header>
