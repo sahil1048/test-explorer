@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { ArrowLeft, BookOpen } from 'lucide-react'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import SubjectContent from '@/components/Courses/SubjectContent'
+import AccessDenied from '@/components/ui/access-denied' // Ensure this path matches where you saved the component
 
 export default async function SubjectDetailsPage({ 
   params 
@@ -10,46 +11,85 @@ export default async function SubjectDetailsPage({
   params: Promise<{ courseId: string; subjectId: string }> 
 }) {
   const supabase = await createClient()
+  
+  // 1. Resolve Params & Authenticate User
   const { courseId, subjectId } = await params
+  const { data: { user } } = await supabase.auth.getUser()
 
-  // 1. Fetch Subject & Course Info
+  if (!user) return redirect('/login')
+
+  // 2. Fetch Subject & Course Info
+  // We explicitly fetch title to display it on the Access Denied screen if needed
   const { data: subject } = await supabase
     .from('subjects')
-    .select('title, course:courses(title)')
+    .select(`
+      title,
+      course:courses(title)
+    `)
     .eq('id', subjectId)
     .single()
 
   if (!subject) return notFound()
 
-  // @ts-ignore
-  const courseTitle = Array.isArray(subject.course) 
-    ? subject.course[0]?.title 
-    // @ts-ignore
-    : subject.course?.title
+  // 3. CHECK ENROLLMENT STATUS
+  // Check if a record exists in 'student_enrollments' for this user + subject
+  const { data: enrollment } = await supabase
+    .from('student_enrollments')
+    .select('id')
+    .eq('user_id', user.id) // user.id is text (from auth/profiles)
+    .eq('subject_id', subjectId) // subjectId is uuid
+    .single()
 
-  // 2. Fetch Data for Tabs (UPDATED QUERIES)
+  // 4. CHECK USER ROLE (Admins bypass enrollment checks)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  const isAdmin = profile?.role === 'super_admin' || profile?.role === 'school_admin'
+
+  // 5. GATEKEEPING LOGIC
+  // If user is NOT enrolled AND NOT an admin -> Deny Access
+  if (!enrollment && !isAdmin) {
+    return <AccessDenied subjectTitle={subject.title} />
+  }
+
+  // --- ACCESS GRANTED BELOW THIS LINE ---
+
+  // Handle Supabase Relation Array/Object weirdness for Course Title
+  // @ts-ignore
+  const courseData = subject.course as unknown as CourseRelation | CourseRelation[] | null
+  const courseTitle = Array.isArray(courseData) 
+    ? courseData[0]?.title 
+    : courseData?.title
+
+  // 6. Fetch Page Content (Only runs if access is granted)
   const [modulesRes, practiceRes, mockRes] = await Promise.all([
     // A. Prep Modules
     supabase
       .from('prep_modules')
       .select('*')
       .eq('subject_id', subjectId)
-      .eq('is_published', true),
+      .eq('is_published', true)
+      .order('created_at', { ascending: true }),
       
-    // B. Practice Tests (NOW FETCHING FROM 'practice_tests' TABLE)
+    // B. Practice Tests
     supabase
-      .from('practice_tests') // <--- CHANGED THIS
+      .from('practice_tests')
       .select('*')
       .eq('subject_id', subjectId)
-      .eq('is_published', true),
+      .eq('is_published', true)
+      .order('created_at', { ascending: false }),
       
-    // C. Mock Tests (Still fetching from 'exams' table with category 'mock')
+    // C. Mock Tests
     supabase
       .from('exams')
       .select('*')
       .eq('subject_id', subjectId)
       .eq('category', 'mock')
       .eq('is_published', true)
+      .order('created_at', { ascending: false })
   ])
 
   return (
