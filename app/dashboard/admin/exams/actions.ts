@@ -175,3 +175,24 @@ export async function deleteQuestionAction(formData: FormData) {
   // Revalidate the edit page so the list updates immediately
   revalidatePath(`/dashboard/admin/exams/${examId}/edit`)
 }
+
+export async function deleteAllQuestionsAction(formData: FormData) {
+  const supabase = await createClient()
+  const examId = formData.get('exam_id') as string
+  const type = formData.get('exam_type') as string
+
+  // Determine the correct foreign key based on type
+  let questionFK = 'module_id' // default for 'prep'
+  if (type === 'mock') questionFK = 'exam_id'
+  else if (type === 'practice') questionFK = 'practice_test_id'
+
+  // Delete all questions where the foreign key matches the exam ID
+  const { error } = await supabase
+    .from('questions')
+    .delete()
+    .eq(questionFK, examId)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath(`/dashboard/admin/exams/${examId}/edit`)
+}

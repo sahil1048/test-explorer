@@ -19,10 +19,6 @@ export default async function LandingPage() {
   // 1. Detect Subdomain Logic
   const headersList = await headers();
   const hostname = headersList.get("host") || "";
-
-  console.log("--------------------------------------------------");
-  console.log("🔍 Current Hostname:", hostname);
-
   let schoolData = null;
 
   const parts = hostname.split(".");
@@ -36,16 +32,11 @@ export default async function LandingPage() {
     if (parts.length >= 3) subdomain = parts[0];
   }
 
-  console.log("🔍 Detected Subdomain:", subdomain);
 
   // 3. Fetch School Data
   if (subdomain && subdomain !== "www" && subdomain !== "test-explorer") {
     schoolData = await getSchoolBySubdomain(subdomain);
-    console.log("🏫 School Data Found:", schoolData ? schoolData.name : "None");
-  } else {
-    console.log("🌍 Loading Main Site (No School Data)");
   }
-  console.log("--------------------------------------------------");
 
   // Fetch School Data if valid subdomain found
   if (subdomain && subdomain !== "www" && subdomain !== "test-explorer") {

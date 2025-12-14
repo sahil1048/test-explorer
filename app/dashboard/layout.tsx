@@ -13,7 +13,8 @@ import {
   Library,
   Layers,
   Megaphone,
-  GraduationCap
+  GraduationCap,
+  Newspaper
 } from 'lucide-react'
 import UserNav from '@/components/Navbar/UserNav' 
 
@@ -156,6 +157,12 @@ export default async function DashboardLayout({
       label: 'Users',
       href: '/dashboard/admin/users',
       icon: Users,
+      roles: ['super_admin']
+    },
+    {
+      label: 'Blogs',
+      href: '/dashboard/admin/blogs',
+      icon: Newspaper,
       roles: ['super_admin']
     },
   ]

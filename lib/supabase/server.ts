@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 export async function createClient() {
-  // Await the cookies() promise here
+  // 1. Await the cookies() promise (Next.js 15 requirement)
   const cookieStore = await cookies()
 
   return createServerClient(
@@ -10,6 +10,7 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
+        // 2. Use the awaited cookieStore
         getAll() {
           return cookieStore.getAll()
         },

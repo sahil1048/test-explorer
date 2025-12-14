@@ -10,16 +10,13 @@ export async function getSchoolBySubdomain(slug: string) {
       .eq('slug', slug)
       .single();
 
-      console.log(`Fetching subdomain: ${slug}`, school);
 
     if (error) {
-      console.error("Error fetching school:", error);
       return null;
     }
 
     return school;
   } catch (err) {
-    console.error("Unexpected error:", err);
     return null;
   }
 }

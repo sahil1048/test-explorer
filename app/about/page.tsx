@@ -1,12 +1,39 @@
 import Image from "next/image";
+import { headers } from "next/headers";
+import { getSchoolBySubdomain } from "@/lib/db/school";
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  // 1. Detect Subdomain
+  const headersList = await headers();
+  const domain = headersList.get("x-current-domain") || 
+                 headersList.get("x-forwarded-host") || 
+                 headersList.get("host") || "";
+
+  let subdomain = null;
+  if (domain.includes("localhost")) {
+    const parts = domain.split(".");
+    if (parts.length >= 2) subdomain = parts[0];
+  } else {
+    const parts = domain.split(".");
+    if (parts.length >= 3) subdomain = parts[0];
+  }
+
+  // 2. Fetch School Data (if on a subdomain)
+  let schoolName = "Test Explorer"; // Default name
+  
+  if (subdomain && subdomain !== "www" && subdomain !== "test-explorer") {
+    const schoolData = await getSchoolBySubdomain(subdomain);
+    if (schoolData) {
+      schoolName = schoolData.name;
+    }
+  }
+
   return (
     <div className="bg-white">
       {/* Hero Section */}
       <section className="py-20 px-4 text-center border-b border-gray-100">
         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
-          We are <span className="text-blue-600">Test Explorer</span>.
+          We are <span className="text-blue-600">{schoolName}</span>.
         </h1>
         <p className="text-xl md:text-2xl text-gray-500 max-w-3xl mx-auto font-medium">
           Building the future of assessment. We help students and schools unlock potential through data-driven practice.
@@ -33,7 +60,7 @@ export default function AboutPage() {
       {/* Mission */}
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row gap-12 items-center">
-           {/* Placeholder for an image - replace src with actual image */}
+           {/* Placeholder for an image */}
           <div className="w-full md:w-1/2 aspect-square bg-gray-200 rounded-3xl relative overflow-hidden">
              <div className="absolute inset-0 bg-linear-to-tr from-blue-600 to-purple-600 opacity-80 mix-blend-multiply" />
              <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-2xl">
