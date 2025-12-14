@@ -131,7 +131,7 @@ export default async function EditExamPage({
         {/* RIGHT COLUMN: Questions List */}
         <div className="lg:col-span-3">
            <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm sticky top-8">
-              <QuestionsList questions={questions || []} examId={item.id} />
+              <QuestionsList questions={questions || []} examId={item.id} examType={currentType} />
            </div>
         </div>
 
