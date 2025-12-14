@@ -62,7 +62,7 @@ export default async function AnnouncementsPage() {
         </div>
 
         {/* LIST */}
-        <div className="lg:col-span-4 space-y-4">
+        <div className="lg:col-span-4 space-y-4 h-[700px] overflow-auto">
            {(!announcements || announcements.length === 0) ? (
              <div className="text-center py-12 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
                 <Bell className="w-8 h-8 text-gray-300 mx-auto mb-2" />
