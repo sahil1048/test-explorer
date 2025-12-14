@@ -3,36 +3,49 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { parse } from 'csv-parse/sync'
 
-// --- HELPER: Parse CSV ---
-// Simple parser: Assumes header row + columns: Question, Option A, Option B, Option C, Option D, Correct Answer, Explanation
+// 1. Define the Shape of your CSV Row
+interface CSVQuestionRow {
+  text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_option: string;
+  explanation?: string;
+  direction?: string;
+}
+
+// --- HELPER: Parse CSV and Insert ---
 async function parseAndInsertQuestions(file: File, parentId: string, type: 'prep' | 'mock' | 'practice') {
-  const text = await file.text()
-  const rows = text.split('\n').filter(r => r.trim() !== '')
+  const fileContent = await file.text()
   const supabase = await createClient()
 
-  // Skip header row (index 0)
-  for (let i = 1; i < rows.length; i++) {
-    // Basic CSV splitting (handling commas inside quotes is complex, this is a simple splitter)
-    // For production, consider using a library like 'papaparse'
-    const cols = rows[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''))
+  // 2. Cast the result of parse to your Interface array
+  const records = parse(fileContent, {
+    columns: true, 
+    skip_empty_lines: true,
+    trim: true,
+    relax_quotes: true 
+  }) as CSVQuestionRow[] // <--- FIX: Explicitly cast here
+
+  // Iterate over parsed records
+  for (const [index, row] of records.entries()) {
     
-    if (cols.length < 6) continue // Skip invalid rows
-
-    const [qText, optA, optB, optC, optD, correctAns, explanation] = cols
-
-    // 1. Insert Question
+    // Prepare Question Data
     const qData: any = {
-      text: qText,
-      explanation: explanation || '',
-      order_index: i
+      text: row.text,
+      explanation: row.explanation || '',
+      direction: row.direction || null,
+      order_index: index + 1
     }
-    
-    // Link to correct parent
+
     if (type === 'prep') qData.module_id = parentId
     else if (type === 'mock') qData.exam_id = parentId
     else if (type === 'practice') qData.practice_test_id = parentId
 
+    // Insert Question
     const { data: question, error: qError } = await supabase
       .from('questions')
       .insert(qData)
@@ -40,29 +53,36 @@ async function parseAndInsertQuestions(file: File, parentId: string, type: 'prep
       .single()
 
     if (qError) {
-      console.error(`Row ${i} Error:`, qError.message)
-      continue
+      console.error(`Row ${index + 1} Error:`, qError.message)
+      continue 
     }
 
-    // 2. Insert Options
+    // Prepare Options Data
+    const correctVal = row.correct_option ? row.correct_option.trim() : ''
+    
     const options = [
-      { text: optA, is_correct: correctAns.toLowerCase() === 'a' || correctAns === optA },
-      { text: optB, is_correct: correctAns.toLowerCase() === 'b' || correctAns === optB },
-      { text: optC, is_correct: correctAns.toLowerCase() === 'c' || correctAns === optC },
-      { text: optD, is_correct: correctAns.toLowerCase() === 'd' || correctAns === optD },
+      { text: row.option_a, label: 'A' },
+      { text: row.option_b, label: 'B' },
+      { text: row.option_c, label: 'C' },
+      { text: row.option_d, label: 'D' },
     ]
 
-    const optionsData = options.map(o => ({
+    const optionsData = options.map(opt => ({
       question_id: question.id,
-      text: o.text,
-      is_correct: o.is_correct
+      text: opt.text,
+      // Check if correct_option matches 'A'/'B' or the text itself
+      is_correct: correctVal.toUpperCase() === opt.label || correctVal === opt.text
     }))
 
-    await supabase.from('question_options').insert(optionsData)
+    const { error: optError } = await supabase.from('question_options').insert(optionsData)
+    
+    if (optError) {
+      console.error(`Options Error for Row ${index + 1}:`, optError.message)
+    }
   }
 }
 
-// --- CREATE ACTION ---
+// ... (Rest of your export functions: createExamAction, deleteExamAction, etc. remain the same)
 export async function createExamAction(formData: FormData) {
   const supabase = await createClient()
   
@@ -102,7 +122,6 @@ export async function createExamAction(formData: FormData) {
   redirect('/dashboard/admin/exams')
 }
 
-// --- DELETE ACTION ---
 export async function deleteExamAction(formData: FormData) {
   const supabase = await createClient()
   const id = formData.get('id') as string
@@ -136,7 +155,6 @@ export async function updateExamAction(formData: FormData) {
   else if (type === 'mock') table = 'exams'
   else if (type === 'practice') table = 'practice_tests'
 
-  // 1. Update Basic Info
   const updatePayload: any = { title, description, subject_id, is_published }
   if (type !== 'prep') {
     updatePayload.duration_minutes = duration
@@ -149,9 +167,7 @@ export async function updateExamAction(formData: FormData) {
 
   if (error) throw new Error(error.message)
 
-  // 2. Process CSV if uploaded (Adds NEW questions)
   if (csvFile && csvFile.size > 0) {
-    // Reusing the helper from the create action
     await parseAndInsertQuestions(csvFile, id, type)
   }
 
@@ -164,7 +180,6 @@ export async function deleteQuestionAction(formData: FormData) {
   const questionId = formData.get('question_id') as string
   const examId = formData.get('exam_id') as string
   
-  // Delete the question (Options will cascade delete automatically)
   const { error } = await supabase
     .from('questions')
     .delete()
@@ -172,7 +187,6 @@ export async function deleteQuestionAction(formData: FormData) {
 
   if (error) throw new Error(error.message)
 
-  // Revalidate the edit page so the list updates immediately
   revalidatePath(`/dashboard/admin/exams/${examId}/edit`)
 }
 
@@ -181,12 +195,10 @@ export async function deleteAllQuestionsAction(formData: FormData) {
   const examId = formData.get('exam_id') as string
   const type = formData.get('exam_type') as string
 
-  // Determine the correct foreign key based on type
-  let questionFK = 'module_id' // default for 'prep'
+  let questionFK = 'module_id' 
   if (type === 'mock') questionFK = 'exam_id'
   else if (type === 'practice') questionFK = 'practice_test_id'
 
-  // Delete all questions where the foreign key matches the exam ID
   const { error } = await supabase
     .from('questions')
     .delete()

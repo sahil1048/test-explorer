@@ -35,19 +35,28 @@ export async function submitExamAction(
     throw new Error('Failed to load exam data for grading.')
   }
 
-  // 3. Calculate Score
-  let score = 0
-  let totalQuestions = questions.length
+  // 3. Calculate Score & Counts
+  let correctCount = 0
+  let incorrectCount = 0
+  const totalQuestions = questions.length
 
   questions.forEach(q => {
     // @ts-ignore
     const correctOption = q.options.find((o: any) => o.is_correct)
     const userSelectedOptionId = answers[q.id]
     
-    if (correctOption && userSelectedOptionId === correctOption.id) {
-      score += 1
+    // Check if user attempted the question
+    if (userSelectedOptionId) {
+      if (correctOption && userSelectedOptionId === correctOption.id) {
+        correctCount += 1
+      } else {
+        incorrectCount += 1
+      }
     }
   })
+
+  // Basic scoring: 1 mark per question (Update logic here if you implement negative marking)
+  const score = correctCount 
 
   // 4. Save Attempt
   const attemptPayload = {
@@ -72,9 +81,12 @@ export async function submitExamAction(
     throw new Error('Failed to save attempt')
   }
 
-  // 5. RETURN URL (Do not redirect here)
+  // 5. RETURN Data with Stats
   return { 
     success: true, 
-    redirectUrl: `/courses/${courseId}/subjects/${subjectId}/test/${testType}/${examId}/result/${attempt.id}` 
+    redirectUrl: `/courses/${courseId}/subjects/${subjectId}/test/${testType}/${examId}/result/${attempt.id}`,
+    score: score,
+    correct: correctCount,
+    incorrect: incorrectCount
   }
 }
