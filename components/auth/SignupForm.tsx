@@ -2,10 +2,10 @@
 import Link from 'next/link'
 import { signup } from '@/app/auth/actions'
 import { useState } from 'react'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2, GraduationCap } from 'lucide-react' // Added GraduationCap icon
 import Image from 'next/image'
 import SearchSchoolInput from '@/components/signup/schoolSearchInput'
-import { toast } from "sonner" // Assuming you set up Sonner from previous steps
+import { toast } from "sonner"
 
 interface SignupFormProps {
   school?: { id: string; name: string } | null
@@ -15,11 +15,27 @@ export default function SignupForm({ school }: SignupFormProps) {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  // New State for Stream
+  const [selectedStream, setSelectedStream] = useState<string>("") 
 
   const handleSubmit = async (formData: FormData) => {
     setLoading(true)
     setError(null)
+
+    // Validate Stream Selection
+    if (!selectedStream) {
+      toast.error('Please select your stream (Medical, Non-Medical, etc.)')
+      setLoading(false)
+      return
+    }
+
+    // Manually append the stream to formData because 'select' value is managed by state
+    // (Though standard form submission captures it if 'name' attribute is present, explicit append is safer with controlled components in some Next.js patterns)
+    formData.append('stream', selectedStream)
+
     const result = await signup(formData)
+    
     if (result?.error) {
       setError(result.error)
       toast.error(result.error)
@@ -49,7 +65,7 @@ export default function SignupForm({ school }: SignupFormProps) {
             <div>
               <label className="block text-sm font-bold text-gray-900 mb-2">Full Name</label>
               <input 
-                name="fullName" 
+                name="fullName" // Ensure backend action uses 'fullName' or 'full_name' consistently. Previous action example used 'full_name'.
                 type="text" 
                 required 
                 className="w-full px-5 py-4 rounded-xl bg-gray-100 border-2 border-transparent focus:bg-white focus:border-orange-500 outline-none transition-all placeholder-gray-400 font-medium"
@@ -69,12 +85,37 @@ export default function SignupForm({ school }: SignupFormProps) {
               />
             </div>
 
-            {/* School Search Input (Controlled by props) */}
+            {/* School Search Input */}
             <div className="space-y-2">
                  <SearchSchoolInput 
                    prefilledSchool={school}
-                   readOnly={!!school} // If school exists, make it read-only
+                   readOnly={!!school} 
                  />
+            </div>
+
+            {/* --- NEW: Stream Selection Dropdown --- */}
+            <div>
+              <label className="block text-sm font-bold text-gray-900 mb-2">Stream</label>
+              <div className="relative">
+                <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                <select
+                  name="stream"
+                  value={selectedStream}
+                  onChange={(e) => setSelectedStream(e.target.value)}
+                  className="w-full pl-12 pr-5 py-4 rounded-xl bg-gray-100 border-2 border-transparent focus:bg-white focus:border-orange-500 outline-none transition-all appearance-none cursor-pointer font-medium text-gray-700"
+                  required
+                >
+                  <option value="" disabled>Select your stream</option>
+                  <option value="Non-Medical">Non-Medical (PCM)</option>
+                  <option value="Medical">Medical (PCB)</option>
+                  <option value="Commerce">Commerce</option>
+                  <option value="Arts">Arts / Humanities</option>
+                </select>
+                {/* Custom Arrow Icon (optional) */}
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+              </div>
             </div>
 
             {/* Contact */}
@@ -89,7 +130,7 @@ export default function SignupForm({ school }: SignupFormProps) {
               />
             </div>
 
-            {/* Address (Compulsory) */}
+            {/* Address */}
             <div>
               <label className="block text-sm font-bold text-gray-900 mb-2">Full Address</label>
               <textarea 
@@ -137,15 +178,7 @@ export default function SignupForm({ school }: SignupFormProps) {
             </button>
 
             {/* Google Button */}
-            <div className="text-center pt-2">
-               <button 
-                type="button"
-                className="w-full bg-white border-2 border-gray-200 text-gray-700 font-bold py-3.5 rounded-full hover:bg-gray-50 transition-colors flex items-center justify-center gap-3 text-sm"
-              >
-                {/* SVG Icons... */}
-                <span className="flex items-center gap-2">Sign up with Google</span>
-              </button>
-            </div>
+            
           </form>
         </div>
 

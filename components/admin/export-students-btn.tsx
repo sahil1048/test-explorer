@@ -8,6 +8,7 @@ interface Student {
   phone?: string;
   phone_no?: string;
   address?: string;
+  stream?: string;
   created_at: string;
   organizations?: {
     name: string;
@@ -22,6 +23,7 @@ export default function ExportStudentsBtn({ data }: { data: any[] }) {
       "Email",
       "Phone",
       "Address",
+      "Stream",
       "School/Organization",
     ];
 
@@ -31,6 +33,7 @@ export default function ExportStudentsBtn({ data }: { data: any[] }) {
       student.email || "",
       student.phone || student.phone_no || "",
       student.address || "",
+      student.stream || "N/A",
       student.organizations?.name || "Individual",
     ]);
 

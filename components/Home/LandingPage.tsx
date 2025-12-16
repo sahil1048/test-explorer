@@ -5,15 +5,15 @@ import { getSchoolBySubdomain } from "@/lib/db/school";
 import HeroMain from "@/components/landing/hero-main";
 import HeroSchool from "@/components/landing/hero-school";
 
-// Import Footer
+// Import Shared Content Sections
 import Footer from "@/components/landing/footer";
 import Features from "@/components/landing/features";
 import Steps from "@/components/landing/steps";
 import Testimonials from "@/components/landing/testimonials";
 import Faq from "@/components/landing/faq";
 
-// Import Shared Content Sections
-
+// Import New Section
+import SchoolUpdates from "@/components/landing/school-updates"; // <--- IMPORT THIS
 
 export default async function LandingPage() {
   // 1. Detect Subdomain Logic
@@ -32,13 +32,7 @@ export default async function LandingPage() {
     if (parts.length >= 3) subdomain = parts[0];
   }
 
-
   // 3. Fetch School Data
-  if (subdomain && subdomain !== "www" && subdomain !== "test-explorer") {
-    schoolData = await getSchoolBySubdomain(subdomain);
-  }
-
-  // Fetch School Data if valid subdomain found
   if (subdomain && subdomain !== "www" && subdomain !== "test-explorer") {
     schoolData = await getSchoolBySubdomain(subdomain);
   }
@@ -47,22 +41,21 @@ export default async function LandingPage() {
     <main className="flex flex-col min-h-screen">
       
       {/* === SECTION 1: DYNAMIC HERO === */}
-      {/* If we have school data, show the School Hero. Otherwise, show Main Hero. */}
       {schoolData ? (
         <HeroSchool school={schoolData} />
       ) : (
         <HeroMain />
       )}
 
+      {/* === SECTION 1.5: SCHOOL SPECIFIC UPDATES (Only on Subdomain) === */}
+      {schoolData && (
+        <SchoolUpdates school={schoolData} />
+      )}
+
       {/* === SECTION 2: SHARED CONTENT === */}
-      {/* These sections appear on BOTH the main site and school sites */}
-
-        <Features />
-
-        <Steps />
-
-        <Testimonials />
-
+      <Features />
+      <Steps />
+      <Testimonials />
       <Faq />
 
       {/* === SECTION 3: FOOTER === */}

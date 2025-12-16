@@ -62,6 +62,7 @@ export async function signup(formData: FormData) {
   const fullName = formData.get('fullName') as string
   const phone = formData.get('phone') as string
   const address = formData.get('address') as string // <--- NEW: Get Address
+  const stream = formData.get('stream') as string
   
   // Logic Changed: Prefer 'schoolId' (UUID) from the hidden input in SchoolSearchInput
   const schoolId = formData.get('schoolId') as string
@@ -78,6 +79,9 @@ export async function signup(formData: FormData) {
       data: {
         full_name: fullName,
         phone: phone,
+        organization_id: schoolId, // Assuming you map 'school_id' to 'organization_id' in your schema
+        stream: stream, // <--- Saving Stream to user_metadata
+        role: 'student',
       },
     },
   })
@@ -96,6 +100,7 @@ export async function signup(formData: FormData) {
         address: address, // <--- NEW: Save Address
         role: 'student',
         organization_id: organizationId,
+        stream: stream, // <--- NEW: Save Stream
       })
   }
 
