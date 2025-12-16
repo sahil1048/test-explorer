@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { Phone, MapPin, ArrowLeft, User } from 'lucide-react'
+import { Phone, MapPin, ArrowLeft, User, GraduationCap } from 'lucide-react'
 import Link from 'next/link'
 import EnrollmentManager from '@/components/admin/enrollment-manager'
 import ExportStudentsBtn from '@/components/admin/export-students-btn' // Import Export Btn
@@ -39,7 +39,7 @@ export default async function SchoolStudentsPage({
   // 3. Fetch Data
   const { data: allSubjects } = await supabase
     .from('subjects')
-    .select('id, title, courses(title)')
+    .select('*')
     .order('title')
 
   const { data: rawStudents } = await dbQuery
@@ -100,6 +100,7 @@ if (sort === 'name_asc') {
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-200">
                 <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider">Student Name</th>
+                <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider">Stream</th>
                 <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider">Phone Number</th>
                 <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider">Address</th>
                 <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Access Control</th>
@@ -119,7 +120,7 @@ if (sort === 'name_asc') {
                     {/* NAME */}
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center text-gray-600 font-bold border border-gray-200 shadow-sm">
+                        <div className="w-10 h-10 bg-linear-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center text-gray-600 font-bold border border-gray-200 shadow-sm">
                           {student.full_name?.charAt(0).toUpperCase() || <User className="w-5 h-5" />}
                         </div>
                         <div>
@@ -127,6 +128,14 @@ if (sort === 'name_asc') {
                            <div className="text-xs text-gray-400">{student.email}</div>
                         </div>
                       </div>
+                    </td>
+
+                    <td className="px-8 py-5">
+                       <div className="flex items-center gap-2 text-sm font-medium text-gray-700 bg-blue-50 px-3 py-1 rounded-full w-fit border border-blue-100">
+                         <GraduationCap className="w-4 h-4 text-blue-500" />
+                         {/* @ts-ignore */}
+                         {student.stream || <span className="text-gray-400">N/A</span>}
+                       </div>
                     </td>
                     
                     {/* PHONE */}

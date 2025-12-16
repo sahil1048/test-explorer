@@ -29,7 +29,7 @@ export default function HeroSchool({ school }: { school: any }) {
         <Image
           src={heroImage}
           alt={`${school.name} Campus`}
-          fill
+            fill
           className="object-cover"
           priority
         />
@@ -37,70 +37,7 @@ export default function HeroSchool({ school }: { school: any }) {
       </div>
 
       {/* 2. Content Container */}
-      <div className=" w-full px-4 relative z-10 h-full py-12 flex flex-col justify-center">
-        <div className="flex justify-end items-center h-full">
-
-          {/* Right: Glassmorphism Notice Board */}
-          <div className="w-full max-w-lg h-full">
-            
-            <div className="bg-white/90 backdrop-blur-lg rounded-[2.5rem] p-8 shadow-2xl shadow-black/10 border border-white/40 flex flex-col max-h-[800px]">
-              
-              {/* Header (Fixed) */}
-              <div className="flex items-center gap-3 mb-6 shrink-0">
-                <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm">
-                  <Bell className="w-6 h-6 animate-pulse" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-xl text-gray-900">Notice Board</h3>
-                  <p className="text-sm text-gray-500 font-medium">Latest updates</p>
-                </div>
-              </div>
-
-              {/* Scrolling Content Area */}
-              <div className="relative overflow-hidden flex-1 h-[300px] -mx-2 px-2"> 
-                
-                {/* The Animated Wrapper */}
-                <div className={styles.scrollContainer}>
-                  {scrollingList.map((item, i) => (
-                    <div 
-                      key={`${item.id}-${i}`} 
-                      className="group p-4 rounded-2xl bg-white/60 hover:bg-blue-50 transition-colors cursor-pointer border border-white/50 hover:border-blue-200 shadow-sm shrink-0"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="px-2 py-1 bg-white rounded-md text-[10px] font-bold text-gray-600 border border-gray-100 shadow-sm">
-                          {item.tag || "NOTICE"}
-                        </span>
-                        <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${
-                          item.color === 'purple' ? 'text-purple-600 bg-purple-50' : 
-                          item.color === 'red' ? 'text-red-600 bg-red-50' : 
-                          'text-blue-600 bg-blue-50'
-                        }`}>
-                          {item.date || new Date(item.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <h4 className="text-sm font-bold text-gray-800 leading-tight mb-1">
-                        {item.title}
-                      </h4>
-                      {item.content && (
-                        <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
-                          {item.content}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Fade Gradients for smooth top/bottom edges */}
-                <div className="absolute top-0 left-0 right-0 h-6 bg-linear-to-b from-white/80 to-transparent z-10 pointer-events-none rounded-t-lg"/>
-                <div className="absolute bottom-0 left-0 right-0 h-6 bg-linear-to-t from-white/80 to-transparent z-10 pointer-events-none rounded-b-lg"/>
-
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-      </div>
+      
     </section>
   );
 }

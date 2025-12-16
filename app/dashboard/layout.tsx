@@ -14,7 +14,8 @@ import {
   Layers,
   Megaphone,
   GraduationCap,
-  Newspaper
+  Newspaper,
+  Trophy
 } from 'lucide-react'
 import UserNav from '@/components/Navbar/UserNav' 
 
@@ -115,6 +116,12 @@ export default async function DashboardLayout({
       icon: Megaphone, 
       roles: ['school_admin'] 
     },
+    {
+      label: 'Leaderboard', // <--- NEW
+      href: '/dashboard/leaderboard',
+      icon: Trophy,
+      roles: ['school_admin']
+    },
 
     // --- Super Admin Links ---
     {
@@ -136,21 +143,21 @@ export default async function DashboardLayout({
       roles: ['super_admin']
     },
     {
-      label: 'Courses',
+      label: 'Exams',
       href: '/dashboard/admin/courses',
       icon: BookOpen,
+      roles: ['super_admin']
+    },
+    {
+      label: 'Courses',
+      href: '/dashboard/admin/exams',
+      icon: FileText,
       roles: ['super_admin']
     },
     {
       label: 'Subjects',
       href: '/dashboard/admin/subjects',
       icon: Library,
-      roles: ['super_admin']
-    },
-    {
-      label: 'Exams',
-      href: '/dashboard/admin/exams',
-      icon: FileText,
       roles: ['super_admin']
     },
     {
@@ -163,6 +170,12 @@ export default async function DashboardLayout({
       label: 'Blogs',
       href: '/dashboard/admin/blogs',
       icon: Newspaper,
+      roles: ['super_admin']
+    },
+    {
+      label: 'Leaderboard', // <--- NEW
+      href: '/dashboard/admin/leaderboard',
+      icon: Trophy,
       roles: ['super_admin']
     },
   ]

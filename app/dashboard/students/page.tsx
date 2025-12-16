@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Phone, Calendar, User } from 'lucide-react'
+import { Phone, Calendar, User, GraduationCap } from 'lucide-react'
 import SchoolStudentsFilter from './school-students-filter'
 
 export default async function SchoolStudentsPage({
@@ -86,6 +86,7 @@ export default async function SchoolStudentsPage({
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Student Name</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Stream</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Phone Number</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Joined Date</th>
               </tr>
@@ -106,6 +107,13 @@ export default async function SchoolStudentsPage({
                           {student.full_name.charAt(0).toUpperCase()}
                         </div>
                         <span className="font-bold text-gray-900">{student.full_name}</span>
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 font-medium">
+                        <GraduationCap className="w-4 h-4 text-gray-400" />
+                        {student.stream || <span className="text-gray-400">N/A</span>}
                       </div>
                     </td>
                     
