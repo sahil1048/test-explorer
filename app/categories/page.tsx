@@ -1,48 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { 
-  ArrowUpRight, 
-  PenTool, 
-  Stethoscope, 
-  Briefcase, 
-  Scale, 
-  GraduationCap,
-  Sparkles,
-  Globe 
-} from 'lucide-react'
-import UserNav from '@/components/Navbar/UserNav' // Import UserNav
-import { getBranding } from '@/lib/get-branding'
-
-// Map string keys from DB to actual components
-const ICON_MAP: Record<string, any> = {
-  PenTool, Stethoscope, Briefcase, Scale, GraduationCap, Globe
-}
+import { ArrowUpRight, Sparkles, Layers } from 'lucide-react'
+import * as LucideIcons from 'lucide-react' // <--- 1. Import all icons
 
 export default async function CategoriesPage() {
   const supabase = await createClient()
 
-  const branding = await getBranding()
-
-  // 1. Fetch User Session & Profile (For Navbar)
-  const { data: { user } } = await supabase.auth.getUser()
-  let profile = null
-
-  if (user) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*') // Fetch necessary fields
-      .eq('id', user.id)
-      .single()
-    
-    // Fallback profile object if DB fetch fails but auth exists
-    profile = data || { 
-      full_name: user.email?.split('@')[0] || 'User', 
-      role: 'student', 
-      school_id: null 
-    }
-  }
-
-  // 2. Fetch Categories
+  // 1. Fetch Categories
   const { data: categories } = await supabase
     .from('categories')
     .select('*')
@@ -68,20 +32,36 @@ export default async function CategoriesPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {categories?.map((cat) => {
-            const Icon = ICON_MAP[cat.icon_key] || Globe
+            // --- 2. DYNAMIC ICON LOGIC ---
+            // @ts-ignore
+            const Icon = LucideIcons[cat.icon_key] || Layers
+
+            // --- 3. DYNAMIC COLOR LOGIC ---
+            const rawBg = cat.bg_color || 'bg-gray-50'
+            // Check if it is a custom hex class like "bg-[#123456]"
+            const isArbitrary = rawBg.startsWith('bg-[#') && rawBg.endsWith(']')
+            // Extract the hex code if it is arbitrary, otherwise null
+            const hexColor = isArbitrary ? rawBg.slice(4, -1) : null
             
+            // If we have a hex, remove the class. If not, keep the Tailwind class.
+            const finalClass = hexColor ? '' : rawBg
+            const finalStyle = hexColor ? { backgroundColor: hexColor } : undefined
+
             return (
               <Link 
                 key={cat.id} 
                 href={`/categories/${cat.id}`}
                 className="group relative block"
               >
-                <div className={`
-                  relative z-10 h-full p-8 rounded-[2.5rem] border-2 border-black 
-                  transition-all duration-300 ease-out
-                  group-hover:-translate-y-2 group-hover:translate-x-1 group-hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]
-                  ${cat.bg_color || 'bg-gray-50'}
-                `}>
+                <div 
+                  className={`
+                    relative z-10 h-full p-8 rounded-[2.5rem] border-2 border-black 
+                    transition-all duration-300 ease-out
+                    group-hover:-translate-y-2 group-hover:translate-x-1 group-hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]
+                    ${finalClass} 
+                  `}
+                  style={finalStyle} // <--- Apply Hex Color Here
+                >
                   <div className="flex justify-between items-start mb-8">
                     <div className="w-14 h-14 bg-white border-2 border-black rounded-2xl flex items-center justify-center">
                       <Icon className="w-7 h-7 text-black" />

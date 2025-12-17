@@ -15,7 +15,8 @@ import {
   Megaphone,
   GraduationCap,
   Newspaper,
-  Trophy
+  Trophy,
+  TagIcon
 } from 'lucide-react'
 import UserNav from '@/components/Navbar/UserNav' 
 
@@ -164,6 +165,12 @@ export default async function DashboardLayout({
       label: 'Users',
       href: '/dashboard/admin/users',
       icon: Users,
+      roles: ['super_admin']
+    },
+    {
+      label: 'Tags',
+      href: '/dashboard/admin/tags',
+      icon: TagIcon,
       roles: ['super_admin']
     },
     {

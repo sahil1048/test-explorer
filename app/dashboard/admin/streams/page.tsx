@@ -2,6 +2,15 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Plus, Pencil, Trash2, Layers } from 'lucide-react'
 import { deleteStreamAction } from './actions'
+import * as LucideIcons from 'lucide-react' // Import icons for preview
+
+// Helper to render icon
+const DynamicIcon = ({ name, className }: { name: string, className?: string }) => {
+  // @ts-ignore
+  const IconComponent = LucideIcons[name]
+  if (!IconComponent) return <Layers className={className} />
+  return <IconComponent className={className} />
+}
 
 export default async function StreamsAdminPage() {
   const supabase = await createClient()
@@ -31,44 +40,66 @@ export default async function StreamsAdminPage() {
             <p className="text-gray-400 font-medium">No streams found. Add one to get started.</p>
           </div>
         ) : (
-          streams.map((stream) => (
-            <div key={stream.id} className="bg-white p-6 rounded-2xl border border-gray-200 flex justify-between items-center group hover:border-blue-400 transition-all shadow-sm">
-              <div className="flex items-center gap-4">
-                {/* Visual Indicator of Color */}
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center border-2 border-black/10 ${stream.bg_color || 'bg-gray-100'}`}>
-                  <span className="font-bold text-xs">{stream.order_index}</span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">{stream.title}</h3>
-                  <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
-                    <span className="bg-gray-100 px-2 py-0.5 rounded text-xs uppercase tracking-wide">
-                      Icon: {stream.icon_key}
-                    </span>
-                    <span>•</span>
-                    <span className="truncate max-w-xs">{stream.description}</span>
+          streams.map((stream) => {
+            // --- COLOR FIX LOGIC ---
+            const rawBg = stream.bg_color || 'bg-gray-100'
+            
+            // Check if it's our custom format: bg-[#123456]
+            const isArbitrary = rawBg.startsWith('bg-[#') && rawBg.endsWith(']')
+            
+            // If arbitrary, extract hex (#123456). If standard (bg-red-500), keep as class.
+            const hexColor = isArbitrary ? rawBg.slice(4, -1) : null
+            const finalClass = hexColor ? '' : rawBg
+            const finalStyle = hexColor ? { backgroundColor: hexColor } : undefined
+            // -----------------------
+
+            return (
+              <div key={stream.id} className="bg-white p-6 rounded-2xl border border-gray-200 flex justify-between items-center group hover:border-blue-400 transition-all shadow-sm">
+                <div className="flex items-center gap-4">
+                  
+                  {/* Visual Indicator with Fixed Color Logic */}
+                  <div 
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center border-2 border-black/10 ${finalClass}`}
+                    style={finalStyle}
+                  >
+                     {/* Show the actual icon instead of just the number */}
+                     <DynamicIcon name={stream.icon_key} className="w-5 h-5 text-gray-900 opacity-70" />
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">{stream.title}</h3>
+                    <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
+                      <span className="bg-gray-100 px-2 py-0.5 rounded text-xs uppercase tracking-wide">
+                        Order: {stream.order_index}
+                      </span>
+                      <span>•</span>
+                      <span className="bg-gray-100 px-2 py-0.5 rounded text-xs uppercase tracking-wide">
+                        Icon: {stream.icon_key}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                 <Link 
-                   href={`/dashboard/admin/streams/${stream.id}/edit`} 
-                   className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                 >
-                   <Pencil className="w-5 h-5" />
-                 </Link>
-                 <form action={deleteStreamAction}>
-                   <input type="hidden" name="id" value={stream.id} />
-                   <button 
-                     type="submit" 
-                     className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                
+                <div className="flex items-center gap-2">
+                   <Link 
+                     href={`/dashboard/admin/streams/${stream.id}/edit`} 
+                     className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                    >
-                     <Trash2 className="w-5 h-5" />
-                   </button>
-                 </form>
+                     <Pencil className="w-5 h-5" />
+                   </Link>
+                   <form action={deleteStreamAction}>
+                     <input type="hidden" name="id" value={stream.id} />
+                     <button 
+                       type="submit" 
+                       className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                     >
+                       <Trash2 className="w-5 h-5" />
+                     </button>
+                   </form>
+                </div>
               </div>
-            </div>
-          ))
+            )
+          })
         )}
       </div>
     </div>
