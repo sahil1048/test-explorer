@@ -10,7 +10,9 @@ export interface ExamData {
 }
 
 export interface UserData {
-  user_metadata?: {
-    full_name?: string
-  }
+  full_name?: string
+  email?: string
+  role?: string
+  phone?: string
+  stream?: string
 }

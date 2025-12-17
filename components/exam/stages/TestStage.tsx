@@ -124,7 +124,7 @@ export const TestStage = ({
               />
               <div className="font-bold text-black text-lg ml-2">
                 {/* DYNAMIC USER NAME */}
-                {user?.user_metadata?.full_name || "Candidate"}
+                {user?.full_name || "Candidate"}
               </div>
             </div>
   
