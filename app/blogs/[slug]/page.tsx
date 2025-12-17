@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Calendar, Clock, Share2, Facebook, Twitter, Linkedin, Copy } from 'lucide-react'
+import { ArrowLeft, Calendar, Clock, Share2 } from 'lucide-react'
 import { NewsletterWidget, RelatedArticles } from '@/components/blogs/blog-sidebar'
 import {
   Accordion,
@@ -52,13 +52,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     .limit(4)
     .order('created_at', { ascending: false })
 
-  // 3. Generate Table of Contents
+  // 3. Generate Table of Contents from HTML Content
   const toc = extractHeadings(blog.content || "");
 
-  // 4. Inject IDs into Content for Anchor Links (Simple Replace)
+  // 4. Inject IDs into Content for Anchor Links (Simple String Replacement)
   let processedContent = blog.content || "";
   toc.forEach(item => {
-    // This is a basic replacement. Ideally, use a parser like 'cheerio' or 'rehype' for production robustness.
+    // Basic replacement to add id attribute to h2 tags
     processedContent = processedContent.replace(
       `>${item.text}</h2>`, 
       ` id="${item.id}">${item.text}</h2>`
@@ -111,7 +111,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </div>
           </div>
 
-          {/* Table of Contents Box (Matches Screenshot 2) */}
+          {/* Table of Contents Box */}
           {toc.length > 0 && (
             <div className="bg-gray-50 rounded-2xl p-8 mb-10 border border-gray-100">
                <h3 className="font-bold text-lg text-gray-900 mb-4">Table of Contents</h3>
@@ -128,13 +128,20 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </div>
           )}
 
-          {/* HTML Content */}
+          {/* HTML Content (Rendered with Typography Styles) */}
           <article 
-            className="prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-p:text-gray-600 prose-p:leading-relaxed prose-li:text-gray-600 prose-strong:text-gray-900 prose-a:text-blue-600 prose-img:rounded-2xl prose-img:border prose-img:border-gray-100"
+            className="prose prose-lg max-w-none 
+              prose-headings:font-bold prose-headings:text-gray-900 
+              prose-p:text-gray-600 prose-p:leading-relaxed 
+              prose-li:text-gray-600 
+              prose-strong:text-gray-900 
+              prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
+              prose-img:rounded-2xl prose-img:border prose-img:border-gray-100
+              prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:bg-blue-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:not-italic"
             dangerouslySetInnerHTML={{ __html: processedContent }}
           />
 
-          {/* FAQ Section (Matches Screenshot 4) */}
+          {/* FAQ Section */}
           {blog.faqs && Array.isArray(blog.faqs) && blog.faqs.length > 0 && (
             <div className="mt-16 pt-10 border-t border-gray-200">
               <h3 className="text-2xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h3>
@@ -170,7 +177,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </div>
 
         </div>
-
 
         {/* --- SIDEBAR COLUMN (Right) --- */}
         <div className="lg:col-span-4">
