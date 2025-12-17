@@ -31,7 +31,6 @@ export default function MockTestInterface({
   const [questionStatus, setQuestionStatus] = useState<Record<string, string>>({}) 
   const [reportData, setReportData] = useState<any>(null)
 
-  // --- DATA VALIDATION ---
   if (!questions || questions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 font-sans">
@@ -46,7 +45,6 @@ export default function MockTestInterface({
     )
   }
 
-  // --- LOGIC & HANDLERS ---
   const currentQ = questions[currentQIndex]
 
   useEffect(() => {
@@ -92,7 +90,6 @@ export default function MockTestInterface({
   }
 
   const handleSubmit = async () => {
-    // 1. Calculate Results Locally for Immediate Feedback
     let correct = 0
     let incorrect = 0
     const totalQuestions = questions.length
@@ -102,36 +99,15 @@ export default function MockTestInterface({
     questions.forEach(q => {
       const userAnswerId = answers[q.id]
       if (userAnswerId) {
-        // Find if the selected option is correct
-        // Assuming your backend sends 'is_correct' flag in options or you verify differently
-        // Since we typically sanitize 'is_correct' from client for security, 
-        // real calculation usually happens on server. 
-        // BUT for this UI demo, I'll assume we calculate score based on server response or optimistic update.
-        
-        // FOR NOW: Let's rely on server action response to get the score if possible, 
-        // OR if you have is_correct in options:
         const selectedOpt = q.options.find(o => o.id === userAnswerId)
-        // Note: You need to ensure your 'questions' prop includes is_correct for this to work client-side
-        // If not, we wait for server action result.
       }
     })
 
-    // 2. Server Submission
     const timeTaken = ((exam.duration_minutes || 180) * 60) - timeLeft
     
-    // We expect the server action to return the result
     const result = await submitExamAction(examId, courseId, subjectId, answers, timeTaken, 'mock')
-    
-    // 3. Prepare Data for Report Modal
-    // If your server action returns the score/stats, use that.
-    // If not, we simulate it or calculate client side if data is available.
-    
-    // Mocking the result data structure based on the image if server response isn't ready
     const marksPerCorrect = 5 // Based on image
     const marksPerIncorrect = 1 // Negative marking
-    
-    // NOTE: This assumes 'result' from server contains calculated stats. 
-    // If not, you might need to fetch the attempt result.
     
     setReportData({
       score: result?.score || 0, // Replace with actual logic
@@ -145,7 +121,6 @@ export default function MockTestInterface({
     setStage('report')
   }
 
-  // --- RENDER ---
   return (
     <>
       {stage === 'instructions' && (

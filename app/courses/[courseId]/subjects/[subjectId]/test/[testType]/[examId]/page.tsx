@@ -16,6 +16,18 @@ export default async function TestPage({
 
   // 1. FETCH USER (REQUIRED for the Sidebar in Mock Interface)
   const { data: { user } } = await supabase.auth.getUser()
+
+  const { data: userData, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user?.identities?.map((id: any) => id.user_id)[0]) // Adjusted to get the correct user ID
+    .single()
+
+  if (profileError || !userData) {
+    console.error("Error fetching user profile:", profileError)
+    // Fallback: If profile missing, use auth data (though profile should exist)
+    // You might want to handle this differently (e.g., redirect to profile creation)
+  }
   
   if (!user) {
     return redirect('/login')
@@ -61,7 +73,7 @@ export default async function TestPage({
          courseId={courseId}
          subjectId={subjectId}
          examId={examId}
-         user={user} // <--- FIXED: Passed the user prop
+         user={userData} // <--- FIXED: Passed the user prop
       />
     )
   }

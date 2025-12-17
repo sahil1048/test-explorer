@@ -152,7 +152,7 @@ export const ConsentStage = ({ exam, user, onPrev, onStart }: Props) => {
 
                     {/* User Name */}
                     <div className="text-center font-bold text-black text-lg">
-                        {user?.user_metadata?.full_name || "Sahil Mor"}
+                        {user?.full_name || "Candidate"}
                     </div>
                 </div>
 
