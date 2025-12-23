@@ -21,7 +21,7 @@ export default function HeroMain() {
 
         {/* Headline */}
         <h1 className="text-6xl md:text-8xl font-black tracking-tight text-gray-900 mb-6 leading-tight">
-          Ace Your Exams <br />
+          Ace Your Entrance Exams <br />
           <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-pink-600">
             Without the Stress.
           </span>
