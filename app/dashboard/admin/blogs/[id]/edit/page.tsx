@@ -6,13 +6,32 @@ export default async function EditBlogPage({ params }: { params: Promise<{ id: s
   const supabase = await createClient()
   const { id } = await params
 
-  // Fetch Blog
+  // 1. Fetch Blog
   const { data: blog } = await supabase.from('blogs').select('*').eq('id', id).single()
   if (!blog) return notFound()
 
-  // Fetch Available Tags
+  // 2. Fetch Available Tags
   const { data: tags } = await supabase.from('tags').select('name').order('name')
-  const availableTags = tags?.map(t => t.name) || []
+  
+  // 3. Fetch The Blog's Author (or fallback to current user if none)
+  let authorProfile = null
+  if (blog.author_id) {
+     const { data } = await supabase.from('profiles').select('id, full_name').eq('id', blog.author_id).single()
+     authorProfile = data
+  } else {
+     // Fallback: Current Admin
+     const { data: { user } } = await supabase.auth.getUser()
+     if (user) {
+        const { data } = await supabase.from('profiles').select('id, full_name').eq('id', user.id).single()
+        authorProfile = data
+     }
+  }
 
-  return <BlogForm blog={blog} availableTags={availableTags} />
+  return (
+    <BlogForm 
+      blog={blog} 
+      availableTags={tags?.map(t => t.name) || []}
+      defaultAuthor={authorProfile}
+    />
+  )
 }

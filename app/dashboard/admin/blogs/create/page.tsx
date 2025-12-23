@@ -4,9 +4,26 @@ import { createClient } from '@/lib/supabase/server'
 export default async function CreateBlogPage() {
   const supabase = await createClient()
   
-  // Fetch available tags
+  // 1. Fetch available tags
   const { data: tags } = await supabase.from('tags').select('name').order('name')
-  const availableTags = tags?.map(t => t.name) || []
+  
+  // 2. Fetch Current Logged-in Admin
+  const { data: { user } } = await supabase.auth.getUser()
+  let currentUserProfile = null
 
-  return <BlogForm availableTags={availableTags} />
+  if (user) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .eq('id', user.id)
+      .single()
+    currentUserProfile = data
+  }
+
+  return (
+    <BlogForm 
+      availableTags={tags?.map(t => t.name) || []} 
+      defaultAuthor={currentUserProfile} // Pass current user
+    />
+  )
 }
