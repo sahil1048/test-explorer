@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { ArrowLeft, BookOpen, CheckCircle, ChevronRight, List } from 'lucide-react'
+import { ArrowLeft, BookOpen, ChevronRight, List, Lock } from 'lucide-react'
 import { notFound, redirect } from 'next/navigation'
 import QuizInterface from '@/components/Courses/QuizInterface' 
+import AccessDenied from '@/components/ui/access-denied'
 
 export default async function PrepModulePage({ 
   params 
@@ -11,8 +12,12 @@ export default async function PrepModulePage({
 }) {
   const supabase = await createClient()
   const { courseId, subjectId, moduleId } = await params
+
+  // 1. Authenticate User
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return redirect('/login')
   
-  // 1. Fetch Current Module Details
+  // 2. Fetch Current Module Details (Needed for Title & 404 check)
   const { data: moduleData } = await supabase
     .from('prep_modules')
     .select('title, description')
@@ -21,7 +26,41 @@ export default async function PrepModulePage({
 
   if (!moduleData) return notFound()
 
-  // 2. Fetch Questions & Options
+  // 3. CHECK ACCESS (Freemium Logic)
+  const { data: enrollment } = await supabase
+    .from('student_enrollments')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('subject_id', subjectId)
+    .single()
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  const isAdmin = profile?.role === 'super_admin' || profile?.role === 'school_admin'
+  const hasFullAccess = !!enrollment || isAdmin
+
+  // 🔒 GATEKEEPING: If no full access, check if this module is in the "Free" tier (Top 2)
+  if (!hasFullAccess) {
+    const { data: allowedModules } = await supabase
+       .from('prep_modules')
+       .select('id')
+       .eq('subject_id', subjectId)
+       .eq('is_published', true)
+       .order('created_at', { ascending: true }) // Must match Subject Page sort
+       .limit(2)
+
+    const isAllowed = allowedModules?.some(m => m.id === moduleId)
+
+    if (!isAllowed) {
+       return <AccessDenied subjectTitle={moduleData.title} /> 
+    }
+  }
+
+  // 4. Fetch Questions
   const { data: questions } = await supabase
     .from('questions')
     .select(`
@@ -33,7 +72,7 @@ export default async function PrepModulePage({
     .eq('module_id', moduleId)
     .order('order_index', { ascending: true })
 
-  // 3. NEW: Fetch All Modules for Sidebar Navigation
+  // 5. Fetch All Modules for Sidebar
   const { data: allModules } = await supabase
     .from('prep_modules')
     .select('id, title')
@@ -64,6 +103,13 @@ export default async function PrepModulePage({
                  </h1>
              </div>
           </div>
+          
+          {/* Freemium Badge */}
+          {!hasFullAccess && (
+            <div className="hidden md:flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-500 text-xs font-bold rounded-full border border-gray-200">
+               <Lock className="w-3 h-3" /> Preview Mode
+            </div>
+          )}
         </div>
       </header>
 
@@ -81,6 +127,25 @@ export default async function PrepModulePage({
             <div className="max-h-[calc(100vh-200px)] overflow-y-auto p-2 space-y-1">
               {allModules?.map((mod, index) => {
                 const isActive = mod.id === moduleId
+                // Determine lock status for sidebar items
+                const isLocked = !hasFullAccess && index >= 2
+
+                if (isLocked) {
+                   return (
+                    <div 
+                      key={mod.id} 
+                      className="group flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-gray-400 cursor-not-allowed opacity-70"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold bg-gray-100">
+                          <Lock className="w-3 h-3" />
+                        </span>
+                        <span className="line-clamp-1">{mod.title}</span>
+                      </div>
+                    </div>
+                   )
+                }
+
                 return (
                   <Link 
                     key={mod.id} 

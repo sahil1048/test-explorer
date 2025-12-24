@@ -1,9 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { ArrowLeft, BookOpen } from 'lucide-react'
+import { ArrowLeft, BookOpen, Lock } from 'lucide-react'
 import { notFound, redirect } from 'next/navigation'
 import SubjectContent from '@/components/Courses/SubjectContent'
-import AccessDenied from '@/components/ui/access-denied' // Ensure this path matches where you saved the component
 
 export default async function SubjectDetailsPage({ 
   params,
@@ -23,7 +22,6 @@ export default async function SubjectDetailsPage({
   if (!user) return redirect('/login')
 
   // 2. Fetch Subject & Course Info
-  // We explicitly fetch title to display it on the Access Denied screen if needed
   const { data: subject } = await supabase
     .from('subjects')
     .select(`
@@ -36,15 +34,14 @@ export default async function SubjectDetailsPage({
   if (!subject) return notFound()
 
   // 3. CHECK ENROLLMENT STATUS
-  // Check if a record exists in 'student_enrollments' for this user + subject
   const { data: enrollment } = await supabase
     .from('student_enrollments')
     .select('id')
-    .eq('user_id', user.id) // user.id is text (from auth/profiles)
-    .eq('subject_id', subjectId) // subjectId is uuid
+    .eq('user_id', user.id)
+    .eq('subject_id', subjectId)
     .single()
 
-  // 4. CHECK USER ROLE (Admins bypass enrollment checks)
+  // 4. CHECK USER ROLE
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
@@ -53,13 +50,8 @@ export default async function SubjectDetailsPage({
 
   const isAdmin = profile?.role === 'super_admin' || profile?.role === 'school_admin'
 
-  // 5. GATEKEEPING LOGIC
-  // If user is NOT enrolled AND NOT an admin -> Deny Access
-  if (!enrollment && !isAdmin) {
-    return <AccessDenied subjectTitle={subject.title} />
-  }
-
-  // --- ACCESS GRANTED BELOW THIS LINE ---
+  // 5. DETERMINE ACCESS LEVEL (FREEMIUM LOGIC)
+  const hasFullAccess = !!enrollment || isAdmin
 
   // Handle Supabase Relation Array/Object weirdness for Course Title
   // @ts-ignore
@@ -68,12 +60,12 @@ export default async function SubjectDetailsPage({
     ? courseData[0]?.title 
     : courseData?.title
 
-  // 6. Fetch Page Content (Only runs if access is granted)
+  // 6. Fetch Page Content (Fetching ALL content + Question Counts)
   const [modulesRes, practiceRes, mockRes] = await Promise.all([
     // A. Prep Modules
     supabase
       .from('prep_modules')
-      .select('*')
+      .select('*, questions(count)')
       .eq('subject_id', subjectId)
       .eq('is_published', true)
       .order('created_at', { ascending: true }),
@@ -81,7 +73,7 @@ export default async function SubjectDetailsPage({
     // B. Practice Tests
     supabase
       .from('practice_tests')
-      .select('*')
+      .select('*, questions(count)')
       .eq('subject_id', subjectId)
       .eq('is_published', true)
       .order('created_at', { ascending: false }),
@@ -89,12 +81,22 @@ export default async function SubjectDetailsPage({
     // C. Mock Tests
     supabase
       .from('exams')
-      .select('*')
+      .select('*, questions(count)')
       .eq('subject_id', subjectId)
       .eq('category', 'mock')
       .eq('is_published', true)
       .order('created_at', { ascending: false })
   ])
+
+  // Helper to extract count safely
+  const formatData = (data: any[] | null) => {
+    if (!data) return []
+    return data.map((item) => ({
+      ...item,
+      // Supabase returns questions: [{ count: 5 }]
+      question_count: item.questions?.[0]?.count || 0
+    }))
+  }
 
   const backLink = from === 'dashboard' 
     ? '/dashboard/my-courses' 
@@ -126,6 +128,13 @@ export default async function SubjectDetailsPage({
               <BookOpen className="w-6 h-6 text-blue-600" />
             </div>
             <span className="text-sm font-bold text-blue-600 uppercase tracking-widest">Subject View</span>
+            
+            {!hasFullAccess && (
+              <div className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full border border-gray-200">
+                <Lock className="w-3 h-3" />
+                Free Preview Mode
+              </div>
+            )}
           </div>
           <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tight">
             {subject.title}
@@ -133,11 +142,12 @@ export default async function SubjectDetailsPage({
         </div>
 
         <SubjectContent 
-          modules={modulesRes.data || []}
-          practiceTests={practiceRes.data || []}
-          mockTests={mockRes.data || []}
+          modules={formatData(modulesRes.data)}
+          practiceTests={formatData(practiceRes.data)}
+          mockTests={formatData(mockRes.data)}
           courseId={courseId}
           subjectId={subjectId}
+          hasFullAccess={hasFullAccess} 
         />
       </main>
     </div>

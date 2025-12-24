@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
-// Ensure this path matches where you keep your component. 
-// If it is in the same folder as page.tsx, use './mock-interface'
+import AccessDenied from '@/components/ui/access-denied'
+// Ensure these paths match your project structure
 import MockTestInterface from '../../mock/[examId]/MockTestInterface' 
 import TestInterface from '@/components/Courses/TestInterface' 
 import { submitExamAction } from './actions' 
@@ -14,26 +14,67 @@ export default async function TestPage({
   const supabase = await createClient()
   const { courseId, subjectId, testType, examId } = await params
 
-  // 1. FETCH USER (REQUIRED for the Sidebar in Mock Interface)
+  // 1. AUTHENTICATE USER
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return redirect('/login')
 
-  const { data: userData, error: profileError } = await supabase
+  // 2. FETCH USER PROFILE (For Role Check & Mock Interface)
+  // Using user.id directly as it's standard for Supabase relations
+  const { data: userData } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', user?.identities?.map((id: any) => id.user_id)[0]) // Adjusted to get the correct user ID
+    .eq('id', user.id)
     .single()
 
-  if (profileError || !userData) {
-    console.error("Error fetching user profile:", profileError)
-    // Fallback: If profile missing, use auth data (though profile should exist)
-    // You might want to handle this differently (e.g., redirect to profile creation)
-  }
-  
-  if (!user) {
-    return redirect('/login')
+  // 3. CHECK ACCESS (Freemium Logic)
+  // A. Check Enrollment
+  const { data: enrollment } = await supabase
+    .from('student_enrollments')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('subject_id', subjectId)
+    .single()
+
+  // B. Check Admin Role
+  const isAdmin = userData?.role === 'super_admin' || userData?.role === 'school_admin'
+  const hasFullAccess = !!enrollment || isAdmin
+
+  // 🔒 GATEKEEPING: If no full access, check if this test is in the "Free" tier (Top 2)
+  if (!hasFullAccess) {
+     let isAllowed = false
+
+     if (testType === 'practice') {
+        // Fetch top 2 practice tests (Free Tier)
+        const { data: allowedTests } = await supabase
+           .from('practice_tests')
+           .select('id')
+           .eq('subject_id', subjectId)
+           .eq('is_published', true)
+           .order('created_at', { ascending: false }) // Must match Subject Page sort order
+           .limit(2)
+        
+        isAllowed = allowedTests?.some(t => t.id === examId) || false
+     } 
+     else if (testType === 'mock') {
+        // Fetch top 2 mock tests (Free Tier)
+        const { data: allowedTests } = await supabase
+           .from('exams')
+           .select('id')
+           .eq('subject_id', subjectId)
+           .eq('category', 'mock')
+           .eq('is_published', true)
+           .order('created_at', { ascending: false }) // Must match Subject Page sort order
+           .limit(2)
+           
+        isAllowed = allowedTests?.some(t => t.id === examId) || false
+     }
+
+     if (!isAllowed) {
+        return <AccessDenied subjectTitle="Restricted Test" />
+     }
   }
 
-  // 2. FETCH EXAM DATA
+  // 4. FETCH EXAM DATA
   let examData = null
   let questionsData = null
   
@@ -64,7 +105,7 @@ export default async function TestPage({
 
   if (!examData) return notFound()
 
-  // 3. RENDER MOCK INTERFACE
+  // 5. RENDER MOCK INTERFACE
   if (testType === 'mock') {
     return (
       <MockTestInterface 
@@ -73,12 +114,12 @@ export default async function TestPage({
          courseId={courseId}
          subjectId={subjectId}
          examId={examId}
-         user={userData} // <--- FIXED: Passed the user prop
+         user={userData} 
       />
     )
   }
 
-  // 4. RENDER STANDARD PRACTICE INTERFACE
+  // 6. RENDER STANDARD PRACTICE INTERFACE
   const bindedSubmitAction = async (answers: Record<string, string>, timeTaken: number) => {
     'use server'
     return await submitExamAction(examId, courseId, subjectId, answers, timeTaken, testType)

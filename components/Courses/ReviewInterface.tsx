@@ -28,8 +28,29 @@ export default function ReviewInterface({
   userAnswers,
   backLink 
 }: ReviewInterfaceProps) {
+  
+  // 1. GUARD CLAUSE: Handle empty/undefined questions array to prevent crash
+  if (!questions || questions.length === 0) {
+    return (
+      <div className="flex flex-col h-screen items-center justify-center bg-[#FDF8F6] font-sans text-gray-900">
+        <div className="text-center p-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Questions Available</h2>
+          <p className="text-gray-500 mb-6">There are no questions to review for this test.</p>
+          <Link 
+            href={backLink} 
+            className="px-6 py-3 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-all inline-flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" /> Go Back
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // 2. State
   const [currentQIndex, setCurrentQIndex] = useState(0)
   
+  // 3. Derived Data (Safe now due to guard clause)
   const currentQ = questions[currentQIndex]
   const userSelectedOptionId = userAnswers[currentQ.id]
   const isSkipped = !userSelectedOptionId
@@ -111,9 +132,6 @@ export default function ReviewInterface({
                     style = "border-red-500 bg-red-50 text-red-900 ring-1 ring-red-500"
                     icon = <XCircle className="w-5 h-5 text-red-600 fill-red-100" />
                   } else if (isSelected) {
-                     // Selected but implicitly covered by 'isCorrect' above, 
-                     // essentially this case shouldn't be hit visually if logic is right, 
-                     // but good for fallback
                      style = "border-gray-900 bg-gray-50"
                   } else {
                      style = "opacity-60" // Dim non-selected, wrong answers
