@@ -33,7 +33,7 @@ export default async function LandingPage() {
   }
 
   // 3. Fetch School Data
-  if (subdomain && subdomain !== "www" && subdomain !== "test-explorer") {
+  if (subdomain && subdomain !== "www" && subdomain !== "testexplorer") {
     schoolData = await getSchoolBySubdomain(subdomain);
   }
 
