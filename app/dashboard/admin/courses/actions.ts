@@ -24,8 +24,7 @@ export async function createCourseAction(formData: FormData) {
 
   if (error) throw new Error(error.message)
 
-  revalidatePath('/dashboard/admin/courses')
-  redirect('/dashboard/admin/courses')
+  revalidatePath('/dashboard/admin/manage-content')
 }
 
 // Update Course
@@ -50,8 +49,7 @@ export async function updateCourseAction(formData: FormData) {
 
   if (error) throw new Error(error.message)
 
-  revalidatePath('/dashboard/admin/courses')
-  redirect('/dashboard/admin/courses')
+    revalidatePath('/dashboard/admin/manage-content')
 }
 
 // Delete Course
@@ -62,5 +60,5 @@ export async function deleteCourseAction(formData: FormData) {
   const { error } = await supabase.from('courses').delete().eq('id', id)
   
   if (error) throw new Error(error.message)
-  revalidatePath('/dashboard/admin/courses')
+    revalidatePath('/dashboard/admin/manage-content')
 }

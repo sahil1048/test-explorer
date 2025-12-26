@@ -20,9 +20,7 @@ export async function createStreamAction(formData: FormData) {
 
   if (error) throw new Error(error.message)
 
-  revalidatePath('/dashboard/admin/streams')
-  revalidatePath('/categories') // Update the public page too
-  redirect('/dashboard/admin/streams')
+  revalidatePath('/dashboard/admin/manage-content')
 }
 
 // Update Stream
@@ -43,9 +41,7 @@ export async function updateStreamAction(formData: FormData) {
 
   if (error) throw new Error(error.message)
 
-  revalidatePath('/dashboard/admin/streams')
-  revalidatePath('/categories')
-  redirect('/dashboard/admin/streams')
+  revalidatePath('/dashboard/admin/manage-content')
 }
 
 // Delete Stream
@@ -57,6 +53,5 @@ export async function deleteStreamAction(formData: FormData) {
   
   if (error) throw new Error(error.message)
   
-  revalidatePath('/dashboard/admin/streams')
-  revalidatePath('/categories')
+  revalidatePath('/dashboard/admin/manage-content')
 }

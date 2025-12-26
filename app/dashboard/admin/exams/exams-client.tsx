@@ -2,118 +2,197 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Plus, Pencil, Trash2, FileText, PlayCircle, Trophy, BookOpen } from 'lucide-react'
+import { 
+  Plus, Pencil, Trash2, 
+  PlayCircle, Trophy, FileText, 
+  Layers, FolderOpen, BookOpen, ChevronDown, ChevronRight 
+} from 'lucide-react'
 import { deleteExamAction } from './actions'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
-interface ExamItem {
-  id: string
-  title: string
-  description?: string
-  subjects?: { title: string }
-  is_published: boolean
-  question_count?: number
+// --- TYPES ---
+type Item = { id: string; title: string; is_published: boolean; created_at: string; category?: string }
+type Subject = { 
+  id: string; title: string; 
+  prep_modules: Item[]; 
+  practice_tests: Item[]; 
+  exams: Item[] 
 }
+type Course = { id: string; title: string; subjects: Subject[] }
+type Stream = { id: string; title: string; courses: Course[] }
 
-interface ExamsClientProps {
-  prepModules: ExamItem[]
-  mockTests: ExamItem[]
-  practiceTests: ExamItem[]
-}
-
-export default function ExamsClient({ prepModules, mockTests, practiceTests }: ExamsClientProps) {
+export default function ExamsClient({ streams }: { streams: Stream[] }) {
   const [activeTab, setActiveTab] = useState<'prep' | 'mock' | 'practice'>('prep')
 
-  const getData = () => {
+  // Helper to get the correct list based on active tab
+  const getItems = (subject: Subject) => {
     switch (activeTab) {
-      case 'prep': return prepModules
-      case 'mock': return mockTests
-      case 'practice': return practiceTests
+      case 'prep': return subject.prep_modules || []
+      case 'practice': return subject.practice_tests || []
+      case 'mock': 
+        // Filter exams table for category 'mock' (just in case)
+        return subject.exams?.filter(e => e.category === 'mock') || []
       default: return []
     }
   }
 
-  const items = getData()
+  // Helper for Tab Styling
+  const TabButton = ({ id, label, icon: Icon }: { id: typeof activeTab, label: string, icon: any }) => (
+    <button
+      onClick={() => setActiveTab(id)}
+      className={`
+        flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all
+        ${activeTab === id 
+          ? 'bg-black text-white shadow-md' 
+          : 'bg-white text-gray-500 hover:bg-gray-100 hover:text-black'}
+      `}
+    >
+      <Icon className="w-4 h-4" />
+      {label}
+    </button>
+  )
 
   return (
     <div>
-      {/* Tabs */}
-      <div className="flex gap-4 border-b border-gray-200 mb-8 overflow-x-auto pb-1">
-        <button
-          onClick={() => setActiveTab('prep')}
-          className={`pb-3 px-2 text-sm font-bold flex items-center gap-2 transition-all ${activeTab === 'prep' ? 'border-b-2 border-black text-black' : 'text-gray-500 hover:text-black'}`}
-        >
-          <PlayCircle className="w-4 h-4" /> Prep Modules
-        </button>
-        <button
-          onClick={() => setActiveTab('mock')}
-          className={`pb-3 px-2 text-sm font-bold flex items-center gap-2 transition-all ${activeTab === 'mock' ? 'border-b-2 border-black text-black' : 'text-gray-500 hover:text-black'}`}
-        >
-          <Trophy className="w-4 h-4" /> Mock Tests
-        </button>
-        <button
-          onClick={() => setActiveTab('practice')}
-          className={`pb-3 px-2 text-sm font-bold flex items-center gap-2 transition-all ${activeTab === 'practice' ? 'border-b-2 border-black text-black' : 'text-gray-500 hover:text-black'}`}
-        >
-          <FileText className="w-4 h-4" /> Practice Tests
-        </button>
-      </div>
+      {/* --- HEADER CONTROLS --- */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        
+        {/* Tabs */}
+        <div className="flex bg-gray-100 p-1 rounded-xl w-fit space-x-2">
+          <TabButton id="prep" label="Prep Modules" icon={PlayCircle} />
+          <TabButton id="mock" label="Mock Tests" icon={Trophy} />
+          <TabButton id="practice" label="Practice Tests" icon={FileText} />
+        </div>
 
-      {/* Action Bar */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-800 capitalize">{activeTab} Management</h2>
+        {/* Add Button */}
         <Link 
           href={`/dashboard/admin/exams/new?type=${activeTab}`}
-          className="bg-black text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-gray-800 shadow-md"
+          className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all"
         >
-          <Plus className="w-4 h-4" /> Add New
+          <Plus className="w-4 h-4" /> Create {activeTab === 'prep' ? 'Module' : activeTab === 'mock' ? 'Mock Test' : 'Practice Test'}
         </Link>
       </div>
 
-      {/* List */}
-      <div className="grid gap-4">
-        {items.length === 0 ? (
-          <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50">
-            <p className="text-gray-400 font-medium">No items found in this section.</p>
-          </div>
+      {/* --- HIERARCHY LIST --- */}
+      <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+        {(!streams || streams.length === 0) ? (
+          <div className="p-12 text-center text-gray-400">No content found.</div>
         ) : (
-          items.map((item) => (
-            <div key={item.id} className="bg-white p-5 rounded-xl border border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-blue-300 transition-all shadow-sm">
-              <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <h3 className="text-lg font-bold text-gray-900">{item.title}</h3>
-                  <span className={`px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded ${item.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                    {item.is_published ? 'Live' : 'Draft'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-gray-500">
-                  <span className="flex items-center gap-1 bg-gray-50 px-2 py-0.5 rounded">
-                    <BookOpen className="w-3 h-3" /> {item.subjects?.title || 'No Subject'}
-                  </span>
-                  {/* Placeholder for question count logic if needed later */}
-                  {/* <span>• {item.question_count || 0} Questions</span> */}
-                </div>
-              </div>
+          <Accordion type="multiple" className="w-full">
+            {streams.map((stream) => (
+              <AccordionItem key={stream.id} value={stream.id} className="border-b last:border-0 px-0">
+                
+                {/* LEVEL 1: STREAM */}
+                <AccordionTrigger className="hover:no-underline py-4 px-6 hover:bg-gray-50 transition-colors group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                      <Layers className="w-4 h-4" />
+                    </div>
+                    <span className="text-lg font-bold text-gray-800">{stream.title}</span>
+                  </div>
+                </AccordionTrigger>
 
-              <div className="flex items-center gap-2">
-                <Link 
-                  href={`/dashboard/admin/exams/${item.id}/edit?type=${activeTab}`}
-                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                >
-                  <Pencil className="w-4 h-4" />
-                </Link>
-                <form action={deleteExamAction}>
-                  <input type="hidden" name="id" value={item.id} />
-                  <input type="hidden" name="type" value={activeTab} />
-                  <button 
-                    type="submit" 
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </form>
-              </div>
-            </div>
-          ))
+                <AccordionContent className="pb-0 pt-0">
+                  <div className="bg-gray-50/50 border-t border-gray-100 pl-6 md:pl-10">
+                    
+                    {(!stream.courses || stream.courses.length === 0) && (
+                       <p className="py-4 text-sm text-gray-400 italic">No exams found in this stream.</p>
+                    )}
+
+                    {stream.courses.map((course) => (
+                      <Accordion key={course.id} type="multiple" className="border-l border-gray-200 ml-4">
+                        <AccordionItem value={course.id} className="border-0">
+                          
+                          {/* LEVEL 2: COURSE (EXAM) */}
+                          <AccordionTrigger className="hover:no-underline py-3 px-4 hover:text-blue-600 text-gray-700">
+                             <div className="flex items-center gap-2">
+                                <FolderOpen className="w-4 h-4 text-gray-400" />
+                                <span className="font-bold text-sm">{course.title}</span>
+                             </div>
+                          </AccordionTrigger>
+
+                          <AccordionContent className="pb-4 pt-0 pl-8 pr-4">
+                             {(!course.subjects || course.subjects.length === 0) ? (
+                                <p className="text-xs text-gray-400 italic py-2">No subjects.</p>
+                             ) : (
+                                <div className="grid gap-4 mt-2">
+                                   {course.subjects.map((subject) => {
+                                      const items = getItems(subject)
+
+                                      // Only show subject if it has items OR allow showing empty to indicate where to add?
+                                      // Let's show it so users know the structure exists.
+                                      return (
+                                        <div key={subject.id} className="bg-white rounded-xl border border-gray-200 p-4">
+                                          
+                                          {/* LEVEL 3: SUBJECT HEADER */}
+                                          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
+                                             <BookOpen className="w-3.5 h-3.5 text-purple-500" />
+                                             <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">{subject.title}</span>
+                                          </div>
+
+                                          {/* LEVEL 4: ACTUAL ITEMS (Modules/Tests) */}
+                                          <div className="space-y-2">
+                                             {items.length === 0 ? (
+                                                <p className="text-xs text-gray-400 italic">No {activeTab}s created yet.</p>
+                                             ) : (
+                                                items.map((item) => (
+                                                  <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-blue-50 hover:border-blue-100 border border-transparent transition-all group/item">
+                                                     <div>
+                                                        <h4 className="font-bold text-gray-800 text-sm mb-0.5">{item.title}</h4>
+                                                        <div className="flex items-center gap-2">
+                                                           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${item.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>
+                                                              {item.is_published ? 'Live' : 'Draft'}
+                                                           </span>
+                                                           <span className="text-[10px] text-gray-400">
+                                                              {new Date(item.created_at).toLocaleDateString()}
+                                                           </span>
+                                                        </div>
+                                                     </div>
+
+                                                     <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover/item:opacity-100 transition-opacity">
+                                                        <Link 
+                                                          href={`/dashboard/admin/exams/${item.id}/edit?type=${activeTab}`}
+                                                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-white rounded-md transition-colors"
+                                                        >
+                                                          <Pencil className="w-3.5 h-3.5" />
+                                                        </Link>
+                                                        <form action={deleteExamAction}>
+                                                          <input type="hidden" name="id" value={item.id} />
+                                                          <input type="hidden" name="type" value={activeTab} />
+                                                          <button 
+                                                            type="submit" 
+                                                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-white rounded-md transition-colors"
+                                                          >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                          </button>
+                                                        </form>
+                                                     </div>
+                                                  </div>
+                                                ))
+                                             )}
+                                          </div>
+
+                                        </div>
+                                      )
+                                   })}
+                                </div>
+                             )}
+                          </AccordionContent>
+
+                        </AccordionItem>
+                      </Accordion>
+                    ))}
+
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         )}
       </div>
     </div>

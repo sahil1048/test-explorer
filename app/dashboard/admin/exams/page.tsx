@@ -4,25 +4,37 @@ import ExamsClient from './exams-client'
 export default async function ExamsAdminPage() {
   const supabase = await createClient()
 
-  // Parallel Fetching for all 3 types
-  const [prepRes, mockRes, practiceRes] = await Promise.all([
-    supabase.from('prep_modules').select('*, subjects(title)').order('created_at', { ascending: false }),
-    supabase.from('exams').select('*, subjects(title)').eq('category', 'mock').order('created_at', { ascending: false }),
-    supabase.from('practice_tests').select('*, subjects(title)').order('created_at', { ascending: false })
-  ])
+  // Fetch Full Hierarchy: 
+  // Streams -> Courses -> Subjects -> (Prep, Mock, Practice)
+  // Note: We are fetching ALL content types nested under subjects.
+  const { data: streams } = await supabase
+    .from('categories')
+    .select(`
+      id, 
+      title,
+      courses (
+        id, 
+        title,
+        subjects (
+          id, 
+          title,
+          prep_modules (id, title, is_published, created_at),
+          practice_tests (id, title, is_published, created_at),
+          exams (id, title, is_published, created_at, category)
+        )
+      )
+    `)
+    .order('order_index', { ascending: true })
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-black text-gray-900 tracking-tight">Course Management</h1>
-        <p className="text-gray-500">Manage all testing content: Prep Modules, Mocks, and Practice Tests.</p>
+        <h1 className="text-3xl font-black text-gray-900 tracking-tight">Content Library</h1>
+        <p className="text-gray-500">Manage Prep Modules, Practice Tests, and Mock Exams organized by stream.</p>
       </div>
 
-      <ExamsClient 
-        prepModules={prepRes.data || []}
-        mockTests={mockRes.data || []}
-        practiceTests={practiceRes.data || []}
-      />
+      {/* @ts-ignore - Supabase types can be deep and tricky */}
+      <ExamsClient streams={streams || []} />
     </div>
   )
 }
