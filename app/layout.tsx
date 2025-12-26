@@ -27,28 +27,23 @@ export default async function RootLayout({
   // 2. ROBUST SUBDOMAIN DETECTION
   const headersList = await headers();
   const domain = headersList.get("x-current-domain") || headersList.get("host") || "";
-  const hostname = headersList.get("host") || "";
   
   let schoolData = null;
   let subdomain = null;
 
-  // Split hostname into parts (e.g., "school.localhost:3000" -> ["school", "localhost:3000"])
-  const parts = hostname.split(".");
+  const parts = domain.split(".");
 
   if (domain.includes("localhost")) {
-    const parts = domain.split(".");
     if (parts.length >= 2) {
       subdomain = parts[0];
     }
   } else {
-    const parts = domain.split(".");
     if (parts.length >= 3) {
       subdomain = parts[0];
     }
   }
 
-  // 3. Fetch School Data if Subdomain exists and is not 'www'
-  if (subdomain && subdomain !== "www" && subdomain !== "test-explorer") {
+  if (subdomain && subdomain !== "www" && subdomain !== "testexplorer") {
     schoolData = await getSchoolBySubdomain(subdomain);
   }
 
@@ -56,7 +51,6 @@ export default async function RootLayout({
     <html lang="en">
       <body className="min-h-screen bg-gray-50 font-sans antialiased" suppressHydrationWarning={true}>
         
-        {/* Pass schoolData. If found, SiteHeader shows School Logo. If null, it shows Test Explorer. */}
         <SiteHeader 
           school={schoolData} 
           user={user} 
