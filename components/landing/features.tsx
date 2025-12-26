@@ -1,29 +1,29 @@
-import { Zap, Target, BarChart3, Users } from "lucide-react";
+import { Globe, Monitor, BarChart3, Trophy } from "lucide-react";
 
 const features = [
   {
-    icon: <Zap className="w-6 h-6" />,
-    title: "Instant Results",
-    desc: "No more waiting. Get your score and detailed analysis immediately after submission.",
-    color: "bg-yellow-100 text-yellow-700",
-  },
-  {
-    icon: <Target className="w-6 h-6" />,
-    title: "Adaptive Testing",
-    desc: "Questions that adapt to your skill level, ensuring you are always challenged just right.",
-    color: "bg-red-100 text-red-700",
-  },
-  {
-    icon: <BarChart3 className="w-6 h-6" />,
-    title: "Deep Analytics",
-    desc: "Visualize your progress with beautiful charts. Identify weak areas in seconds.",
+    icon: <Globe className="w-6 h-6" />,
+    title: "Multiple Exam Categories",
+    desc: "From CUET to JEE, access structured content for every major entrance exam in one place.",
     color: "bg-blue-100 text-blue-700",
   },
   {
-    icon: <Users className="w-6 h-6" />,
-    title: "School Integration",
-    desc: "Teachers can create tests, manage batches, and track every student's growth.",
-    color: "bg-green-100 text-green-700",
+    icon: <Monitor className="w-6 h-6" />,
+    title: "Real Exam Interface",
+    desc: "Familiarize yourself with the actual NTA exam environment to boost confidence and speed.",
+    color: "bg-orange-100 text-orange-700",
+  },
+  {
+    icon: <BarChart3 className="w-6 h-6" />,
+    title: "Detailed Analysis",
+    desc: "Go beyond scores. Track accuracy, time-spent, and weak areas with our smart analytics.",
+    color: "bg-teal-100 text-teal-700",
+  },
+  {
+    icon: <Trophy className="w-6 h-6" />,
+    title: "All India Rank",
+    desc: "Compete with thousands of students and gauge your true potential before the big day.",
+    color: "bg-purple-100 text-purple-700",
   },
 ];
 

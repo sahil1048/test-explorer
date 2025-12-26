@@ -13,7 +13,7 @@ import Testimonials from "@/components/landing/testimonials";
 import Faq from "@/components/landing/faq";
 
 // Import New Section
-import SchoolUpdates from "@/components/landing/school-updates"; // <--- IMPORT THIS
+import SchoolUpdates from "@/components/landing/school-updates";
 
 export default async function LandingPage() {
   // 1. Detect Subdomain Logic
@@ -53,8 +53,8 @@ export default async function LandingPage() {
       )}
 
       {/* === SECTION 2: SHARED CONTENT === */}
-      <Features />
       <Steps />
+      <Features />
       <Testimonials />
       <Faq />
 
