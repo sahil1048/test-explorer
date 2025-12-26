@@ -14,7 +14,7 @@ export default async function ExamsAdminPage() {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-black text-gray-900 tracking-tight">Exam Management</h1>
+        <h1 className="text-3xl font-black text-gray-900 tracking-tight">Course Management</h1>
         <p className="text-gray-500">Manage all testing content: Prep Modules, Mocks, and Practice Tests.</p>
       </div>
 

@@ -64,7 +64,7 @@ export default function QuestionsList({
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete ALL questions from this exam.
+                This action cannot be undone. This will permanently delete ALL questions from this course.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

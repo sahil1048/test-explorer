@@ -150,15 +150,15 @@ export default async function DashboardLayout({
       roles: ['super_admin']
     },
     {
-      label: 'Courses',
-      href: '/dashboard/admin/exams',
-      icon: FileText,
-      roles: ['super_admin']
-    },
-    {
       label: 'Subjects',
       href: '/dashboard/admin/subjects',
       icon: Library,
+      roles: ['super_admin']
+    },
+    {
+      label: 'Courses',
+      href: '/dashboard/admin/exams',
+      icon: FileText,
       roles: ['super_admin']
     },
     {

@@ -69,7 +69,7 @@ export default async function NewExamPage({
               <Upload className="w-4 h-4" /> Bulk Upload Questions
             </h3>
             <p className="text-sm text-blue-700/80 mb-4">
-              Upload a CSV file with columns: <strong>Question, Option A, Option B, Option C, Option D, Correct Answer, Explanation</strong>.
+              Upload a CSV file with columns: <strong>Question, Option A, Option B, Option C, Option D, Correct Answer, Explanation, Direction</strong>.
             </p>
             <input 
               type="file" 

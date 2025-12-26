@@ -15,11 +15,11 @@ export default async function NewCoursePage() {
   return (
     <div className="max-w-2xl mx-auto py-8">
       <Link href="/dashboard/admin/courses" className="flex items-center gap-2 text-gray-500 font-bold mb-6 hover:text-black">
-        <ArrowLeft className="w-4 h-4" /> Back to Courses
+        <ArrowLeft className="w-4 h-4" /> Back to Exams
       </Link>
       
       <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm">
-        <h1 className="text-2xl font-black text-gray-900 mb-6">Create New Course</h1>
+        <h1 className="text-2xl font-black text-gray-900 mb-6">Create New Exams</h1>
         <form action={createCourseAction} className="space-y-6">
           
           {/* Category Dropdown */}
@@ -46,7 +46,7 @@ export default async function NewCoursePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-900 mb-2">Course Title</label>
+            <label className="block text-sm font-bold text-gray-900 mb-2">Exam Title</label>
             <input name="title" type="text" placeholder="e.g. JEE Main 2025" required className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-black" />
           </div>
           
@@ -61,7 +61,7 @@ export default async function NewCoursePage() {
           </div>
 
           <button type="submit" className="w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-gray-800 flex items-center justify-center gap-2">
-            <Save className="w-4 h-4" /> Create Course
+            <Save className="w-4 h-4" /> Create Exam
           </button>
         </form>
       </div>

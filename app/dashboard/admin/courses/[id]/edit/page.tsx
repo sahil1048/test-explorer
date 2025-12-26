@@ -30,7 +30,7 @@ export default async function EditCoursePage({ params }: { params: Promise<{ id:
       </Link>
       
       <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm">
-        <h1 className="text-2xl font-black text-gray-900 mb-6">Edit Course</h1>
+        <h1 className="text-2xl font-black text-gray-900 mb-6">Edit Exam</h1>
         <form action={updateCourseAction} className="space-y-6">
           <input type="hidden" name="id" value={course.id} />
           
@@ -57,7 +57,7 @@ export default async function EditCoursePage({ params }: { params: Promise<{ id:
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-900 mb-2">Title</label>
+            <label className="block text-sm font-bold text-gray-900 mb-2">Exam Title</label>
             <input name="title" defaultValue={course.title} type="text" required className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-black" />
           </div>
           

@@ -67,7 +67,7 @@ export default async function HeroMain() {
         </div>
 
         {/* --- Categories Grid (Dynamic) --- */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {categories?.map((cat) => {
             // Dynamic Icon Logic
             // @ts-ignore
@@ -89,7 +89,7 @@ export default async function HeroMain() {
               >
                 <div 
                   className={`
-                    relative z-10 h-full px-2 py-6 rounded-[2.5rem] border-2 border-black flex items-center flex-col space-y-6
+                    relative z-10 h-full px-2 py-6 rounded-[2.5rem] border-2 border-black flex items-center flex-col space-y-6 justify-center
                     transition-all duration-300 ease-out
                     group-hover:-translate-y-2 group-hover:translate-x-1 group-hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]
                     ${finalClass} 
@@ -106,14 +106,14 @@ export default async function HeroMain() {
                   </div> */}
 
                   <div className='text-center'>
-                    <h3 className="text-3xl font-black text-black mb-2 tracking-tight">
+                    <h3 className="text-xl font-black text-black mb-2 tracking-tight">
                       {cat.title}
                     </h3>
                     <p className="text-black/70 font-bold text-sm">
                       {cat.description}
                     </p>
                   </div>
-                <Button variant={"outline"} className='rounded-3xl'>
+                <Button variant={"outline"} className='rounded-3xl text-xs'>
                   <ArrowRight className='w-2 h-3'/>
                   Take Mock Test
                 </Button>
