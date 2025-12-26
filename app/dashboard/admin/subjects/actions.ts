@@ -17,8 +17,7 @@ export async function createSubjectAction(formData: FormData) {
 
   if (error) throw new Error(error.message)
 
-  revalidatePath('/dashboard/admin/subjects')
-  redirect('/dashboard/admin/subjects')
+  revalidatePath('/dashboard/admin/manage-content')
 }
 
 // Update Subject
@@ -36,8 +35,7 @@ export async function updateSubjectAction(formData: FormData) {
 
   if (error) throw new Error(error.message)
 
-  revalidatePath('/dashboard/admin/subjects')
-  redirect('/dashboard/admin/subjects')
+  revalidatePath('/dashboard/admin/manage-content')
 }
 
 // Delete Subject
@@ -48,6 +46,6 @@ export async function deleteSubjectAction(formData: FormData) {
   const { error } = await supabase.from('subjects').delete().eq('id', id)
   
   if (error) throw new Error(error.message)
-  revalidatePath('/dashboard/admin/subjects')
+  revalidatePath('/dashboard/admin/manage-content')
 }
 

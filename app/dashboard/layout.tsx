@@ -138,27 +138,33 @@ export default async function DashboardLayout({
       roles: ['super_admin']
     },
     {
-      label: 'Streams', 
-      href: '/dashboard/admin/streams',
-      icon: Layers, 
-      roles: ['super_admin']
-    },
-    {
-      label: 'Exams',
-      href: '/dashboard/admin/courses',
+      label: 'Manage Content',
+      href: '/dashboard/admin/manage-content',
       icon: BookOpen,
       roles: ['super_admin']
     },
+    // {
+    //   label: 'Streams', 
+    //   href: '/dashboard/admin/streams',
+    //   icon: Layers, 
+    //   roles: ['super_admin']
+    // },
+    // {
+    //   label: 'Exams',
+    //   href: '/dashboard/admin/courses',
+    //   icon: BookOpen,
+    //   roles: ['super_admin']
+    // },
+    // {
+    //   label: 'Subjects',
+    //   href: '/dashboard/admin/subjects',
+    //   icon: Library,
+    //   roles: ['super_admin']
+    // },
     {
       label: 'Courses',
       href: '/dashboard/admin/exams',
       icon: FileText,
-      roles: ['super_admin']
-    },
-    {
-      label: 'Subjects',
-      href: '/dashboard/admin/subjects',
-      icon: Library,
       roles: ['super_admin']
     },
     {

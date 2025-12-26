@@ -60,7 +60,7 @@ export default async function CategoriesPage() {
                     group-hover:-translate-y-2 group-hover:translate-x-1 group-hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]
                     ${finalClass} 
                   `}
-                  style={finalStyle} // <--- Apply Hex Color Here
+                  style={finalStyle}
                 >
                   <div className="flex justify-between items-start mb-8">
                     <div className="w-14 h-14 bg-white border-2 border-black rounded-2xl flex items-center justify-center">
