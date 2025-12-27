@@ -30,7 +30,7 @@ export default function MockTestInterface({
   const [answers, setAnswers] = useState<Record<string, string>>({}) 
   const [questionStatus, setQuestionStatus] = useState<Record<string, string>>({}) 
   const [reportData, setReportData] = useState<any>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false) // Added submission state
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (!questions || questions.length === 0) {
     return (

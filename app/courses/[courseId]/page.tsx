@@ -36,10 +36,6 @@ export default async function CourseSubjectsPage({
     .eq('course_id', courseId)
     .order('created_at', { ascending: false })
 
-    const questionsCount = subjects?.reduce((total, subject) => {
-      return total + (subject.question_banks?.count || 0)
-    }, 0) || 0
-    
 
   return (
     <div className="min-h-screen bg-white">
@@ -78,7 +74,6 @@ export default async function CourseSubjectsPage({
           courseId={courseId}
           subjects={subjects || []}
           mocks={mocks || []}
-          questionsCount={questionsCount || 0}
         />
 
       </main>
