@@ -49,7 +49,7 @@ export default async function ResultPage({
   
   if (examData) examTitle = examData.title
 
-  // Fetch Questions (needed to know total count and correct answers for chart)
+  // Fetch Questions (needed to know counts for the chart)
   const { data: questionData } = await supabase
     .from('questions')
     .select('id, options:question_options(id, is_correct)')
@@ -67,6 +67,7 @@ export default async function ResultPage({
 
   questions.forEach((q: any) => {
     const selectedOptionId = userAnswers[q.id]
+    // @ts-ignore
     const correctOption = q.options.find((o: any) => o.is_correct)
 
     if (!selectedOptionId) {
@@ -78,11 +79,10 @@ export default async function ResultPage({
     }
   })
 
-  // Calculate Percentages for Chart
+  // Calculate Chart Proportions (Based on Question Count, NOT Marks)
   const correctPercent = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0
   const incorrectPercent = totalQuestions > 0 ? (incorrectCount / totalQuestions) * 100 : 0
-  const skippedPercent = totalQuestions > 0 ? (skippedCount / totalQuestions) * 100 : 0
-
+  
   // Create Conic Gradient String
   // Green (Correct) -> Red (Incorrect) -> Yellow (Skipped)
   const chartGradient = `conic-gradient(
@@ -91,14 +91,22 @@ export default async function ResultPage({
     #FFB020 ${correctPercent + incorrectPercent}% 100%
   )`
 
-  // Basic Stats
+  // --- SCORE LOGIC ---
   const score = attempt.score || 0
-  const percentage = totalQuestions > 0 ? ((score / totalQuestions) * 100).toFixed(1) : "0.0"
+  
+  // Fallback for total_marks if old attempts exist without it
+  // Mock: Q * 5, Practice: Q * 1
+  const defaultTotalMarks = testType === 'mock' ? totalQuestions * 5 : totalQuestions
+  const totalMarks = attempt.total_marks || defaultTotalMarks
+
+  // Percentage based on Marks
+  const percentage = totalMarks > 0 ? ((score / totalMarks) * 100).toFixed(1) : "0.0"
+  
   const timeUsed = `${Math.floor(attempt.time_taken_seconds / 60)}m ${attempt.time_taken_seconds % 60}s`
 
-  // Dummy Topper Data
-  const topperScore = Math.min(totalQuestions, score + 2)
-  const topperTime = timeUsed
+  // Dummy Topper Data (Logic: slightly higher than user or 98%)
+  const topperScore = Math.min(totalMarks, Math.ceil(totalMarks * 0.98)) // 98% Score
+  const topperTime = `${Math.floor(attempt.time_taken_seconds * 0.8 / 60)}m` // 20% faster
 
   return (
     <div className="min-h-screen bg-black/40 flex items-center justify-center p-4 backdrop-blur-sm fixed inset-0 z-50">
@@ -122,10 +130,10 @@ export default async function ResultPage({
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <StatCard label="Score" value={`${score}/${totalQuestions}`} icon={Target} color="text-blue-600" bg="bg-blue-50" />
-            <StatCard label="Percentile" value="Top 10%" icon={Trophy} color="text-orange-600" bg="bg-orange-50" />
+            <StatCard label="Marks" value={`${score}/${totalMarks}`} icon={Target} color="text-blue-600" bg="bg-blue-50" />
+            <StatCard label="Questions" value={`${correctCount}/${totalQuestions}`} icon={Trophy} color="text-orange-600" bg="bg-orange-50" />
             <StatCard label="Time" value={timeUsed} icon={Clock} color="text-purple-600" bg="bg-purple-50" />
-            <StatCard label="Accuracy" value={`${percentage}%`} icon={BarChart2} color="text-green-600" bg="bg-green-50" />
+            <StatCard label="Percentage" value={`${percentage}%`} icon={BarChart2} color="text-green-600" bg="bg-green-50" />
           </div>
 
           {/* Detailed Analysis Area */}
@@ -138,7 +146,7 @@ export default async function ResultPage({
                     style={{ background: chartGradient }}
                >
                  <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center flex-col z-10">
-                   <span className="text-xs text-gray-400 uppercase font-bold">Total</span>
+                   <span className="text-xs text-gray-400 uppercase font-bold">Total Questions</span>
                    <span className="text-3xl font-black text-gray-900">{totalQuestions}</span>
                  </div>
                </div>
@@ -157,14 +165,14 @@ export default async function ResultPage({
                     <tr>
                       <th className="p-4 font-bold">Metric</th>
                       <th className="p-4 font-bold">You</th>
-                      <th className="p-4 font-bold">Topper</th>
+                      <th className="p-4 font-bold">Topper (Avg)</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr className="border-b border-gray-50">
-                      <td className="p-4 font-medium text-gray-600">Score</td>
-                      <td className="p-4 font-bold text-gray-900">{score}</td>
-                      <td className="p-4 text-gray-500">{topperScore}</td>
+                      <td className="p-4 font-medium text-gray-600">Marks Scored</td>
+                      <td className="p-4 font-bold text-gray-900">{score} / {totalMarks}</td>
+                      <td className="p-4 text-gray-500">{topperScore} / {totalMarks}</td>
                     </tr>
                     <tr className="border-b border-gray-50">
                       <td className="p-4 font-medium text-gray-600">Time Taken</td>
@@ -172,9 +180,9 @@ export default async function ResultPage({
                       <td className="p-4 text-gray-500">{topperTime}</td>
                     </tr>
                     <tr className="bg-[#FFECB3]">
-                      <td className="p-4 font-bold text-orange-900">Accuracy</td>
-                      <td className="p-4 font-bold text-orange-900">{percentage}%</td>
-                      <td className="p-4 font-bold text-orange-900">98%</td>
+                      <td className="p-4 font-bold text-orange-900">Result</td>
+                      <td className="p-4 font-bold text-orange-900">{Number(percentage) > 35 ? 'PASS' : 'FAIL'}</td>
+                      <td className="p-4 font-bold text-orange-900">PASS</td>
                     </tr>
                   </tbody>
                 </table>

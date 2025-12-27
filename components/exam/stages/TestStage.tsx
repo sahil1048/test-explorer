@@ -41,12 +41,12 @@ export const TestStage = ({
   // --- DYNAMIC DATA CALCULATIONS ---
   const marksPerQuestion = exam.total_marks && exam.total_questions 
     ? Math.round((exam.total_marks / exam.total_questions) * 100) / 100 
-    : 1;
+    : 5;
     
   // Assuming negative marking is usually 1/4th of positive or specific value. 
   // If you have a specific column for 'negative_marks' in DB, use that instead.
   // For now, based on your boolean 'negative_marking', we display logic:
-  const negativeMarks = exam.negative_marking ? (marksPerQuestion * 0.25) : 0;
+  const negativeMarks = exam.negative_marking ? (marksPerQuestion * 0.25) : 1;
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600)

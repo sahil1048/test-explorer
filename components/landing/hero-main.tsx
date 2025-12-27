@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Layers } from "lucide-react";
 import * as LucideIcons from 'lucide-react' // Import all icons for dynamic mapping
 import { Button } from '../ui/button';
+import CategoryGrid from '../categories/category-grid';
 
 export default async function HeroMain() {
   const supabase = await createClient()
@@ -67,61 +68,7 @@ export default async function HeroMain() {
         </div>
 
         {/* --- Categories Grid (Dynamic) --- */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          {categories?.map((cat) => {
-            // Dynamic Icon Logic
-            // @ts-ignore
-            const Icon = LucideIcons[cat.icon_key] || Layers
-
-            // Dynamic Color Logic
-            const rawBg = cat.bg_color || 'bg-gray-50'
-            const isArbitrary = rawBg.startsWith('bg-[#') && rawBg.endsWith(']')
-            const hexColor = isArbitrary ? rawBg.slice(4, -1) : null
-            
-            const finalClass = hexColor ? '' : rawBg
-            const finalStyle = hexColor ? { backgroundColor: hexColor } : undefined
-
-            return (
-              <Link 
-                key={cat.id} 
-                href={`/categories/${cat.id}`}
-                className="group relative block text-left" // Ensure text-left for card content
-              >
-                <div 
-                  className={`
-                    relative z-10 h-full px-2 py-6 rounded-[2.5rem] border-2 border-black flex items-center flex-col space-y-6 justify-center
-                    transition-all duration-300 ease-out
-                    group-hover:-translate-y-2 group-hover:translate-x-1 group-hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]
-                    ${finalClass} 
-                  `}
-                  style={finalStyle}
-                >
-                  {/* <div className="flex justify-between items-start mb-8">
-                    <div className="w-14 h-14 bg-white border-2 border-black rounded-2xl flex items-center justify-center">
-                      <Icon className="w-7 h-7 text-black" />
-                    </div>
-                    <div className="bg-white rounded-full p-3 border-2 border-black transition-transform group-hover:rotate-45">
-                      <ArrowUpRight className="w-5 h-5 text-black" />
-                    </div>
-                  </div> */}
-
-                  <div className='text-center'>
-                    <h3 className="text-xl font-black text-black mb-2 tracking-tight">
-                      {cat.title}
-                    </h3>
-                    <p className="text-black/70 font-bold text-sm">
-                      {cat.description}
-                    </p>
-                  </div>
-                <Button variant={"outline"} className='rounded-3xl text-xs'>
-                  <ArrowRight className='w-2 h-3'/>
-                  Take Mock Test
-                </Button>
-                </div>
-              </Link>
-            )
-          })}
-        </div>
+       {/* <CategoryGrid categories={categories}/> */}
       </div>
     </section>
   );

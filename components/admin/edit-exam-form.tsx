@@ -145,7 +145,7 @@ export default function EditExamForm({ streams, item, type }: EditExamFormProps)
       )}
 
       {/* CSV Upload Section */}
-      <div className="bg-orange-50 border border-orange-100 p-6 rounded-2xl">
+      {/* <div className="bg-orange-50 border border-orange-100 p-6 rounded-2xl">
         <h3 className="text-orange-900 font-bold mb-2 flex items-center gap-2">
           <Upload className="w-4 h-4" /> Add Questions (CSV)
         </h3>
@@ -158,7 +158,7 @@ export default function EditExamForm({ streams, item, type }: EditExamFormProps)
           accept=".csv"
           className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-orange-600 file:text-white hover:file:bg-orange-700"
         />
-      </div>
+      </div> */}
 
       <div className="flex items-center gap-3 pt-2">
         <input type="checkbox" name="is_published" id="pub" defaultChecked={item.is_published} className="w-5 h-5 accent-black" />

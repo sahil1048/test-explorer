@@ -1,7 +1,6 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-// REMOVE: import { redirect } from 'next/navigation' 
 
 export async function submitExamAction(
   examId: string, 
@@ -35,7 +34,7 @@ export async function submitExamAction(
     throw new Error('Failed to load exam data for grading.')
   }
 
-  // 3. Calculate Score & Counts
+  // 3. Calculate Counts
   let correctCount = 0
   let incorrectCount = 0
   const totalQuestions = questions.length
@@ -55,15 +54,27 @@ export async function submitExamAction(
     }
   })
 
-  // Basic scoring: 1 mark per question (Update logic here if you implement negative marking)
-  const score = correctCount 
+  // 4. SCORING LOGIC
+  let score = 0
+  let totalMaxMarks = 0
 
-  // 4. Save Attempt
+  if (testType === 'mock') {
+    // Mock Test: +5 for Correct, -1 for Incorrect
+    score = (correctCount * 5) - (incorrectCount * 1)
+    totalMaxMarks = totalQuestions * 5
+  } else {
+    // Practice Test: +1 for Correct, No Negative Marking
+    score = correctCount * 1
+    totalMaxMarks = totalQuestions * 1
+  }
+
+  // 5. Save Attempt
   const attemptPayload = {
     user_id: user.id,
     score: score,
-    total_marks: totalQuestions,
-    percentage: totalQuestions > 0 ? (score / totalQuestions) * 100 : 0,
+    total_marks: totalMaxMarks,
+    // Calculate percentage based on the new totalMaxMarks
+    percentage: totalMaxMarks > 0 ? (score / totalMaxMarks) * 100 : 0,
     time_taken_seconds: timeTaken,
     answers: answers,
     exam_id: testType === 'mock' ? examId : null, 
@@ -81,11 +92,12 @@ export async function submitExamAction(
     throw new Error('Failed to save attempt')
   }
 
-  // 5. RETURN Data with Stats
+  // 6. RETURN Data with Stats
   return { 
     success: true, 
     redirectUrl: `/courses/${courseId}/subjects/${subjectId}/test/${testType}/${examId}/result/${attempt.id}`,
     score: score,
+    totalMarks: totalMaxMarks, // Pass this back so the UI can display "Score: X / Total" correctly
     correct: correctCount,
     incorrect: incorrectCount
   }

@@ -10,13 +10,13 @@ import {
   Users, 
   FileText,
   Building2,
-  Library,
-  Layers,
+  TagIcon,
   Megaphone,
   GraduationCap,
   Newspaper,
   Trophy,
-  TagIcon
+  Library,
+  Map
 } from 'lucide-react'
 import UserNav from '@/components/Navbar/UserNav' 
 
@@ -40,38 +40,21 @@ export default async function DashboardLayout({
 
   if (!profile) return redirect('/')
 
-  // 3. --- UPDATED: Robust Domain Detection (Flicker Fix) ---
+  // 3. --- UPDATED: Header-Based School Detection ---
   const headersList = await headers()
+  const schoolSlug = headersList.get("x-school-slug") // Read middleware header
   
-  // Read custom header from middleware FIRST
-  const domain = headersList.get("x-current-domain") || 
-                 headersList.get("x-forwarded-host") || 
-                 headersList.get("host") || ""
-
   let schoolData = null
-  let subdomain = null
-  
-  // Handle localhost vs production
-  if (domain.includes("localhost")) {
-    const parts = domain.split(".")
-    if (parts.length >= 2) {
-      subdomain = parts[0]
-    }
-  } else {
-    // Production (e.g., school.testexplorer.com)
-    const parts = domain.split(".")
-    if (parts.length >= 3) {
-      subdomain = parts[0]
-    }
+  if (schoolSlug) {
+    schoolData = await getSchoolBySubdomain(schoolSlug)
   }
 
-  // Fetch School Data if Subdomain exists
-  if (subdomain && subdomain !== "www" && subdomain !== "test-explorer") {
-    schoolData = await getSchoolBySubdomain(subdomain)
-  }
+  // Define Base Path for Links (e.g., "/ops" or "")
+  const basePath = schoolSlug ? `/${schoolSlug}` : ''
 
   // 4. Define Navigation
-  const navItems = [
+  // We explicitly define paths here. We will map over them to prepend basePath later.
+  const rawNavItems = [
     // --- Student Links ---
     {
       label: 'My Stats',
@@ -118,7 +101,7 @@ export default async function DashboardLayout({
       roles: ['school_admin'] 
     },
     {
-      label: 'Leaderboard', // <--- NEW
+      label: 'Leaderboard', 
       href: '/dashboard/leaderboard',
       icon: Trophy,
       roles: ['school_admin']
@@ -137,13 +120,7 @@ export default async function DashboardLayout({
       icon: Building2, 
       roles: ['super_admin']
     },
-    {
-      label: 'Manage Content',
-      href: '/dashboard/admin/manage-content',
-      icon: BookOpen,
-      roles: ['super_admin']
-    },
-    // {
+      // {
     //   label: 'Streams', 
     //   href: '/dashboard/admin/streams',
     //   icon: Layers, 
@@ -162,8 +139,26 @@ export default async function DashboardLayout({
     //   roles: ['super_admin']
     // },
     {
+      label: 'Mock Blueprints',
+      href: '/dashboard/admin/blueprints',
+      icon: Map, // You can also use 'LayoutTemplate' or 'Map'
+      roles: ['super_admin']
+    },
+    {
+      label: 'Manage Content',
+      href: '/dashboard/admin/manage-content',
+      icon: BookOpen,
+      roles: ['super_admin']
+    },
+    {
       label: 'Courses',
       href: '/dashboard/admin/exams',
+      icon: FileText,
+      roles: ['super_admin']
+    },
+    {
+      label: 'Question Pool',
+      href: '/dashboard/admin/question-uploads',
       icon: FileText,
       roles: ['super_admin']
     },
@@ -186,14 +181,20 @@ export default async function DashboardLayout({
       roles: ['super_admin']
     },
     {
-      label: 'Leaderboard', // <--- NEW
+      label: 'Leaderboard',
       href: '/dashboard/admin/leaderboard',
       icon: Trophy,
       roles: ['super_admin']
     },
   ]
 
-  const visibleItems = navItems.filter(item => item.roles.includes(profile.role))
+  // Filter based on role AND Prepend basePath to all hrefs
+  const visibleItems = rawNavItems
+    .filter(item => item.roles.includes(profile.role))
+    .map(item => ({
+      ...item,
+      href: `${basePath}${item.href}` // e.g. "/ops/dashboard"
+    }))
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -201,10 +202,11 @@ export default async function DashboardLayout({
       {/* SIDEBAR */}
       <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col fixed inset-y-0 left-0 z-50">
         
-        {/* BRANDING - Uses the robust schoolData */}
+        {/* BRANDING */}
         <div className="h-16 flex items-center px-6 border-b border-gray-100">
           {schoolData ? (
-            <Link href="/" className="flex items-center gap-3 group">
+            // Link back to School Home (e.g. /ops/)
+            <Link href={`${basePath}/`} className="flex items-center gap-3 group">
               {schoolData.logo_url ? (
                 <div className="w-8 h-8 relative shrink-0">
                   <img 
@@ -223,6 +225,7 @@ export default async function DashboardLayout({
               </span>
             </Link>
           ) : (
+            // Link back to Main Home
             <Link href="/" className="flex items-center gap-2">
               <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
                 TE

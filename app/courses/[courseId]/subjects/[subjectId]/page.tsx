@@ -76,7 +76,7 @@ export default async function SubjectDetailsPage({
       .select('*, questions(count)')
       .eq('subject_id', subjectId)
       .eq('is_published', true)
-      .order('created_at', { ascending: false }),
+      .order('created_at', { ascending: true }),
       
     // C. Mock Tests
     supabase
@@ -85,7 +85,7 @@ export default async function SubjectDetailsPage({
       .eq('subject_id', subjectId)
       .eq('category', 'mock')
       .eq('is_published', true)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true })
   ])
 
   // Helper to extract count safely
