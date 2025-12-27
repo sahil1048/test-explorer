@@ -126,7 +126,7 @@ export default function MockTestInterface({
     <>
       {/* Loading Overlay during submission */}
       {isSubmitting && (
-        <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm flex items-center justify-center text-white">
+        <div className="fixed inset-0 z-200 bg-black/50 backdrop-blur-sm flex items-center justify-center text-white">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-10 h-10 animate-spin" />
             <p className="font-bold text-lg">Submitting your test...</p>

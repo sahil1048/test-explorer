@@ -16,7 +16,8 @@ import {
   Newspaper,
   Trophy,
   Library,
-  Map
+  Map,
+  Pen
 } from 'lucide-react'
 import UserNav from '@/components/Navbar/UserNav' 
 
@@ -142,6 +143,12 @@ export default async function DashboardLayout({
       label: 'Mock Blueprints',
       href: '/dashboard/admin/blueprints',
       icon: Map, // You can also use 'LayoutTemplate' or 'Map'
+      roles: ['super_admin']
+    },
+    {
+      label: 'Mock Tests',
+      href: '/dashboard/admin/mocktest',
+      icon: Pen, // You can also use 'LayoutTemplate' or 'Map'
       roles: ['super_admin']
     },
     {
