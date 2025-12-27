@@ -1,7 +1,7 @@
+import MockTestInterface from '@/app/courses/[courseId]/subjects/[subjectId]/test/mock/[examId]/MockTestInterface'
 import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
-// Make sure your MockTestInterface is located here, or update the import path
-import MockTestInterface from '@/components/mocktest/MockTestInterface'
+// FIX 1: Ensure this imports from the correct components folder
 
 export default async function MockExamPage({ 
   params 
@@ -11,55 +11,76 @@ export default async function MockExamPage({
   const { examId } = await params
   const supabase = await createClient()
 
-  // 1. Authenticate User
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return redirect('/login')
 
+  // 2. FETCH USER PROFILE (For Role Check & Mock Interface)
+  // Using user.id directly as it's standard for Supabase relations
+  const { data: userData } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) return notFound()
+    
+
   // 2. Fetch Mock Test Details
-  const { data: mockTest } = await supabase
+  const { data: mockTest, error: mockError } = await supabase
     .from('mock_tests')
     .select('*')
     .eq('id', examId)
     .single()
 
-  if (!mockTest) return notFound()
+  if (mockError || !mockTest) {
+    console.error("Mock Test fetch error:", mockError)
+    return notFound()
+  }
 
   // 3. Fetch Questions linked to this Mock Test
-  // We join 'mock_test_questions' with 'questions' to get the actual data
-  const { data: linkedQuestions } = await supabase
-    .from('mock_test_questions')
+  const { data: questionsData, error: qError } = await supabase
+    .from('questions')
     .select(`
-      question:questions (
-        id,
-        question_text,
-        options,
-        marks
-      )
+      id,
+      text, 
+      explanation,
+      options:question_options (*),
+      mock_test_questions!inner(mock_test_id)
     `)
-    .eq('mock_test_id', examId)
+    .eq('mock_test_questions.mock_test_id', examId)
 
-  // Extract the actual question objects from the join result
-  const questions = linkedQuestions?.flatMap((item: any) => item.question || []) || []
+  if (qError) {
+    console.error("Questions fetch error:", qError)
+  }
 
-  // 4. Get or Create Attempt (Session)
-  // Check if there is an active attempt for this user and mock test
+  // 4. Transform Data (FIXED TYPE ERROR HERE)
+  const questions = questionsData?.map((q: any) => ({
+    id: q.id,
+    // FIX 2: Map DB column 'text' to BOTH 'text' and 'question_text'
+    // This satisfies the TypeScript error requiring 'text'
+    text: q.text, 
+    question_text: q.text, 
+    options: q.options,
+    marks: 4 // Default marks
+  })) || []
+
+  // 5. Get or Create Attempt (Session)
   let { data: attempt } = await supabase
     .from('exam_attempts')
     .select('*')
     .eq('user_id', user.id)
-    .eq('mock_test_id', examId) // Ensure your attempt table has this column
+    .eq('mock_test_id', examId)
     .eq('status', 'in_progress')
     .order('started_at', { ascending: false })
     .limit(1)
     .single()
 
-  // If no active attempt, create a new one
   if (!attempt) {
-    const { data: newAttempt, error } = await supabase
+    const { data: newAttempt, error: attemptError } = await supabase
       .from('exam_attempts')
       .insert({
         user_id: user.id,
-        mock_test_id: examId, // Linking to the mock_test table
+        mock_test_id: examId,
         status: 'in_progress',
         total_marks: mockTest.total_marks || 0,
         duration_minutes: mockTest.duration_minutes || 0,
@@ -69,23 +90,21 @@ export default async function MockExamPage({
       .select()
       .single()
     
-    if (error) {
-      console.error("Failed to start test session:", error)
-      throw new Error("Could not start test session.")
+    if (attemptError) {
+      console.error("Attempt creation failed:", attemptError)
+      throw new Error("Failed to start test session.")
     }
     attempt = newAttempt
   }
-
-  // 5. Render the Interface
+  
   return (
     <MockTestInterface 
-      mockTest={mockTest}
-      questions={questions}
-      courseId={mockTest.course_id} // Used for redirection after submit
-      examId={examId}
-      subjectId="full-mock"
-      user={user}
-      attempt={attempt}
+      exam={mockTest} 
+      questions={questions} 
+      courseId={mockTest.course_id} 
+      subjectId="full-mock" 
+      examId={examId} 
+      user={userData} 
     />
   )
 }

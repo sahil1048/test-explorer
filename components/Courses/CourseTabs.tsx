@@ -12,7 +12,7 @@ const SUBJECT_COLORS = [
   'bg-[#FFEBEE] border-[#B71C1C]',
 ]
 
-export default function CourseTabs({ courseId, subjects, mocks, questionsCount }: { courseId: string, subjects: any[], mocks: any[], questionsCount: number }) {
+export default function CourseTabs({ courseId, subjects, mocks }: { courseId: string, subjects: any[], mocks: any[] }) {
   const [activeTab, setActiveTab] = useState<'subjects' | 'mocks'>('subjects')
 
   return (
