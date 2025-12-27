@@ -11,13 +11,21 @@ interface SiteHeaderProps {
   } | null;
   user?: any;
   profile?: any;
+  schoolSlug?: string | null; // <--- NEW PROP
 }
 
-export function SiteHeader({ school, user, profile }: SiteHeaderProps) {
+export function SiteHeader({ school, user, profile, schoolSlug }: SiteHeaderProps) {
   const pathname = usePathname();
 
+  // Define the Base Path (e.g., "/ops" or "")
+  const basePath = schoolSlug ? `/${schoolSlug}` : "";
+
   // 1. Hide Navbar on Test/Practice Pages
-  // Add any other specific test routes here
+  // We strip the schoolSlug from the pathname to check against prefixes reliably
+  const cleanPath = schoolSlug && pathname.startsWith(`/${schoolSlug}`)
+    ? pathname.replace(`/${schoolSlug}`, "") || "/" 
+    : pathname;
+
   const hiddenPrefixes = [
     "/dashboard",
     "/profile",
@@ -32,12 +40,12 @@ export function SiteHeader({ school, user, profile }: SiteHeaderProps) {
     "/result", 
     "/practice", 
     "/mock", 
-    "/review" // Catches 'review-test' or just 'review'
+    "/review" 
   ];
 
   const isHidden = 
-    hiddenPrefixes.some((prefix) => pathname.startsWith(prefix)) || 
-    hiddenKeywords.some((keyword) => pathname.includes(keyword));
+    hiddenPrefixes.some((prefix) => cleanPath.startsWith(prefix)) || 
+    hiddenKeywords.some((keyword) => cleanPath.includes(keyword));
 
   if (isHidden) return null;
 
@@ -49,7 +57,8 @@ export function SiteHeader({ school, user, profile }: SiteHeaderProps) {
         <div className="flex items-center gap-2">
           {school ? (
             // --- SCHOOL MODE ---
-            <Link href={`/`} className="flex items-center gap-2 group">
+            // Links back to "/ops" instead of "/"
+            <Link href={`${basePath}/`} className="flex items-center gap-2 group">
               {school.logo_url ? (
                 <div className="relative w-10 h-10 md:w-12 md:h-12">
                   <img
@@ -80,46 +89,45 @@ export function SiteHeader({ school, user, profile }: SiteHeaderProps) {
           )}
         </div>
 
-        {/* ================= CENTER: NAVIGATION (Main Site Only) ================= */}
-        {/* Only show these links if we are NOT on a school subdomain */}
-        
-          <nav className="hidden md:flex gap-8 items-center text-sm font-medium text-gray-600">
-            <Link href="/" className="hover:text-blue-600 transition-colors">
-              Home
-            </Link>
-            <Link href="/categories" className="hover:text-blue-600 transition-colors">
-              Streams
-            </Link>
-            <Link href="/about" className="hover:text-blue-600 transition-colors">
-              About
-            </Link>
-            <Link href="/blogs" className="hover:text-blue-600 transition-colors">
-              Blogs
-            </Link>
-            <Link href="/contact" className="hover:text-blue-600 transition-colors">
-              Contact
-            </Link>
-          </nav>
-        
+        {/* ================= CENTER: NAVIGATION ================= */}
+        <nav className="hidden md:flex gap-8 items-center text-sm font-medium text-gray-600">
+          <Link href={`${basePath}/`} className="hover:text-blue-600 transition-colors">
+            Home
+          </Link>
+          <Link href={`${basePath}/categories`} className="hover:text-blue-600 transition-colors">
+            Streams
+          </Link>
+          {/* Keep these global unless you have school-specific About pages */}
+          <Link href={`${basePath}/about`} className="hover:text-blue-600 transition-colors">
+            About
+          </Link>
+          <Link href={`${basePath}/blogs`} className="hover:text-blue-600 transition-colors">
+            Blogs
+          </Link>
+          <Link href={`${basePath}/contact`} className="hover:text-blue-600 transition-colors">
+            Contact
+          </Link>
+        </nav>
 
         {/* ================= RIGHT SIDE: AUTHENTICATION ================= */}
         <div className="flex items-center gap-4">
           {user && profile ? (
             // --- LOGGED IN: UserNav ---
+            // Note: You might need to update UserNav internally to handle links too, 
+            // or we pass the base path if UserNav accepts it.
             <UserNav profile={profile} email={user.email} />
           ) : (
             // --- GUEST VIEW ---
             <>
               <Link
-                href="/login"
+                href={`${basePath}/login`}
                 className="hidden sm:block text-sm font-medium text-gray-700 hover:text-blue-600"
               >
                 Log in
               </Link>
               
-              {/* Dynamic Button Color: Blue for TE, Black for School (as per your code) */}
               <Link
-                href="/signup"
+                href={`${basePath}/signup`}
                 className={`px-5 py-2 rounded-full text-sm font-medium transition-all shadow-md hover:shadow-lg text-white ${
                   school 
                     ? "bg-black hover:bg-gray-800 shadow-gray-200" // School Style

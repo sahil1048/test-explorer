@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Info } from 'lucide-react'
+import { Info, Loader2 } from 'lucide-react' // Added Loader2 for submission state
 import { submitExamAction } from '../../[testType]/[examId]/actions'
 import { InstructionStage } from '@/components/exam/stages/InstructionStage'
 import { ConsentStage } from '@/components/exam/stages/ConsentStage'
 import { ResultReportModal } from '@/components/exam/modals/ResultReportModal'
 import { TestStage } from '@/components/exam/stages/TestStage'
 import { Question } from '@/components/exam/types'
-
+import { toast } from 'sonner' // Assuming you have sonner for notifications
 
 interface MockInterfaceProps {
   exam: any
@@ -30,6 +30,7 @@ export default function MockTestInterface({
   const [answers, setAnswers] = useState<Record<string, string>>({}) 
   const [questionStatus, setQuestionStatus] = useState<Record<string, string>>({}) 
   const [reportData, setReportData] = useState<any>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false) // Added submission state
 
   if (!questions || questions.length === 0) {
     return (
@@ -90,39 +91,49 @@ export default function MockTestInterface({
   }
 
   const handleSubmit = async () => {
-    let correct = 0
-    let incorrect = 0
-    const totalQuestions = questions.length
-    const answeredCount = Object.keys(answers).length
-    const unattempted = totalQuestions - answeredCount
-
-    questions.forEach(q => {
-      const userAnswerId = answers[q.id]
-      if (userAnswerId) {
-        const selectedOpt = q.options.find(o => o.id === userAnswerId)
-      }
-    })
+    if (isSubmitting) return
+    setIsSubmitting(true)
 
     const timeTaken = ((exam.duration_minutes || 180) * 60) - timeLeft
     
-    const result = await submitExamAction(examId, courseId, subjectId, answers, timeTaken, 'mock')
-    const marksPerCorrect = 5 // Based on image
-    const marksPerIncorrect = 1 // Negative marking
-    
-    setReportData({
-      score: result?.score || 0, // Replace with actual logic
-      totalMarks: exam.total_marks || 200,
-      correctCount: result?.correct || 0,
-      incorrectCount: result?.incorrect || 0,
-      unattemptedCount: totalQuestions - (result?.correct + result?.incorrect) || unattempted,
-      timeTaken: timeTaken
-    })
-
-    setStage('report')
+    try {
+      const result = await submitExamAction(examId, courseId, subjectId, answers, timeTaken, 'mock')
+      
+      // Calculate unattempted based on what the server returned
+      // Total = Correct + Incorrect + Unattempted
+      const totalQuestions = questions.length
+      const unattempted = totalQuestions - (result.correct + result.incorrect)
+      
+      setReportData({
+        score: result.score,            
+        totalMarks: result.totalMarks,  // <--- Using dynamic total from server
+        correctCount: result.correct,
+        incorrectCount: result.incorrect,
+        unattemptedCount: unattempted,
+        timeTaken: timeTaken
+      })
+  
+      setStage('report')
+    } catch (error) {
+      console.error("Submission failed", error)
+      toast.error("Failed to submit exam. Please check your connection.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <>
+      {/* Loading Overlay during submission */}
+      {isSubmitting && (
+        <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm flex items-center justify-center text-white">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-10 h-10 animate-spin" />
+            <p className="font-bold text-lg">Submitting your test...</p>
+          </div>
+        </div>
+      )}
+
       {stage === 'instructions' && (
         <InstructionStage onNext={() => setStage('consent')} user={user} />
       )}
@@ -162,7 +173,7 @@ export default function MockTestInterface({
           incorrectCount={reportData.incorrectCount}
           unattemptedCount={reportData.unattemptedCount}
           timeTaken={reportData.timeTaken}
-          onClose={() => router.push('/dashboard')} // Or wherever you want to go
+          onClose={() => router.push('/dashboard')} 
         />
       )}
     </>

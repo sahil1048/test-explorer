@@ -37,10 +37,13 @@ export default async function CategoryExamsPage({
   // --- LIST VIEW ---
   return (
     <div className="min-h-screen bg-white">
-      <header className="px-6 h-20 flex items-center gap-4 border-b border-gray-100">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+      <div className="container mx-auto px-6 h-16 flex items-center gap-4">
+
         <Link href="/categories" className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-black transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back to Streams
         </Link>
+      </div>
       </header>
 
       <main className="container mx-auto px-6 py-12 max-w-5xl">

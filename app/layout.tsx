@@ -10,7 +10,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // 1. Initialize Supabase & User
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -24,43 +23,28 @@ export default async function RootLayout({
     profile = data;
   }
 
-  // 2. ROBUST SUBDOMAIN DETECTION
+  // --- CHANGED LOGIC START ---
   const headersList = await headers();
-  const domain = headersList.get("x-current-domain") || headersList.get("host") || "";
-  
+  const schoolSlug = headersList.get("x-school-slug"); // Read from middleware
+
   let schoolData = null;
-  let subdomain = null;
-
-  const parts = domain.split(".");
-
-  if (domain.includes("localhost")) {
-    if (parts.length >= 2) {
-      subdomain = parts[0];
-    }
-  } else {
-    if (parts.length >= 3) {
-      subdomain = parts[0];
-    }
+  if (schoolSlug) {
+    // We can reuse getSchoolBySubdomain if it just looks up by 'slug' column
+    schoolData = await getSchoolBySubdomain(schoolSlug);
   }
-
-  if (subdomain && subdomain !== "www" && subdomain !== "testexplorer") {
-    schoolData = await getSchoolBySubdomain(subdomain);
-  }
+  // --- CHANGED LOGIC END ---
 
   return (
     <html lang="en">
       <body className="min-h-screen bg-gray-50 font-sans antialiased" suppressHydrationWarning={true}>
-        
         <SiteHeader 
           school={schoolData} 
           user={user} 
           profile={profile} 
+          schoolSlug={schoolSlug} // Pass this so Header knows to format links
         />
-
         <main>{children}</main>
-
         <Toaster />
-        
       </body>
     </html>
   );
