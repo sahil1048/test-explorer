@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js' // Use raw client for Admin actions
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import { ArrowLeft, Building2, Lock, Mail, User } from 'lucide-react'
 import Link from 'next/link'
 
@@ -21,11 +22,15 @@ export default function AddSchoolPage() {
     )
 
     // 2. Extract Form Data
-    const name = formData.get('name') as string
-    const slug = (formData.get('slug') as string).toLowerCase()
-    const adminName = formData.get('adminName') as string
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
+    const name = (formData.get('name') as string || '').trim()
+    const slug = (formData.get('slug') as string || '').toLowerCase().trim().replace(/\s+/g, '-')
+    const adminName = (formData.get('adminName') as string || '').trim()
+    const email = (formData.get('email') as string || '').trim()
+    const password = (formData.get('password') as string || '').trim()
+
+    if (!name || !slug || !adminName || !email || !password) {
+      throw new Error('All fields are required.')
+    }
 
     // 3. Create the Organization (School)
     const { data: org, error: orgError } = await supabaseAdmin
@@ -73,6 +78,7 @@ export default function AddSchoolPage() {
       }
     }
 
+    revalidatePath('/dashboard/admin/schools')
     redirect('/dashboard/admin/schools')
   }
 
