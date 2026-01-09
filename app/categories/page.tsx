@@ -1,10 +1,54 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { ArrowUpRight, Sparkles, Layers } from 'lucide-react'
-import * as LucideIcons from 'lucide-react' // <--- 1. Import all icons
+import * as LucideIcons from 'lucide-react'
+import { redirect } from 'next/navigation'
+
+const STREAM_KEYWORDS: Record<string, string> = {
+  'Non-Medical': 'Engineering', // Will search for category like '%Engineering%' or '%JEE%'
+  'Medical': 'Medical',     // Will search for category like '%Medical%' or '%NEET%'
+  'Commerce': 'Management',
+  'Arts/Humanities': 'Law',
+}
+ 
 
 export default async function CategoriesPage() {
   const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  // 2. SMART REDIRECT LOGIC
+  if (user) {
+    // Fetch user's stream
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('stream')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.stream) {
+      const streamName = profile.stream
+      
+      // Only redirect if the user's stream matches one of our keywords
+      if (STREAM_KEYWORDS[streamName]) {
+        const searchKeyword = STREAM_KEYWORDS[streamName]
+
+        // Find the category ID that matches this stream
+        // We use 'ilike' for a case-insensitive fuzzy match
+        const { data: matchedCategory } = await supabase
+          .from('categories')
+          .select('id')
+          .ilike('title', `%${searchKeyword}%`) 
+          .limit(1)
+          .single()
+
+        // If we found a matching category, REDIRECT user immediately
+        if (matchedCategory) {
+          redirect(`/categories/${matchedCategory.id}`)
+        }
+      }
+    }
+  }
 
   // 1. Fetch Categories
   const { data: categories } = await supabase

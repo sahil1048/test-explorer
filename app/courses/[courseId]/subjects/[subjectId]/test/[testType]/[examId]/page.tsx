@@ -40,39 +40,37 @@ export default async function TestPage({
   const hasFullAccess = !!enrollment || isAdmin
 
   // 🔒 GATEKEEPING: If no full access, check if this test is in the "Free" tier (Top 2)
-  if (!hasFullAccess) {
-     let isAllowed = false
+  // if (!hasFullAccess) {
+  //    let isAllowed = false
 
-     if (testType === 'practice') {
-        // Fetch top 2 practice tests (Free Tier)
-        const { data: allowedTests } = await supabase
-           .from('practice_tests')
-           .select('id')
-           .eq('subject_id', subjectId)
-           .eq('is_published', true)
-           .order('created_at', { ascending: false }) // Must match Subject Page sort order
-           .limit(2)
+  //    if (testType === 'practice') {
+  //       const { data: allowedTests } = await supabase
+  //          .from('practice_tests')
+  //          .select('id')
+  //          .eq('subject_id', subjectId)
+  //          .eq('is_published', true)
+  //          .order('created_at', { ascending: false })
+  //          .limit(2)
         
-        isAllowed = allowedTests?.some(t => t.id === examId) || false
-     } 
-     else if (testType === 'mock') {
-        // Fetch top 2 mock tests (Free Tier)
-        const { data: allowedTests } = await supabase
-           .from('exams')
-           .select('id')
-           .eq('subject_id', subjectId)
-           .eq('category', 'mock')
-           .eq('is_published', true)
-           .order('created_at', { ascending: false }) // Must match Subject Page sort order
-           .limit(2)
+  //       isAllowed = allowedTests?.some(t => t.id === examId) || false
+  //    } 
+  //    else if (testType === 'mock') {
+  //       const { data: allowedTests } = await supabase
+  //          .from('exams')
+  //          .select('id')
+  //          .eq('subject_id', subjectId)
+  //          .eq('category', 'mock')
+  //          .eq('is_published', true)
+  //          .order('created_at', { ascending: false }) 
+  //          .limit(2)
            
-        isAllowed = allowedTests?.some(t => t.id === examId) || false
-     }
+  //       isAllowed = allowedTests?.some(t => t.id === examId) || false
+  //    }
 
-     if (!isAllowed) {
-        return <AccessDenied subjectTitle="Restricted Test" />
-     }
-  }
+  //    if (!isAllowed) {
+  //       return <AccessDenied subjectTitle="Restricted Test" />
+  //    }
+  // }
 
   // 4. FETCH EXAM DATA
   let examData = null

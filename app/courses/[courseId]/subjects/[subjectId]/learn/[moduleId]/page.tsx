@@ -44,21 +44,21 @@ export default async function PrepModulePage({
   const hasFullAccess = !!enrollment || isAdmin
 
   // 🔒 GATEKEEPING: If no full access, check if this module is in the "Free" tier (Top 2)
-  if (!hasFullAccess) {
-    const { data: allowedModules } = await supabase
-       .from('prep_modules')
-       .select('id')
-       .eq('subject_id', subjectId)
-       .eq('is_published', true)
-       .order('created_at', { ascending: true }) // Must match Subject Page sort
-       .limit(2)
+  // if (!hasFullAccess) {
+  //   const { data: allowedModules } = await supabase
+  //      .from('prep_modules')
+  //      .select('id')
+  //      .eq('subject_id', subjectId)
+  //      .eq('is_published', true)
+  //      .order('created_at', { ascending: true })
+  //      .limit(2)
 
-    const isAllowed = allowedModules?.some(m => m.id === moduleId)
+  //   const isAllowed = allowedModules?.some(m => m.id === moduleId)
 
-    if (!isAllowed) {
-       return <AccessDenied subjectTitle={moduleData.title} /> 
-    }
-  }
+  //   if (!isAllowed) {
+  //      return <AccessDenied subjectTitle={moduleData.title} /> 
+  //   }
+  // }
 
   // 4. Fetch Questions
   const { data: questions } = await supabase
