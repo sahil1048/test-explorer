@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { updateExamAction } from '@/app/dashboard/admin/exams/actions'
-import { Save, Upload, Layers, FolderOpen, BookOpen } from 'lucide-react'
+import { Save, Upload, Layers, FolderOpen, BookOpen, Loader2 } from 'lucide-react'
 
 // Define Hierarchy Types
 type Subject = { id: string; title: string }
@@ -16,6 +18,8 @@ interface EditExamFormProps {
 }
 
 export default function EditExamForm({ streams, item, type }: EditExamFormProps) {
+  const router = useRouter()
+  const [isPending, setIsPending] = useState(false)
   // --- STATE ---
   const [selectedStreamId, setSelectedStreamId] = useState('')
   const [selectedCourseId, setSelectedCourseId] = useState('')
@@ -46,8 +50,24 @@ export default function EditExamForm({ streams, item, type }: EditExamFormProps)
   const filteredCourses = streams.find(s => s.id === selectedStreamId)?.courses || []
   const filteredSubjects = filteredCourses.find(c => c.id === selectedCourseId)?.subjects || []
 
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setIsPending(true)
+    const formData = new FormData(event.currentTarget)
+    
+    const result = await updateExamAction(formData)
+
+    if (result && 'error' in result) {
+      toast.error(result.error)
+    } else {
+      toast.success('Exam updated successfully')
+      router.refresh()
+    }
+    setIsPending(false)
+  }
+
   return (
-    <form action={updateExamAction} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <input type="hidden" name="id" value={item.id} />
       <input type="hidden" name="type" value={type} />
 
@@ -165,8 +185,8 @@ export default function EditExamForm({ streams, item, type }: EditExamFormProps)
         <label htmlFor="pub" className="text-sm font-medium text-gray-700">Publish immediately</label>
       </div>
 
-      <button type="submit" className="w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-gray-800 shadow-lg flex items-center justify-center gap-2">
-        <Save className="w-4 h-4" /> Save Changes
+      <button type="submit" disabled={isPending} className="w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-gray-800 shadow-lg flex items-center justify-center gap-2 disabled:opacity-70">
+        {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
       </button>
     </form>
   )

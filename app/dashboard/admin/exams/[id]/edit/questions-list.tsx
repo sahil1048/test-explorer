@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { deleteQuestionAction, deleteAllQuestionsAction } from '../../actions'
 import {
   AlertDialog,
@@ -73,8 +74,16 @@ export default function QuestionsList({
                 onClick={(e) => {
                   e.preventDefault() // Prevent closing immediately to allow async action
                   setIsDeleting(true)
-                  const form = document.getElementById('delete-all-form') as HTMLFormElement
-                  if (form) form.requestSubmit()
+                  
+                  const formData = new FormData()
+                  formData.append('exam_id', examId)
+                  formData.append('exam_type', examType)
+                  
+                  deleteAllQuestionsAction(formData).then((result) => {
+                    if (result && 'error' in result) toast.error(result.error)
+                    else toast.success('All questions deleted')
+                    setIsDeleting(false)
+                  })
                 }}
                 disabled={isDeleting}
                 className="bg-red-600 hover:bg-red-700 text-white"
@@ -85,19 +94,6 @@ export default function QuestionsList({
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* --- HIDDEN FORM (Triggered by Modal) --- */}
-        <form 
-          id="delete-all-form"
-          action={async (formData) => {
-              await deleteAllQuestionsAction(formData)
-              setIsDeleting(false)
-              // The dialog closes automatically when the UI refreshes/redirects
-          }}
-          className="hidden"
-        >
-          <input type="hidden" name="exam_id" value={examId} />
-          <input type="hidden" name="exam_type" value={examType} />
-        </form>
       </div>
 
       <div className="grid gap-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar p-1">
@@ -112,9 +108,15 @@ export default function QuestionsList({
               </p>
             </div>
 
-            <form action={deleteQuestionAction}>
-              <input type="hidden" name="question_id" value={q.id} />
-              <input type="hidden" name="exam_id" value={examId} />
+            <form onSubmit={async (e) => {
+              e.preventDefault()
+              const formData = new FormData()
+              formData.append('question_id', q.id)
+              formData.append('exam_id', examId)
+              const result = await deleteQuestionAction(formData)
+              if (result && 'error' in result) toast.error(result.error)
+              else toast.success('Question deleted')
+            }}>
               <button 
                 type="submit" 
                 className="p-2 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"

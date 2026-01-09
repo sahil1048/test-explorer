@@ -17,7 +17,7 @@ export default function DeleteAnnouncementButton({ id }: { id: string }) {
 
     const result = await deleteAnnouncementAction(formData)
 
-    if (result?.error) {
+    if (result && 'error' in result) {
       toast.error(result.error)
     } else {
       toast.success('Announcement deleted successfully')

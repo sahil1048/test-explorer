@@ -16,7 +16,7 @@ export default function DeleteCourseButton({ courseId }: { courseId: string }) {
 
     const result = await deleteCourseAction(formData)
 
-    if (result?.error) {
+    if (result && 'error' in result) {
       toast.error(result.error)
     } else {
       toast.success('Course deleted successfully')

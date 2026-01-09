@@ -16,7 +16,7 @@ export default function DeleteSchoolButton({ schoolId }: { schoolId: string }) {
 
     const result = await deleteSchoolAction(formData)
 
-    if (result?.error) {
+    if (result && 'error' in result) {
       toast.error(result.error)
     } else {
       toast.success('School deleted successfully')

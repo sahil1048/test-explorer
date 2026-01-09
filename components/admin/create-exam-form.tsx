@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { createExamAction } from '@/app/dashboard/admin/exams/actions' // Adjust path if needed
-import { Upload, Save, Layers, FolderOpen, BookOpen } from 'lucide-react'
+import { Upload, Save, Layers, FolderOpen, BookOpen, Loader2 } from 'lucide-react'
 
 // Define types for the hierarchy
 type Subject = { id: string; title: string }
@@ -15,6 +17,8 @@ interface CreateExamFormProps {
 }
 
 export default function CreateExamForm({ streams, type }: CreateExamFormProps) {
+  const router = useRouter()
+  const [isPending, setIsPending] = useState(false)
   const [selectedStreamId, setSelectedStreamId] = useState<string>('')
   const [selectedCourseId, setSelectedCourseId] = useState<string>('')
 
@@ -24,8 +28,25 @@ export default function CreateExamForm({ streams, type }: CreateExamFormProps) {
   // 2. Filter Subjects based on Course
   const filteredSubjects = filteredCourses.find(c => c.id === selectedCourseId)?.subjects || []
 
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setIsPending(true)
+    const formData = new FormData(event.currentTarget)
+    
+    const result = await createExamAction(formData)
+
+    if (result && 'error' in result) {
+      toast.error(result.error)
+    } else {
+      toast.success('Exam created successfully')
+      router.push('/dashboard/admin/exams')
+      router.refresh()
+    }
+    setIsPending(false)
+  }
+
   return (
-    <form action={createExamAction} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <input type="hidden" name="type" value={type} />
 
       {/* --- HIERARCHY SELECTION --- */}
@@ -149,8 +170,8 @@ export default function CreateExamForm({ streams, type }: CreateExamFormProps) {
          <label htmlFor="pub" className="text-sm font-medium text-gray-700">Publish immediately</label>
       </div>
 
-      <button type="submit" className="w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-gray-800 shadow-lg flex items-center justify-center gap-2">
-        <Save className="w-4 h-4" /> Create & Upload
+      <button type="submit" disabled={isPending} className="w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-gray-800 shadow-lg flex items-center justify-center gap-2 disabled:opacity-70">
+        {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Create & Upload
       </button>
     </form>
   )
