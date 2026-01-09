@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { createStreamAction } from '../actions' 
 import { ArrowLeft, Save, Search, X } from 'lucide-react'
 import Link from 'next/link'
 import * as LucideIcons from 'lucide-react'
+import { toast } from 'sonner'
 
 // 1. Get all valid icon names from the library
 const iconList = Object.keys(LucideIcons).filter((key) => isNaN(Number(key)) && key !== 'createLucideIcon' && key !== 'default')
@@ -18,6 +20,7 @@ const DynamicIcon = ({ name, className }: { name: string, className?: string }) 
 }
 
 export default function NewStreamPage() {
+  const router = useRouter()
   const [iconName, setIconName] = useState('PenTool')
   const [bgColor, setBgColor] = useState('#CEFF1A')
   const [title, setTitle] = useState('')
@@ -33,11 +36,23 @@ export default function NewStreamPage() {
     return iconList.filter(name => name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 100)
   }, [searchQuery])
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const formData = new FormData(event.currentTarget)
+    
     const rawColor = formData.get('color_picker') as string
     const formattedClass = `bg-[${rawColor}]`
     formData.set('bg_color', formattedClass)
-    await createStreamAction(formData)
+    
+    const result = await createStreamAction(formData)
+    
+    if (result && 'error' in result) {
+      toast.error(result.error)
+    } else {
+      toast.success('Stream created successfully')
+      router.push('/dashboard/admin/streams')
+      router.refresh()
+    }
   }
 
   return (
@@ -52,7 +67,7 @@ export default function NewStreamPage() {
         <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm h-fit">
           <h1 className="text-2xl font-black text-gray-900 mb-6">Create New Stream</h1>
           
-          <form action={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             
             {/* Title & Order */}
             <div className="grid md:grid-cols-2 gap-4">

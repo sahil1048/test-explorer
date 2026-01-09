@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { parse } from 'csv-parse/sync'
 
 // 1. Robust Interface (Flexible Headers)
@@ -65,7 +64,7 @@ async function parseAndInsertQuestions(
   }) as CSVQuestionRow[]
 
   if (records.length === 0) {
-    throw new Error("Parsed 0 records. Check if CSV is empty.")
+    return { error: "Parsed 0 records. Check if CSV is empty." }
   }
 
   console.log(`[CSV] Parsed ${records.length} rows. Headers:`, Object.keys(records[0]))
@@ -152,8 +151,9 @@ async function parseAndInsertQuestions(
   console.log(`[CSV] Complete. Inserted: ${insertedCount}`)
   
   if (insertedCount === 0) {
-    throw new Error(`Failed to insert any questions. ${errors.length > 0 ? errors[0] : 'Check CSV format.'}`)
+    return { error: `Failed to insert any questions. ${errors.length > 0 ? errors[0] : 'Check CSV format.'}` }
   }
+  return { success: true }
 }
 
 // --- ACTIONS ---
@@ -172,35 +172,30 @@ export async function createExamAction(formData: FormData) {
   let newRecordId = null
 
   // 1. Insert into correct table
-  try {
-    if (type === 'prep') {
-      const { data, error } = await supabase.from('prep_modules').insert({ title, description, subject_id, is_published }).select('id').single()
-      if (error) throw error
-      newRecordId = data.id
-    } 
-    else if (type === 'mock') {
-      const { data, error } = await supabase.from('exams').insert({ title, description, subject_id, duration_minutes: duration, is_published, category: 'mock' }).select('id').single()
-      if (error) throw error
-      newRecordId = data.id
-    } 
-    else if (type === 'practice') {
-      const { data, error } = await supabase.from('practice_tests').insert({ title, description, subject_id, duration_minutes: duration, is_published }).select('id').single()
-      if (error) throw error
-      newRecordId = data.id
-    }
+  if (type === 'prep') {
+    const { data, error } = await supabase.from('prep_modules').insert({ title, description, subject_id, is_published }).select('id').single()
+    if (error) return { error: error.message }
+    newRecordId = data.id
+  } 
+  else if (type === 'mock') {
+    const { data, error } = await supabase.from('exams').insert({ title, description, subject_id, duration_minutes: duration, is_published, category: 'mock' }).select('id').single()
+    if (error) return { error: error.message }
+    newRecordId = data.id
+  } 
+  else if (type === 'practice') {
+    const { data, error } = await supabase.from('practice_tests').insert({ title, description, subject_id, duration_minutes: duration, is_published }).select('id').single()
+    if (error) return { error: error.message }
+    newRecordId = data.id
+  }
 
-    // 2. Process CSV if uploaded
-    if (newRecordId && csvFile && csvFile.size > 0) {
-      await parseAndInsertQuestions(csvFile, newRecordId, type)
-    }
-  } catch (error: any) {
-    console.error("Creation Failed:", error)
-    // Optional: cleanup if failed
-    throw new Error(error.message)
+  // 2. Process CSV if uploaded
+  if (newRecordId && csvFile && csvFile.size > 0) {
+    const csvResult = await parseAndInsertQuestions(csvFile, newRecordId, type)
+    if (csvResult?.error) return { error: csvResult.error }
   }
 
   revalidatePath('/dashboard/admin/exams')
-  redirect('/dashboard/admin/exams')
+  return { success: true }
 }
 
 export async function updateExamAction(formData: FormData) {
@@ -230,20 +225,18 @@ export async function updateExamAction(formData: FormData) {
     .update(updatePayload)
     .eq('id', id)
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   // 2. Process CSV if uploaded (Appending questions to existing exam)
   if (csvFile && csvFile.size > 0) {
-    try {
-      await parseAndInsertQuestions(csvFile, id, type)
-    } catch (error: any) {
-      console.error("Update CSV Failed:", error)
-      throw new Error("Failed to process CSV: " + error.message)
+    const csvResult = await parseAndInsertQuestions(csvFile, id, type)
+    if (csvResult?.error) {
+      return { error: "Failed to process CSV: " + csvResult.error }
     }
   }
 
   revalidatePath('/dashboard/admin/exams')
-  redirect('/dashboard/admin/exams')
+  return { success: true }
 }
 
 export async function deleteExamAction(formData: FormData) {
@@ -257,9 +250,10 @@ export async function deleteExamAction(formData: FormData) {
   else if (type === 'practice') table = 'practice_tests'
 
   const { error } = await supabase.from(table).delete().eq('id', id)
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   revalidatePath('/dashboard/admin/exams')
+  return { success: true }
 }
 
 export async function deleteQuestionAction(formData: FormData) {
@@ -272,9 +266,10 @@ export async function deleteQuestionAction(formData: FormData) {
     .delete()
     .eq('id', questionId)
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   revalidatePath(`/dashboard/admin/exams/${examId}/edit`)
+  return { success: true }
 }
 
 export async function deleteAllQuestionsAction(formData: FormData) {
@@ -291,7 +286,8 @@ export async function deleteAllQuestionsAction(formData: FormData) {
     .delete()
     .eq(questionFK, examId)
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   revalidatePath(`/dashboard/admin/exams/${examId}/edit`)
+  return { success: true }
 }

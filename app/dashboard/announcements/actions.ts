@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache'
 export async function createAnnouncementAction(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
+  if (!user) return { error: 'Unauthorized' }
 
   // Get Admin's School ID
   const { data: profile } = await supabase
@@ -15,7 +15,7 @@ export async function createAnnouncementAction(formData: FormData) {
     .eq('id', user.id)
     .single()
 
-  if (!profile?.organization_id) throw new Error('No school assigned')
+  if (!profile?.organization_id) return { error: 'No school assigned' }
 
   const title = formData.get('title') as string
   const content = formData.get('content') as string
@@ -28,10 +28,11 @@ export async function createAnnouncementAction(formData: FormData) {
       content
     })
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   revalidatePath('/dashboard/announcements')
   revalidatePath('/') // Revalidate landing pages if cached
+  return { success: true }
 }
 
 export async function deleteAnnouncementAction(formData: FormData) {
@@ -43,7 +44,8 @@ export async function deleteAnnouncementAction(formData: FormData) {
     .delete()
     .eq('id', id)
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   revalidatePath('/dashboard/announcements')
+  return { success: true }
 }

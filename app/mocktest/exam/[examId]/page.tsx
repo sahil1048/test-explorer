@@ -92,7 +92,7 @@ export default async function MockExamPage({
     
     if (attemptError) {
       console.error("Attempt creation failed:", attemptError)
-      throw new Error("Failed to start test session.")
+      return redirect('/dashboard?error=Failed to start test session')
     }
     attempt = newAttempt
   }

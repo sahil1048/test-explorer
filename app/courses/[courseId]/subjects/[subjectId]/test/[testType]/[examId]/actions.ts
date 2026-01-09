@@ -14,7 +14,7 @@ export async function submitExamAction(
   
   // 1. Check User Session
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
+  if (!user) return { error: 'Unauthorized' }
 
   // 2. Fetch Questions
   let query = supabase
@@ -31,7 +31,7 @@ export async function submitExamAction(
 
   if (fetchError || !questions) {
     console.error('Error fetching questions:', fetchError)
-    throw new Error('Failed to load exam data for grading.')
+    return { error: 'Failed to load exam data for grading.' }
   }
 
   // 3. Calculate Counts
@@ -89,7 +89,7 @@ export async function submitExamAction(
 
   if (saveError) {
     console.error('Submission Error:', saveError)
-    throw new Error('Failed to save attempt')
+    return { error: 'Failed to save attempt' }
   }
 
   // 6. RETURN Data with Stats

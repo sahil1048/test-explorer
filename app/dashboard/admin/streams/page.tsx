@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Plus, Pencil, Trash2, Layers } from 'lucide-react'
-import { deleteStreamAction } from './actions'
+import { Plus, Pencil, Layers } from 'lucide-react'
+import DeleteStreamButton from './delete-button'
 import * as LucideIcons from 'lucide-react' // Import icons for preview
 
 // Helper to render icon
@@ -87,15 +87,7 @@ export default async function StreamsAdminPage() {
                    >
                      <Pencil className="w-5 h-5" />
                    </Link>
-                   <form action={deleteStreamAction}>
-                     <input type="hidden" name="id" value={stream.id} />
-                     <button 
-                       type="submit" 
-                       className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                     >
-                       <Trash2 className="w-5 h-5" />
-                     </button>
-                   </form>
+                   <DeleteStreamButton streamId={stream.id} />
                 </div>
               </div>
             )

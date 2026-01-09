@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 
 // Create Course
 export async function createCourseAction(formData: FormData) {
@@ -22,9 +21,10 @@ export async function createCourseAction(formData: FormData) {
       category_id: category_id || null // Handle "Select Category" (empty string) case
     })
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
-  revalidatePath('/dashboard/admin/manage-content')
+  revalidatePath('/dashboard/admin/courses')
+  return { success: true }
 }
 
 // Update Course
@@ -47,9 +47,10 @@ export async function updateCourseAction(formData: FormData) {
     })
     .eq('id', id)
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
-    revalidatePath('/dashboard/admin/manage-content')
+  revalidatePath('/dashboard/admin/courses')
+  return { success: true }
 }
 
 // Delete Course
@@ -59,6 +60,7 @@ export async function deleteCourseAction(formData: FormData) {
 
   const { error } = await supabase.from('courses').delete().eq('id', id)
   
-  if (error) throw new Error(error.message)
-    revalidatePath('/dashboard/admin/manage-content')
+  if (error) return { error: error.message }
+  revalidatePath('/dashboard/admin/courses')
+  return { success: true }
 }

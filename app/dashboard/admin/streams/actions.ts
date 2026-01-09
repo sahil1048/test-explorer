@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 
 // Create Stream
 export async function createStreamAction(formData: FormData) {
@@ -18,9 +17,10 @@ export async function createStreamAction(formData: FormData) {
     .from('categories')
     .insert({ title, description, icon_key, bg_color, order_index })
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
-  revalidatePath('/dashboard/admin/manage-content')
+  revalidatePath('/dashboard/admin/streams')
+  return { success: true }
 }
 
 // Update Stream
@@ -39,9 +39,10 @@ export async function updateStreamAction(formData: FormData) {
     .update({ title, description, icon_key, bg_color, order_index })
     .eq('id', id)
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
-  revalidatePath('/dashboard/admin/manage-content')
+  revalidatePath('/dashboard/admin/streams')
+  return { success: true }
 }
 
 // Delete Stream
@@ -51,7 +52,8 @@ export async function deleteStreamAction(formData: FormData) {
 
   const { error } = await supabase.from('categories').delete().eq('id', id)
   
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   
-  revalidatePath('/dashboard/admin/manage-content')
+  revalidatePath('/dashboard/admin/streams')
+  return { success: true }
 }

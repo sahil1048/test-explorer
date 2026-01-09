@@ -81,7 +81,8 @@ export async function login(formData: FormData) {
   revalidatePath('/', 'layout')
   
   const destination = await getRedirectPath(data.user.id)
-  redirect(destination)
+  
+  return { success: true, redirectUrl: destination }
 }
 
 export async function signup(formData: FormData) {
@@ -167,7 +168,7 @@ export async function signup(formData: FormData) {
   
   if (userId) {
     const destination = await getRedirectPath(userId)
-    redirect(destination)
+    return { success: true, redirectUrl: destination }
   } else {
     return { error: "Signup failed to retrieve user ID." }
   }
@@ -177,7 +178,7 @@ export async function signout() {
   const supabase = await createClient()
   await supabase.auth.signOut()
   revalidatePath('/', 'layout')
-  redirect('/')
+  return { success: true }
 }
 
 export async function forgotPassword(formData: FormData) {

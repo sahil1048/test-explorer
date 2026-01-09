@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { createAnnouncementAction, deleteAnnouncementAction } from './actions'
 import { Megaphone, Trash2, Plus, Bell } from 'lucide-react'
+import CreateAnnouncementForm from './create-announcement-form'
+import DeleteAnnouncementButton from './delete-announcement-button'
 
 export default async function AnnouncementsPage() {
   const supabase = await createClient()
@@ -45,19 +46,7 @@ export default async function AnnouncementsPage() {
             <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Plus className="w-4 h-4" /> Add New
             </h2>
-            <form action={createAnnouncementAction} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wide">Headline</label>
-                <input name="title" required placeholder="e.g. Exam Schedule Released" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-black outline-none text-sm font-medium" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wide">Content</label>
-                <textarea name="content" required rows={4} placeholder="Details about the announcement..." className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-black outline-none text-sm font-medium resize-none" />
-              </div>
-              <button type="submit" className="w-full bg-black text-white font-bold py-3 rounded-xl hover:bg-gray-800 transition-all text-sm">
-                Post Announcement
-              </button>
-            </form>
+            <CreateAnnouncementForm />
           </div>
         </div>
 
@@ -79,12 +68,7 @@ export default async function AnnouncementsPage() {
                        Posted on {new Date(item.created_at).toLocaleDateString()}
                      </p>
                    </div>
-                   <form action={deleteAnnouncementAction}>
-                     <input type="hidden" name="id" value={item.id} />
-                     <button type="submit" className="p-2 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                       <Trash2 className="w-4 h-4" />
-                     </button>
-                   </form>
+                   <DeleteAnnouncementButton id={item.id} />
                  </div>
                </div>
              ))

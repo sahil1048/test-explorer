@@ -21,7 +21,7 @@ export default function AddSchoolPage() {
     const result = await createSchoolAction(formData)
     setIsPending(false)
 
-    if (result?.error) {
+    if (result && 'error' in result) {
       // SERVER said there was an error, so CLIENT shows toast
       toast.error(result.error) 
     } else {

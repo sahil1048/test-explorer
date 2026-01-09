@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Plus, Pencil, Trash2, Layers, BookOpen, GraduationCap } from 'lucide-react'
-import { deleteCourseAction } from './actions'
+import { Plus, Pencil, Layers, GraduationCap } from 'lucide-react'
+import DeleteCourseButton from './delete-button'
 import {
   Accordion,
   AccordionContent,
@@ -109,16 +109,7 @@ export default async function CoursesAdminPage() {
                              >
                                <Pencil className="w-4 h-4" />
                              </Link>
-                             <form action={deleteCourseAction}>
-                               <input type="hidden" name="id" value={course.id} />
-                               <button 
-                                 type="submit" 
-                                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                 title="Delete Exam"
-                               >
-                                 <Trash2 className="w-4 h-4" />
-                               </button>
-                             </form>
+                             <DeleteCourseButton courseId={course.id} />
                           </div>
                         </div>
                       ))}
