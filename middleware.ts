@@ -3,12 +3,17 @@ import { createServerClient } from '@supabase/ssr'
 
 export const config = {
   matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
 
-// 1. SYSTEM ROUTES: These are reserved and CANNOT be used as school slugs.
-// If a URL starts with these, we treat it as a Main Site route.
 const SYSTEM_ROUTES = new Set([
   'login', 'signup', 'dashboard', 'api', 'about', 'contact', 
   'streams', 'categories', 'blogs', 'forgot-password', 
@@ -17,42 +22,43 @@ const SYSTEM_ROUTES = new Set([
 ])
 
 export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
+
   const url = request.nextUrl
   const path = url.pathname
-  const requestHeaders = new Headers(request.headers)
-  
-  // 2. Extract Potential Slug
   const parts = path.split('/')
-  const candidateSlug = parts[1] // e.g. "ops" from "/ops/dashboard" or "categories" from "/categories"
+  const candidateSlug = parts[1]
 
-  let currentSchoolSlug = null
+  let currentSchoolSlug: string | null = null
   let isSchoolRoute = false
 
-  // 3. Determine if this is a School Route
-  // Logic: It has a first segment AND that segment is NOT a system route
   if (candidateSlug && !SYSTEM_ROUTES.has(candidateSlug)) {
     isSchoolRoute = true
     currentSchoolSlug = candidateSlug
     
-    // Add headers so Layout/Page knows the school
+    const rewriteUrl = url.clone()
+    rewriteUrl.pathname = `/${parts.slice(2).join('/')}` 
+    
+    const requestHeaders = new Headers(request.headers)
     requestHeaders.set('x-school-slug', currentSchoolSlug)
+    requestHeaders.set('x-current-path', path) 
+
+    response = NextResponse.rewrite(rewriteUrl, {
+      request: { headers: requestHeaders }
+    })
+  } else {
+    const requestHeaders = new Headers(request.headers)
     requestHeaders.set('x-current-path', path)
     
-    // Rewrite Logic: Remove the slug from the internal path
-    // Browser: /ops/categories -> Server sees: /categories
-    const newPath = `/${parts.slice(2).join('/')}`
-    url.pathname = newPath
-  } else {
-    // Main Site Route
-    requestHeaders.set('x-current-path', path)
+    response = NextResponse.next({
+      request: { headers: requestHeaders }
+    })
   }
 
-  // 4. Create Response
-  let response = isSchoolRoute 
-    ? NextResponse.rewrite(url, { request: { headers: requestHeaders } })
-    : NextResponse.next({ request: { headers: requestHeaders } })
-
-  // 5. Supabase Auth Setup
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -61,9 +67,21 @@ export async function middleware(request: NextRequest) {
         getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          response = isSchoolRoute 
-            ? NextResponse.rewrite(url, { request: { headers: requestHeaders } })
-            : NextResponse.next({ request: { headers: requestHeaders } })
+          
+          if (isSchoolRoute && currentSchoolSlug) {
+             const rewriteUrl = url.clone()
+             rewriteUrl.pathname = `/${parts.slice(2).join('/')}`
+             const requestHeaders = new Headers(request.headers)
+             requestHeaders.set('x-school-slug', currentSchoolSlug)
+             requestHeaders.set('x-current-path', path)
+             
+             response = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } })
+          } else {
+             const requestHeaders = new Headers(request.headers)
+             requestHeaders.set('x-current-path', path)
+             response = NextResponse.next({ request: { headers: requestHeaders } })
+          }
+          
           cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
         },
       },
@@ -72,38 +90,33 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // 6. Auth Protection Logic
-  // Check against the REWRITTEN url.pathname (internal path)
-  const internalPath = url.pathname
-  
+  const internalPath = isSchoolRoute ? `/${parts.slice(2).join('/')}` : path
+
   const authRoutes = ['/login', '/signup', '/forgot-password', '/update-password']
-  
-  // A. Redirect Logged-In Users away from Auth Pages
-  if (user && authRoutes.some(route => internalPath.startsWith(route))) {
+  const isAuthRoute = authRoutes.some(route => internalPath.startsWith(route))
+
+  if (user && isAuthRoute) {
     const redirectBase = isSchoolRoute ? `/${currentSchoolSlug}` : ''
     return NextResponse.redirect(new URL(`${redirectBase}/categories`, request.url))
   }
 
-  // B. Define Public Paths (Routes accessible without login)
   const isPublicPath = 
     internalPath === '/' || 
     internalPath.startsWith('/about') ||         
     internalPath.startsWith('/contact') || 
     internalPath.startsWith('/streams') ||    
-    internalPath.startsWith('/categories') || // <--- Important!       
-    internalPath.startsWith('/courses') ||    // <--- Important!
+    internalPath.startsWith('/categories') ||    
+    internalPath.startsWith('/courses') ||    
     internalPath.startsWith('/blogs') ||         
     internalPath.startsWith('/auth') ||           
     internalPath.startsWith('/api') ||
     internalPath.startsWith('/mocktest') ||
-    authRoutes.some(route => internalPath.startsWith(route))
+    isAuthRoute 
 
-  // C. Redirect Guest Users to Login
-  if (!user && !isPublicPath) {
+    if (!user && !isPublicPath) {
     const redirectBase = isSchoolRoute ? `/${currentSchoolSlug}` : ''
-    // Preserve the original destination for redirect back
-    const nextUrl = isSchoolRoute ? path : internalPath
-    return NextResponse.redirect(new URL(`${redirectBase}/login?next=${nextUrl}`, request.url))
+    const returnUrl = isSchoolRoute ? path : internalPath
+    return NextResponse.redirect(new URL(`${redirectBase}/login?next=${returnUrl}`, request.url))
   }
 
   return response
