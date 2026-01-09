@@ -99,16 +99,21 @@ export default function MockTestInterface({
     try {
       const result = await submitExamAction(examId, courseId, subjectId, answers, timeTaken, 'mock')
       
+      if (result && 'error' in result) {
+        toast.error(result.error)
+        return
+      }
+
       // Calculate unattempted based on what the server returned
       // Total = Correct + Incorrect + Unattempted
       const totalQuestions = questions.length
-      const unattempted = totalQuestions - (result.correct + result.incorrect)
+      const unattempted = totalQuestions - ((result.correct ?? 0) + (result.incorrect ?? 0))
       
       setReportData({
-        score: result.score,            
-        totalMarks: result.totalMarks,  // <--- Using dynamic total from server
-        correctCount: result.correct,
-        incorrectCount: result.incorrect,
+        score: result.score ?? 0,            
+        totalMarks: result.totalMarks ?? 0,  // <--- Using dynamic total from server
+        correctCount: result.correct ?? 0,
+        incorrectCount: result.incorrect ?? 0,
         unattemptedCount: unattempted,
         timeTaken: timeTaken
       })
