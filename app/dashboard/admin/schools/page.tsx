@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Plus, Building, ExternalLink, Pencil, Trash2 } from 'lucide-react'
-import { deleteSchoolAction } from './actions'
+import { Plus, Building, ExternalLink, Pencil } from 'lucide-react'
+import DeleteSchoolButton from './delete-button'
 
 export default async function ManageSchoolsPage() {
   const supabase = await createClient()
@@ -75,18 +75,7 @@ export default async function ManageSchoolsPage() {
                </Link>
 
                {/* 3. Delete Action (Form) */}
-               <form action={deleteSchoolAction}>
-                 <input type="hidden" name="schoolId" value={school.id} />
-                 <button 
-                   type="submit"
-                   className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                   title="Delete School"
-                   // Add a simple confirmation
-                   // Note: For a proper modal, we'd use a Client Component, but this works for simple actions
-                 >
-                   <Trash2 className="w-5 h-5" />
-                 </button>
-               </form>
+               <DeleteSchoolButton schoolId={school.id} />
             </div>
           </div>
         ))}

@@ -1,85 +1,34 @@
+'use client'
 import { createClient } from '@supabase/supabase-js' // Use raw client for Admin actions
-import { redirect } from 'next/navigation'
-import { revalidatePath } from 'next/cache'
+import { redirect, useRouter } from 'next/navigation'
+import { createSchoolAction } from '../actions'
 import { ArrowLeft, Building2, Lock, Mail, User } from 'lucide-react'
 import Link from 'next/link'
+import { toast } from 'sonner'
+import { useState } from 'react'
 
 export default function AddSchoolPage() {
+  const router = useRouter()
+  const [isPending, setIsPending] = useState(false)
   
-  async function createSchool(formData: FormData) {
-    'use server'
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setIsPending(true)
     
-    // 1. Initialize Admin Client (Bypasses RLS)
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!, 
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const formData = new FormData(event.currentTarget)
+    
+    // Call the Server Action
+    const result = await createSchoolAction(formData)
+    setIsPending(false)
 
-    // 2. Extract Form Data
-    const name = (formData.get('name') as string || '').trim()
-    const slug = (formData.get('slug') as string || '').toLowerCase().trim().replace(/\s+/g, '-')
-    const adminName = (formData.get('adminName') as string || '').trim()
-    const email = (formData.get('email') as string || '').trim()
-    const password = (formData.get('password') as string || '').trim()
-
-    if (!name || !slug || !adminName || !email || !password) {
-      throw new Error('All fields are required.')
+    if (result?.error) {
+      // SERVER said there was an error, so CLIENT shows toast
+      toast.error(result.error) 
+    } else {
+      toast.success('School created successfully!')
+      router.push('/dashboard/admin/schools')
+      router.refresh()
     }
-
-    // 3. Create the Organization (School)
-    const { data: org, error: orgError } = await supabaseAdmin
-      .from('organizations')
-      .insert({ name, slug, welcome_message: `Welcome to ${name}` })
-      .select()
-      .single()
-
-    if (orgError) {
-      console.error('Org Error:', orgError)
-      // CHANGE HERE: Throw instead of return
-      throw new Error('Failed to create school. Slug might be taken.') 
-    }
-
-    // 4. Create the School Admin User (Auth)
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name: adminName }
-    })
-
-    if (authError) {
-      console.error('Auth Error:', authError)
-      // Cleanup orphan org
-      await supabaseAdmin.from('organizations').delete().eq('id', org.id)
-      // CHANGE HERE: Throw instead of return
-      throw new Error('Failed to create admin user. Email might be taken.')
-    }
-
-    // 5. Create Profile & Link to Org
-    if (authUser.user && org) {
-       const { error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .upsert({ // <--- CHANGED FROM insert TO upsert
-          id: authUser.user.id,
-          full_name: adminName,
-          role: 'school_admin', // This will now overwrite 'student'
-          organization_id: org.id
-        })
-      
-      if (profileError) {
-        console.error('Profile Error:', profileError)
-        // Optional: Throw error if critical
-      }
-    }
-
-    revalidatePath('/dashboard/admin/schools')
-    redirect('/dashboard/admin/schools')
   }
 
   return (
@@ -94,7 +43,7 @@ export default function AddSchoolPage() {
            <p className="text-gray-500">Create the school entity and its primary administrator account.</p>
         </div>
         
-        <form action={createSchool} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           
           {/* Section 1: School Details */}
           <div className="space-y-4">
