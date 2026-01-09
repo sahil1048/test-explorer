@@ -48,16 +48,17 @@ export default async function EditSchoolPage({ params }: { params: Promise<{ id:
           <div>
             <label className="block text-sm font-bold text-gray-900 mb-2">Subdomain Slug</label>
             <div className="flex items-center">
+              <span className="px-4 py-3 bg-gray-100 border border-r-0 border-gray-200 text-gray-500 font-medium rounded-l-xl">
+                testexplorer.in/
+              </span>
               <input 
                 name="slug" 
                 type="text" 
                 defaultValue={school.slug}
                 required
-                className="flex-1 px-4 py-3 rounded-l-xl border border-gray-200 focus:ring-2 focus:ring-black outline-none transition-all"
+                className="flex-1 px-4 py-3 rounded-r-xl border border-gray-200 focus:ring-2 focus:ring-black outline-none transition-all"
               />
-              <span className="px-4 py-3 bg-gray-100 border border-l-0 border-gray-200 text-gray-500 font-medium rounded-r-xl">
-                .testexplorer.com
-              </span>
+              
             </div>
             <p className="text-xs text-yellow-600 mt-2 font-medium">
               Warning: Changing this will break existing bookmarks for students.

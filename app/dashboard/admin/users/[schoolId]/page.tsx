@@ -151,7 +151,7 @@ if (sort === 'name_asc') {
                        <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
                          <MapPin className="w-4 h-4 text-gray-300" />
                          {/* @ts-ignore */}
-                         {student.address || <span className="text-gray-300 italic">No address</span>}
+                         {student.city && student.state ? `${student.city}, ${student.state}` : <span className="text-gray-300 italic">No address</span>}
                        </div>
                     </td>
 
