@@ -49,7 +49,8 @@ export default function SubjectContent({
 }: SubjectContentProps) {
   const [activeTab, setActiveTab] = useState<'prep' | 'practice' | 'mock'>('prep')
 
-  const isLocked = (index: number) => !hasFullAccess && index >= 2
+  // const isLocked = (index: number) => !hasFullAccess && index >= 2
+  const isLocked = (index: number) => false
 
   const handleLockedClick = (e: React.MouseEvent) => {
     e.preventDefault()

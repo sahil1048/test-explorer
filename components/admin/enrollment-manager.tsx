@@ -167,7 +167,7 @@ export default function EnrollmentManager({
 
                       return (
                         <div key={courseTitle} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                          <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wider text-blue-600">{courseTitle}</h3>
+                          {/* <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wider text-blue-600">{courseTitle}</h3> */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {filtered.map((subject) => {
                               const isSelected = selectedIds.includes(subject.id);
