@@ -17,7 +17,7 @@ export default function DeleteTagButton({ tagId }: { tagId: string }) {
 
     const result = await deleteTagAction(formData)
 
-    if (result?.error) {
+    if (result && 'error' in result) {
       toast.error(result.error)
     } else {
       toast.success('Tag deleted successfully')

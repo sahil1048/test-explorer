@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { 
   Plus, Pencil, Trash2, 
   PlayCircle, Trophy, FileText, 
@@ -161,7 +162,16 @@ export default function ExamsClient({ streams }: { streams: Stream[] }) {
                                                         >
                                                           <Pencil className="w-3.5 h-3.5" />
                                                         </Link>
-                                                        <form action={deleteExamAction}>
+                                                        <form onSubmit={async (e) => {
+                                                          e.preventDefault()
+                                                          const formData = new FormData(e.currentTarget)
+                                                          const result = await deleteExamAction(formData)
+                                                          if (result && 'error' in result) {
+                                                            toast.error(result.error)
+                                                          } else {
+                                                            toast.success('Deleted successfully')
+                                                          }
+                                                        }}>
                                                           <input type="hidden" name="id" value={item.id} />
                                                           <input type="hidden" name="type" value={activeTab} />
                                                           <button 

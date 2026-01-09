@@ -25,14 +25,13 @@ export default function LoginPage() {
     
     const result = await login(formData)
     
-    if (result?.error) {
+    if (result && 'error' in result) {
       // Dismiss loading, show error
       toast.dismiss(toastId)
-      toast.error(result.error)
-      setError(result.error)
+      toast.error(result.error || 'Login failed')
+      setError(result.error || 'Login failed')
       setLoading(false)
-    } else if (result?.success && result?.redirectUrl) {
-      // Success!
+    } else if (result && 'success' in result && result.redirectUrl) {
       toast.dismiss(toastId)
       toast.success('Welcome back! Redirecting...')
       router.push(result.redirectUrl)
