@@ -17,7 +17,7 @@ export default function EditSchoolForm({ school }: { school: any }) {
     const formData = new FormData(event.currentTarget)
     const result = await updateSchoolAction(formData)
     
-    if (result?.error) {
+    if (result && 'error' in result) {
       toast.error(result.error)
     } else {
       toast.success('School updated successfully')

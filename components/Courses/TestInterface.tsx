@@ -12,7 +12,7 @@ import {
   CheckCircle2,
   ListTodo
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 type Option = { id: string; text: string }
 type Question = { id: string; text: string; options: Option[] }
@@ -24,7 +24,7 @@ interface TestInterfaceProps {
   subjectId: string
   testType: string
   // We pass the action as a prop to avoid import path issues
-  submitAction: (answers: Record<string, string>, timeTaken: number) => Promise<{ success: boolean; redirectUrl?: string }>
+  submitAction: (answers: Record<string, string>, timeTaken: number) => Promise<{ error?: string; success?: boolean; redirectUrl?: string }>
 }
 
 export default function TestInterface({ 
@@ -85,19 +85,27 @@ export default function TestInterface({
     
     try {
       // 1. Call Action
-      // @ts-ignore - Typescript might complain about return type if not updated in props interface, ignore for now
       const result = await submitAction(answers, timeTaken)
       
-      // 2. Handle Redirect Client-Side
-      if (result && result.success && result.redirectUrl) {
-        router.push(result.redirectUrl)
+      if (result && 'error' in result && result.error) {
+        toast.error(result.error)
+        setIsSubmitting(false)
+        return
+      }
+
+      if (result?.success) {
+        toast.success("Test submitted successfully!")
+        if (result.redirectUrl) {
+          router.push(result.redirectUrl)
+        }
       } else {
-        throw new Error("Invalid response from server")
+        toast.error("Invalid response from server")
+        setIsSubmitting(false)
       }
 
     } catch (err) {
       console.error(err)
-      alert("Submission failed. Please try again.")
+      toast.error("Submission failed. Please try again.")
       setIsSubmitting(false)
     }
   }

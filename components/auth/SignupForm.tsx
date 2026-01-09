@@ -7,6 +7,7 @@ import Image from 'next/image'
 import SearchSchoolInput from '@/components/signup/schoolSearchInput'
 import { toast } from "sonner"
 import { State, City } from 'country-state-city'
+import { useRouter } from 'next/navigation'
 
 interface SignupFormProps {
   school?: { id: string; name: string } | null
@@ -16,46 +17,81 @@ export default function SignupForm({ school }: SignupFormProps) {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
   
   const [selectedStream, setSelectedStream] = useState<string>("") 
   const [selectedStateIso, setSelectedStateIso] = useState<string>("")
   const [selectedCity, setSelectedCity] = useState<string>("")
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string>('')
 
-  const handleSubmit = async (formData: FormData) => {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
     setLoading(true)
-    setError(null)
-
-    if (!selectedStream) {
-      toast.error('Please select your stream (Medical, Non-Medical, etc.)')
-      setLoading(false)
-      return
-    }
-
-    if (!selectedStateIso || !selectedCity) {
-      toast.error('Please select your state and city')
-      setLoading(false)
-      return
-    }
-
-    const stateName = State.getStateByCodeAndCountry(selectedStateIso, 'IN')?.name || selectedStateIso
-
-    formData.set('stream', selectedStream)
-    formData.set('state', stateName)
-    formData.set('city', selectedCity)
     
-    if (school?.id && school.id !== 'undefined') {
-      formData.set('schoolId', school.id)
+    const formData = new FormData(event.currentTarget)
+    
+    // Append the selected school ID manually if needed
+    if (selectedSchoolId) {
+      formData.set('schoolId', selectedSchoolId)
     }
 
+    const toastId = toast.loading('Creating your account...')
 
-    const result = await signup(formData)
-    
-    if (result?.error) {
-      setError(result.error)
-      toast.error(result.error)
+    try {
+      const result = await signup(formData)
+
+      if (result?.error) {
+        toast.dismiss(toastId)
+        toast.error(result.error)
+        setLoading(false)
+      } else if (result?.success && result?.redirectUrl) {
+        toast.dismiss(toastId)
+        toast.success('Account created successfully!')
+        router.push(result.redirectUrl)
+        // Keep loading true while redirecting
+      }
+    } catch (err) {
+      toast.dismiss(toastId)
+      toast.error('An unexpected error occurred.')
       setLoading(false)
     }
   }
+
+  // const handleSubmit = async (formData: FormData) => {
+  //   setLoading(true)
+  //   setError(null)
+
+  //   if (!selectedStream) {
+  //     toast.error('Please select your stream (Medical, Non-Medical, etc.)')
+  //     setLoading(false)
+  //     return
+  //   }
+
+  //   if (!selectedStateIso || !selectedCity) {
+  //     toast.error('Please select your state and city')
+  //     setLoading(false)
+  //     return
+  //   }
+
+  //   const stateName = State.getStateByCodeAndCountry(selectedStateIso, 'IN')?.name || selectedStateIso
+
+  //   formData.set('stream', selectedStream)
+  //   formData.set('state', stateName)
+  //   formData.set('city', selectedCity)
+    
+  //   if (school?.id && school.id !== 'undefined') {
+  //     formData.set('schoolId', school.id)
+  //   }
+
+
+  //   const result = await signup(formData)
+    
+  //   if (result?.error) {
+  //     setError(result.error)
+  //     toast.error(result.error)
+  //     setLoading(false)
+  //   }
+  // }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden p-4">
@@ -72,7 +108,7 @@ export default function SignupForm({ school }: SignupFormProps) {
             </p>
           </div>
 
-          <form action={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             
             <div>
               <label className="block text-sm font-bold text-gray-900 mb-2">Full Name</label>

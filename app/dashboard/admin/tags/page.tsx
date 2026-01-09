@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import { createTagAction, deleteTagAction } from './actions'
-import { Trash2, Tag as TagIcon, Plus } from 'lucide-react'
+import { Tag as TagIcon } from 'lucide-react'
+import CreateTagForm from './create-tag-form'
+import DeleteTagButton from './delete-tag-button'
 
 export default async function TagsPage() {
   const supabase = await createClient()
@@ -27,21 +28,7 @@ export default async function TagsPage() {
       {/* Create Tag Form */}
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
         <h3 className="font-bold text-gray-900 mb-4">Add New Tag</h3>
-        <form action={createTagAction} className="flex gap-4">
-          <input 
-            name="name" 
-            type="text" 
-            required
-            placeholder="e.g. Technology, Exams, News"
-            className="flex-1 px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-black outline-none"
-          />
-          <button 
-            type="submit" 
-            className="bg-black text-white px-6 py-2 rounded-xl font-bold hover:bg-gray-800 transition-all flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" /> Add
-          </button>
-        </form>
+        <CreateTagForm />
       </div>
 
       {/* Tags List */}
@@ -49,12 +36,7 @@ export default async function TagsPage() {
         {tags?.map((tag) => (
           <div key={tag.id} className="bg-white p-4 rounded-xl border border-gray-200 flex items-center justify-between group hover:border-black transition-colors">
             <span className="font-bold text-gray-700">{tag.name}</span>
-            <form action={deleteTagAction}>
-              <input type="hidden" name="id" value={tag.id} />
-              <button type="submit" className="p-2 text-gray-400 hover:text-red-600 transition-colors">
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </form>
+            <DeleteTagButton tagId={tag.id} />
           </div>
         ))}
         {tags?.length === 0 && (

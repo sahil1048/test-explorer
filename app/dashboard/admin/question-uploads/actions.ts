@@ -60,7 +60,7 @@ async function parseAndInsertQuestions(file: File, parentId: string) {
   }) as CSVQuestionRow[]
 
   if (records.length === 0) {
-    throw new Error("Parsed 0 records. Check if CSV is empty.")
+    return { error: "Parsed 0 records. Check if CSV is empty." }
   }
 
   console.log(`[CSV] Parsed ${records.length} rows. Detected Headers:`, Object.keys(records[0]))
@@ -143,7 +143,7 @@ async function parseAndInsertQuestions(file: File, parentId: string) {
   console.log(`[CSV] Complete. Success: ${insertedCount}`)
 
   if (insertedCount === 0) {
-    throw new Error(`Failed to insert questions. Errors: ${errors.slice(0, 3).join(', ')}`)
+    return { error: `Failed to insert questions. Errors: ${errors.slice(0, 3).join(', ')}` }
   }
   
   return { success: true, inserted: insertedCount }
@@ -157,7 +157,7 @@ export async function uploadQuestionBankAction(formData: FormData) {
   const subject_id = formData.get('subject_id') as string
   const csvFile = formData.get('csv_file') as File
 
-  if (!csvFile || csvFile.size === 0) throw new Error('No file uploaded')
+  if (!csvFile || csvFile.size === 0) return { error: 'No file uploaded' }
 
   // Create Bank
   const { data: bank, error } = await supabase
@@ -170,15 +170,16 @@ export async function uploadQuestionBankAction(formData: FormData) {
     .select('id')
     .single()
 
-  if (error) throw new Error(`Failed to create bank: ${error.message}`)
+  if (error) return { error: `Failed to create bank: ${error.message}` }
 
-  try {
-    await parseAndInsertQuestions(csvFile, bank.id)
-  } catch (error: any) {
-    console.error("CSV Processing Failed:", error)
+  const result = await parseAndInsertQuestions(csvFile, bank.id)
+
+  if (result?.error) {
+    console.error("CSV Processing Failed:", result.error)
     await supabase.from('question_banks').delete().eq('id', bank.id)
-    throw new Error(error.message || "CSV Upload Failed")
+    return { error: result.error || "CSV Upload Failed" }
   }
 
   revalidatePath(`/dashboard/admin/subjects/${subject_id}/edit`)
+  return { success: true }
 }

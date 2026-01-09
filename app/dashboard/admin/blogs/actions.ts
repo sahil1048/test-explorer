@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 
 function parseTags(tagString: string): string[] {
   return tagString.split(',').map(t => t.trim()).filter(t => t.length > 0)
@@ -20,7 +19,10 @@ async function uploadImage(file: File, supabase: any, bucket: string = 'blog-ima
     .from(bucket)
     .upload(filePath, file)
 
-  if (error) throw new Error(`Upload failed: ${error.message}`)
+  if (error) {
+    console.error(`Upload failed: ${error.message}`)
+    return null
+  }
 
   const { data } = supabase.storage
     .from(bucket)
@@ -81,11 +83,11 @@ export async function createBlogAction(formData: FormData) {
     enable_structured_data
   })
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   revalidatePath('/dashboard/admin/blogs')
   revalidatePath('/blogs')
-  redirect('/dashboard/admin/blogs')
+  return { success: true }
 }
 
 export async function updateBlogAction(formData: FormData) {
@@ -137,11 +139,11 @@ export async function updateBlogAction(formData: FormData) {
 
   const { error } = await supabase.from('blogs').update(updateData).eq('id', id)
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   revalidatePath('/dashboard/admin/blogs')
   revalidatePath('/blogs')
-  redirect('/dashboard/admin/blogs')
+  return { success: true }
 }
 
 export async function deleteBlogAction(formData: FormData) {
@@ -149,8 +151,9 @@ export async function deleteBlogAction(formData: FormData) {
   const id = formData.get('id') as string
 
   const { error } = await supabase.from('blogs').delete().eq('id', id)
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   revalidatePath('/dashboard/admin/blogs')
   revalidatePath('/blogs')
+  return { success: true }
 }

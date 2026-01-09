@@ -23,6 +23,8 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { useRouter } from 'next/navigation'
+import { toast } from "sonner"
 
 interface UserNavProps {
   profile: {
@@ -50,6 +52,25 @@ export default function UserNav({ profile, email }: UserNavProps) {
       case 'super_admin': return '/dashboard/admin'
       case 'school_admin': return '/dashboard'
       default: return '/dashboard'
+    }
+  }
+
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    const toastId = toast.loading("Signing out...")
+
+    const result = await signout()
+
+    if (result?.success) {
+      toast.dismiss(toastId)
+      toast.success("Signed out successfully")
+      
+      router.push("/")
+      router.refresh()
+    } else {
+      toast.dismiss(toastId)
+      toast.error("Failed to sign out")
     }
   }
 
@@ -103,10 +124,7 @@ export default function UserNav({ profile, email }: UserNavProps) {
         
         <DropdownMenuItem 
           className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer py-2.5"
-          onSelect={(e) => {
-            e.preventDefault() 
-            signout()
-          }}
+          onClick={handleSignOut}
         >
           <LogOut className="mr-3 h-4 w-4" />
           <span className="font-bold">Log out</span>

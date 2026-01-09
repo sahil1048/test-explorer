@@ -25,7 +25,7 @@ export default function ProfileForm({ profile, email }: { profile: any, email?: 
     
     const result = await updateProfileAction(formData)
 
-    if (result?.error) {
+    if (result && 'error' in result) {
       // REPLACED INLINE ERROR
       toast.error(result.error)
     } else {

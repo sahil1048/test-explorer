@@ -37,7 +37,7 @@ export async function createBlueprintAction(formData: FormData) {
     .select('id')
     .single()
 
-  if (bpError) throw new Error(bpError.message)
+  if (bpError) return { error: bpError.message }
 
   // 2. Create Items
   const items = subjectCounts.map(item => ({
@@ -47,9 +47,10 @@ export async function createBlueprintAction(formData: FormData) {
   }))
 
   const { error: itemError } = await supabase.from('mock_blueprint_items').insert(items)
-  if (itemError) throw new Error(itemError.message)
+  if (itemError) return { error: itemError.message }
 
   revalidatePath('/dashboard/admin/blueprints')
+  return { success: true }
 }
 
 // --- 2. Generate a Mock Exam from Blueprint ---
@@ -63,7 +64,7 @@ export async function generateMockFromBlueprintAction(blueprintId: string) {
     .eq('id', blueprintId)
     .single()
 
-  if (!bp) throw new Error("Blueprint not found")
+  if (!bp) return { error: "Blueprint not found" }
 
   // 2. Create the Exam Record
   const examTitle = `${bp.title} - Generated ${new Date().toLocaleDateString()}`
@@ -82,7 +83,7 @@ export async function generateMockFromBlueprintAction(blueprintId: string) {
     .select('id')
     .single()
 
-  if (examError) throw new Error(examError.message)
+  if (examError) return { error: examError.message }
 
   // 3. Fetch & Link Questions for EACH Subject in Blueprint
   let totalLinked = 0

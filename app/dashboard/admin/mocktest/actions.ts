@@ -7,8 +7,9 @@ export async function deleteMockTest(id: string) {
   const supabase = await createClient()
   const { error } = await supabase.from('mock_tests').delete().eq('id', id)
   
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   revalidatePath('/dashboard/admin/mocktest')
+  return { success: true }
 }
 
 export async function updateMockTest(id: string, formData: FormData) {
@@ -22,6 +23,7 @@ export async function updateMockTest(id: string, formData: FormData) {
     duration_minutes: duration
   }).eq('id', id)
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   revalidatePath('/dashboard/admin/mocktest')
+  return { success: true }
 }

@@ -16,7 +16,7 @@ export async function submitMockTestAction(
     .select('id, options:question_options(id, is_correct)')
     .eq('exam_id', examId)
 
-  if (!questions) throw new Error("Exam questions not found")
+  if (!questions) return { error: "Exam questions not found" }
 
   // 2. Calculate Score
   let correct = 0
@@ -54,7 +54,7 @@ export async function submitMockTestAction(
     })
     .eq('id', attemptId)
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   return {
     success: true,
