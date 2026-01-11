@@ -55,7 +55,6 @@ export default async function AdminMockTestsPage() {
 
       <div className="space-y-10">
         {categories?.map((category) => {
-          console.log("Rendering category:", category)
           const categoryMocks = mocksByCategoryId[category.id] || []
           const hasMocks = categoryMocks.length > 0
 

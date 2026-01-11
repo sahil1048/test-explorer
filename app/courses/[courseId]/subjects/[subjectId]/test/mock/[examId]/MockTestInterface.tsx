@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Info, Loader2 } from 'lucide-react' // Added Loader2 for submission state
-import { submitExamAction } from '../../[testType]/[examId]/actions'
+import { Info, Loader2 } from 'lucide-react' 
+import { submitExamAction } from '@/app/courses/[courseId]/subjects/[subjectId]/test/[testType]/[examId]/actions' // Adjust path if needed
 import { InstructionStage } from '@/components/exam/stages/InstructionStage'
 import { ConsentStage } from '@/components/exam/stages/ConsentStage'
 import { ResultReportModal } from '@/components/exam/modals/ResultReportModal'
 import { TestStage } from '@/components/exam/stages/TestStage'
 import { Question } from '@/components/exam/types'
-import { toast } from 'sonner' // Assuming you have sonner for notifications
+import { toast } from 'sonner' 
 
 interface MockInterfaceProps {
   exam: any
@@ -32,6 +32,7 @@ export default function MockTestInterface({
   const [reportData, setReportData] = useState<any>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // -- Empty State --
   if (!questions || questions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 font-sans">
@@ -40,14 +41,13 @@ export default function MockTestInterface({
             <Info className="w-8 h-8" />
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">No Questions Found</h2>
-          <button onClick={() => window.history.back()} className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-bold">Go Back</button>
+          <button onClick={() => router.back()} className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-bold">Go Back</button>
         </div>
       </div>
     )
   }
 
-  const currentQ = questions[currentQIndex]
-
+  // -- Timer --
   useEffect(() => {
     if (stage !== 'test') return
     const timer = setInterval(() => {
@@ -63,33 +63,31 @@ export default function MockTestInterface({
     return () => clearInterval(timer)
   }, [stage])
 
-  const updateStatus = (qId: string, status: string) => {
-    setQuestionStatus(prev => ({ ...prev, [qId]: status }))
-  }
-
+  // -- Handlers --
   const handleAnswer = (qId: string, optId: string) => {
     setAnswers(prev => ({ ...prev, [qId]: optId }))
   }
 
   const handleSaveNext = () => {
-    const isAnswered = !!answers[currentQ.id]
-    updateStatus(currentQ.id, isAnswered ? 'answered' : 'not_answered')
+    const isAnswered = !!answers[questions[currentQIndex].id]
+    setQuestionStatus(prev => ({ ...prev, [questions[currentQIndex].id]: isAnswered ? 'answered' : 'not_answered' }))
     if (currentQIndex < questions.length - 1) setCurrentQIndex(prev => prev + 1)
   }
 
   const handleReviewNext = () => {
-    const isAnswered = !!answers[currentQ.id]
-    updateStatus(currentQ.id, isAnswered ? 'ans_and_review' : 'review')
+    const isAnswered = !!answers[questions[currentQIndex].id]
+    setQuestionStatus(prev => ({ ...prev, [questions[currentQIndex].id]: isAnswered ? 'ans_and_review' : 'review' }))
     if (currentQIndex < questions.length - 1) setCurrentQIndex(prev => prev + 1)
   }
 
   const handleClear = () => {
     const newAnswers = { ...answers }
-    delete newAnswers[currentQ.id]
+    delete newAnswers[questions[currentQIndex].id]
     setAnswers(newAnswers)
-    updateStatus(currentQ.id, 'not_answered')
+    setQuestionStatus(prev => ({ ...prev, [questions[currentQIndex].id]: 'not_answered' }))
   }
 
+  // -- Submission Logic --
   const handleSubmit = async () => {
     if (isSubmitting) return
     setIsSubmitting(true)
@@ -101,27 +99,25 @@ export default function MockTestInterface({
       
       if (result && 'error' in result) {
         toast.error(result.error)
+        setIsSubmitting(false)
         return
       }
 
-      // Calculate unattempted based on what the server returned
-      // Total = Correct + Incorrect + Unattempted
-      const totalQuestions = questions.length
-      const unattempted = totalQuestions - ((result.correct ?? 0) + (result.incorrect ?? 0))
-      
       setReportData({
+        examTitle: result.examTitle || 'Test Result',
+        sections: result.sections || [],
         score: result.score ?? 0,            
-        totalMarks: result.totalMarks ?? 0,  // <--- Using dynamic total from server
+        totalMarks: result.totalMarks ?? 0,
         correctCount: result.correct ?? 0,
         incorrectCount: result.incorrect ?? 0,
-        unattemptedCount: unattempted,
+        unattemptedCount: result.unattempted ?? 0,
         timeTaken: timeTaken
       })
   
       setStage('report')
     } catch (error) {
       console.error("Submission failed", error)
-      toast.error("Failed to submit exam. Please check your connection.")
+      toast.error("Failed to submit exam.")
     } finally {
       setIsSubmitting(false)
     }
@@ -129,12 +125,11 @@ export default function MockTestInterface({
 
   return (
     <>
-      {/* Loading Overlay during submission */}
       {isSubmitting && (
-        <div className="fixed inset-0 z-200 bg-black/50 backdrop-blur-sm flex items-center justify-center text-white">
+        <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm flex items-center justify-center text-white">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-10 h-10 animate-spin" />
-            <p className="font-bold text-lg">Submitting your test...</p>
+            <p className="font-bold text-lg">Submitting...</p>
           </div>
         </div>
       )}
@@ -172,6 +167,8 @@ export default function MockTestInterface({
 
       {stage === 'report' && reportData && (
         <ResultReportModal 
+          examTitle={reportData.examTitle}
+          sections={reportData.sections}
           score={reportData.score}
           totalMarks={reportData.totalMarks}
           correctCount={reportData.correctCount}

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import { Plus, Settings, Play, Database } from 'lucide-react'
-import BlueprintCreator from '@/components/admin/blueprint-creator' // We'll make this next
-import GenerateButton from '@/components/admin/blueprint-generate-button' // And this
+import { Database } from 'lucide-react'
+import BlueprintModal from '@/components/admin/blueprint-creator' 
+import BlueprintDelete from '@/components/admin/blueprint-delete'
 
 export default async function BlueprintPage() {
   const supabase = await createClient()
@@ -15,7 +15,7 @@ export default async function BlueprintPage() {
   // Fetch Existing Blueprints
   const { data: blueprints } = await supabase
     .from('mock_blueprints')
-    .select('*, courses(title), items:mock_blueprint_items(question_count, subjects(title))')
+    .select('*, courses(title), items:mock_blueprint_items(question_count, subject_id, subjects(title))')
     .order('created_at', { ascending: false })
 
   return (
@@ -23,9 +23,10 @@ export default async function BlueprintPage() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-black text-gray-900">Mock Blueprints</h1>
-          <p className="text-gray-500">Define criteria for full-course mock tests.</p>
+          <p className="text-gray-500">Define criteria. Mocks are auto-generated based on available questions.</p>
         </div>
-        <BlueprintCreator courses={courses || []} />
+        {/* CREATE MODE */}
+        <BlueprintModal courses={courses || []} />
       </div>
 
       <div className="grid gap-6">
@@ -49,18 +50,24 @@ export default async function BlueprintPage() {
               {/* Items List */}
               <div className="mt-4 flex flex-wrap gap-2">
                 {bp.items.map((item: any) => (
-                  <div key={item.subjects.title} className="bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg text-xs flex items-center gap-2">
+                  <div key={item.subject_id} className="bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg text-xs flex items-center gap-2">
                     <Database className="w-3 h-3 text-gray-400" />
                     <span className="font-bold text-gray-700">{item.question_count}</span>
-                    <span className="text-gray-500">{item.subjects.title}</span>
+                    <span className="text-gray-500">{item.subjects?.title}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-3">
-               <GenerateButton blueprintId={bp.id} />
+            <div className="flex items-center gap-2">
+               {/* Note: Generate button removed as per requirements */}
+               
+               {/* EDIT MODE */}
+               <BlueprintModal courses={courses || []} blueprint={bp} />
+               
+               {/* DELETE */}
+               <BlueprintDelete id={bp.id} title={bp.title} />
             </div>
 
           </div>
