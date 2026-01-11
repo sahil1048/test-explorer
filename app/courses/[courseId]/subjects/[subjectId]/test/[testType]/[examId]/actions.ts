@@ -16,69 +16,131 @@ export async function submitExamAction(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Unauthorized' }
 
-  // 2. Fetch Questions
-  let query = supabase
-    .from('questions')
-    .select('id, options:question_options(id, is_correct)')
+  // ---------------------------------------------------------
+  // 2. FETCH EXAM SETTINGS (Marking Scheme)
+  // ---------------------------------------------------------
+  let settingsTable = testType === 'mock' ? 'mock_tests' : 'exams';
+  
+  const { data: examSettings, error: settingsError } = await supabase
+    .from(settingsTable)
+    .select('title, marks_correct, marks_incorrect, marks_unattempted')
+    .eq('id', examId)
+    .single();
 
-  if (testType === 'practice') {
-    query = query.eq('practice_test_id', examId)
+  if (settingsError || !examSettings) {
+    console.error('Error fetching exam settings:', settingsError);
+    return { error: 'Failed to load marking scheme.' };
+  }
+
+  // Fallback defaults if columns are null
+  const MARKS_CORRECT = examSettings.marks_correct ?? 4;
+  const MARKS_INCORRECT = examSettings.marks_incorrect ?? -1; 
+  const MARKS_UNATTEMPTED = examSettings.marks_unattempted ?? 0;
+  const EXAM_TITLE = examSettings.title || 'Exam Result';
+
+  // ---------------------------------------------------------
+  // 3. FETCH QUESTIONS (With Subject Data)
+  // ---------------------------------------------------------
+  const selectQuery = `
+    id, 
+    question_bank:question_banks(
+      subject:subjects(title)
+    ),
+    options:question_options(id, is_correct)
+  `
+  
+  let questions = [];
+
+  if (testType === 'mock') {
+    // Mock Tests: Fetch via the join table
+    const { data: mockData, error: fetchError } = await supabase
+      .from('mock_test_questions')
+      .select(`question:questions (${selectQuery})`)
+      .eq('mock_test_id', examId);
+
+    if (fetchError) return { error: 'Failed to load questions.' };
+    
+    // Flatten the array
+    questions = mockData?.map((item: any) => item.question).filter((q: any) => q !== null) || [];
+
   } else {
-    query = query.eq('exam_id', examId)
+    // Standard/Practice Tests: Fetch directly
+    let query = supabase.from('questions').select(selectQuery);
+
+    if (testType === 'practice') query = query.eq('practice_test_id', examId);
+    else query = query.eq('exam_id', examId);
+
+    const { data: standardData, error: fetchError } = await query;
+    if (fetchError) return { error: 'Failed to load questions.' };
+    
+    questions = standardData || [];
   }
 
-  const { data: questions, error: fetchError } = await query
-
-  if (fetchError || !questions) {
-    console.error('Error fetching questions:', fetchError)
-    return { error: 'Failed to load exam data for grading.' }
-  }
-
-  // 3. Calculate Counts
-  let correctCount = 0
-  let incorrectCount = 0
-  const totalQuestions = questions.length
+  // ---------------------------------------------------------
+  // 4. SCORING & SECTIONAL ANALYSIS
+  // ---------------------------------------------------------
+  let currentScore = 0;
+  let correctCount = 0;
+  let incorrectCount = 0;
+  let unattemptedCount = 0;
+  
+  // Data structure for Sectional Analysis
+  const subjectAnalysis: Record<string, { total: number, score: number }> = {}
 
   questions.forEach(q => {
     // @ts-ignore
-    const correctOption = q.options.find((o: any) => o.is_correct)
-    const userSelectedOptionId = answers[q.id]
+    const subjectName = q.question_bank?.subject?.title || 'General';
     
-    // Check if user attempted the question
-    if (userSelectedOptionId) {
+    // Init subject entry if missing
+    if (!subjectAnalysis[subjectName]) {
+      subjectAnalysis[subjectName] = { total: 0, score: 0 };
+    }
+
+    // Add potential marks to the total for this subject
+    subjectAnalysis[subjectName].total += Number(MARKS_CORRECT); 
+
+    // Determine correctness
+    // @ts-ignore
+    const correctOption = q.options.find((o: any) => o.is_correct);
+    const userSelectedOptionId = answers[q.id];
+    let questionScore = 0;
+    
+    if (!userSelectedOptionId) {
+      // Case: Not Attempted
+      unattemptedCount += 1;
+      questionScore = Number(MARKS_UNATTEMPTED);
+    } else {
       if (correctOption && userSelectedOptionId === correctOption.id) {
-        correctCount += 1
+        // Case: Correct
+        correctCount += 1;
+        questionScore = Number(MARKS_CORRECT);
       } else {
-        incorrectCount += 1
+        // Case: Incorrect
+        incorrectCount += 1;
+        questionScore = Number(MARKS_INCORRECT); 
       }
     }
-  })
 
-  // 4. SCORING LOGIC
-  let score = 0
-  let totalMaxMarks = 0
+    currentScore += questionScore;
+    subjectAnalysis[subjectName].score += questionScore;
+  });
 
-  if (testType === 'mock') {
-    // Mock Test: +5 for Correct, -1 for Incorrect
-    score = (correctCount * 5) - (incorrectCount * 1)
-    totalMaxMarks = totalQuestions * 5
-  } else {
-    // Practice Test: +1 for Correct, No Negative Marking
-    score = correctCount * 1
-    totalMaxMarks = totalQuestions * 1
-  }
+  const totalMaxMarks = questions.length * MARKS_CORRECT;
 
-  // 5. Save Attempt
+  // ---------------------------------------------------------
+  // 5. SAVE ATTEMPT
+  // ---------------------------------------------------------
   const attemptPayload = {
     user_id: user.id,
-    score: score,
+    score: currentScore,
     total_marks: totalMaxMarks,
-    // Calculate percentage based on the new totalMaxMarks
-    percentage: totalMaxMarks > 0 ? (score / totalMaxMarks) * 100 : 0,
+    percentage: totalMaxMarks > 0 ? (currentScore / totalMaxMarks) * 100 : 0,
     time_taken_seconds: timeTaken,
     answers: answers,
-    exam_id: testType === 'mock' ? examId : null, 
-    practice_test_id: testType === 'practice' ? examId : null 
+    // Correctly map IDs based on test type
+    mock_test_id: testType === 'mock' ? examId : null, 
+    practice_test_id: testType === 'practice' ? examId : null,
+    exam_id: (testType !== 'mock' && testType !== 'practice') ? examId : null
   }
   
   const { data: attempt, error: saveError } = await supabase
@@ -92,13 +154,25 @@ export async function submitExamAction(
     return { error: 'Failed to save attempt' }
   }
 
-  // 6. RETURN Data with Stats
+  // ---------------------------------------------------------
+  // 6. RETURN DATA
+  // ---------------------------------------------------------
+  // Transform analysis object to array for frontend
+  const sections = Object.entries(subjectAnalysis).map(([subject, stats]) => ({
+    subject,
+    score: stats.score,
+    total: stats.total
+  }));
+
   return { 
     success: true, 
     redirectUrl: `/courses/${courseId}/subjects/${subjectId}/test/${testType}/${examId}/result/${attempt.id}`,
-    score: score,
-    totalMarks: totalMaxMarks, // Pass this back so the UI can display "Score: X / Total" correctly
+    examTitle: EXAM_TITLE,
+    score: currentScore,
+    totalMarks: totalMaxMarks,
     correct: correctCount,
-    incorrect: incorrectCount
+    incorrect: incorrectCount,
+    unattempted: unattemptedCount,
+    sections: sections
   }
 }
