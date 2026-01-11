@@ -39,7 +39,7 @@ export default async function DashboardLayout({
     .eq('id', user.id)
     .single()
 
-  if (!profile) return redirect('/')
+  if (!profile) return redirect('/complete-profile')
 
   // 3. --- UPDATED: Header-Based School Detection ---
   const headersList = await headers()
