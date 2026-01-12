@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronRight, ChevronDown, Folder, BookOpen, Upload, X, FileText, Loader2, Database } from 'lucide-react'
+import { ChevronRight, ChevronDown, Folder, BookOpen, Upload, X, FileText, Loader2, Database, CheckCircle } from 'lucide-react'
 import { uploadQuestionBankAction } from '@/app/dashboard/admin/question-uploads/actions'
 import { toast } from 'sonner'
 
@@ -10,10 +10,25 @@ export default function SubjectUploader({ streams }: { streams: any[] }) {
   const [openStreams, setOpenStreams] = useState<Record<string, boolean>>({})
   const [openCourses, setOpenCourses] = useState<Record<string, boolean>>({})
   const [selectedSubject, setSelectedSubject] = useState<{id: string, title: string} | null>(null)
+  
   const [loading, setLoading] = useState(false)
+  const [fileName, setFileName] = useState<string | null>(null)
 
   const toggleStream = (id: string) => setOpenStreams(p => ({ ...p, [id]: !p[id] }))
   const toggleCourse = (id: string) => setOpenCourses(p => ({ ...p, [id]: !p[id] }))
+
+  const handleClose = () => {
+    setSelectedSubject(null)
+    setFileName(null)
+    setLoading(false)
+  }
+
+  // Handle file selection to show name
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setFileName(e.target.files[0].name)
+    }
+  }
 
   return (
     <div className="space-y-6 pb-20">
@@ -148,18 +163,35 @@ export default function SubjectUploader({ streams }: { streams: any[] }) {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">CSV File</label>
-                <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center bg-gray-50 hover:bg-white hover:border-blue-400 transition-all cursor-pointer relative">
-                  <Upload className="w-8 h-8 text-gray-300 mb-2" />
-                  <span className="text-xs font-bold text-gray-400">Click to browse CSV</span>
+                <div 
+                  className={`
+                    border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center transition-all cursor-pointer relative
+                    ${fileName ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-gray-50 hover:bg-white hover:border-blue-400'}
+                  `}
+                >
+                  {fileName ? (
+                    <>
+                      <CheckCircle className="w-8 h-8 text-green-500 mb-2 animate-in zoom-in" />
+                      <span className="text-sm font-bold text-gray-900 text-center break-all">{fileName}</span>
+                      <span className="text-xs text-green-600 mt-1">Click to change</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-8 h-8 text-gray-300 mb-2" />
+                      <span className="text-xs font-bold text-gray-400">Click to browse CSV</span>
+                    </>
+                  )}
+                  
                   <input 
                     type="file" 
                     name="csv_file" 
                     accept=".csv"
                     required 
+                    onChange={handleFileChange}
                     className="absolute inset-0 opacity-0 cursor-pointer" 
                   />
                 </div>
-                {/* UPDATED HELP TEXT */}
+                
                 <p className="text-[10px] text-gray-400 mt-2 bg-gray-100 p-2 rounded">
                   <strong>Required Columns:</strong> description, question, option_a, option_b, option_c, option_d, correct_option, explanation
                 </p>
@@ -168,9 +200,18 @@ export default function SubjectUploader({ streams }: { streams: any[] }) {
               <button 
                 type="submit" 
                 disabled={loading}
-                className="w-full py-3 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
+                className={`w-full py-3 font-bold rounded-xl transition-all flex items-center justify-center gap-2 
+                  ${loading ? 'bg-gray-800 text-gray-400 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-800'}`}
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Upload to Pool"}
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4" /> Upload to Pool
+                  </>
+                )}
               </button>
             </form>
 

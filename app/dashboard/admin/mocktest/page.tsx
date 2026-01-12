@@ -28,6 +28,7 @@ export default async function AdminMockTestsPage() {
         category_id
       )
     `)
+    .is('subject_id', null)
     .order('created_at', { ascending: false })
 
   if (mockError) return <div className="p-8 text-red-500">Error loading mocks: {mockError.message}</div>

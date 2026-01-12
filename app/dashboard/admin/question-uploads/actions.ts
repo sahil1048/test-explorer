@@ -3,37 +3,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { parse } from 'csv-parse/sync'
+// ✅ Import the new incremental generators
+import { generatePracticeTestsAction, generateSubjectMockAction } from '@/app/dashboard/admin/subjects/actions'
 
 // 1. Interface for Type Safety
 interface CSVQuestionRow {
-  [key: string]: string | undefined; // Allow dynamic access
-  
-  description?: string;
-  direction?: string;
-  passage?: string;
-  
-  question?: string;
-  text?: string;
-  q?: string;
-  
-  option_a?: string;
-  a?: string;
-  
-  option_b?: string;
-  b?: string;
-  
-  option_c?: string;
-  c?: string;
-  
-  option_d?: string;
-  d?: string;
-  
-  correct_option?: string;
-  answer?: string;
-  correct?: string;
-  
-  explanation?: string;
-  rationale?: string;
+  [key: string]: string | undefined; 
 }
 
 // --- HELPER: Parse CSV and Insert ---
@@ -43,14 +18,13 @@ async function parseAndInsertQuestions(file: File, parentId: string) {
 
   console.log(`[CSV] Processing file. Size: ${fileContent.length} bytes`)
 
-  // 2. Parse CSV with Correct Header Transformation
+  // 2. Parse CSV with Robust Header Normalization
   const records = parse(fileContent, {
-    // FIX: Input is an ARRAY of strings (headers), so we map over them
     columns: (headers: string[]) => 
       headers.map(h => 
         h.trim()
          .toLowerCase()
-         .replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, '') // Remove symbols start/end
+         .replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, '') // Remove symbols
          .replace(/\s+/g, '_') // Space to underscore
       ),
     skip_empty_lines: true,
@@ -63,27 +37,31 @@ async function parseAndInsertQuestions(file: File, parentId: string) {
     return { error: "Parsed 0 records. Check if CSV is empty." }
   }
 
-  console.log(`[CSV] Parsed ${records.length} rows. Detected Headers:`, Object.keys(records[0]))
+  // Debug: Log headers to help troubleshoot missing columns
+  console.log(`[CSV] Parsed ${records.length} rows. Headers:`, Object.keys(records[0]))
 
   let insertedCount = 0
+  let skippedCount = 0
   let errors: string[] = []
 
   for (const [index, row] of records.entries()) {
     try {
-      // 3. Mapping (Robust)
-      const qText = row.question || row.text || row.question_text || row.q
+      // 3. Robust Mapping (Handle multiple common header names)
+      const qText = row.question || row.text || row.question_text || row.q || row.question_name
       const qDesc = row.description || row.direction || row.passage || row.instructions
       const qExp = row.explanation || row.rationale || row.solution || row.exp
       
-      const optA = row.option_a || row.a || row.opt_a
-      const optB = row.option_b || row.b || row.opt_b
-      const optC = row.option_c || row.c || row.opt_c
-      const optD = row.option_d || row.d || row.opt_d
+      const optA = row.option_a || row.a || row.opt_a || row.option1
+      const optB = row.option_b || row.b || row.opt_b || row.option2
+      const optC = row.option_c || row.c || row.opt_c || row.option3
+      const optD = row.option_d || row.d || row.opt_d || row.option4
       
-      const correctVal = row.correct_option || row.answer || row.correct || row.ans
+      const correctVal = row.correct_option || row.answer || row.correct || row.ans || row.correct_answer || row.right_answer
 
+      // Validate critical fields
       if (!qText || !optA || !optB || !correctVal) {
-        // Skip rows with missing critical data
+        console.warn(`[CSV] Skipping Row ${index + 1}: Missing critical data (Q, A, B, or Correct Answer).`)
+        skippedCount++
         continue
       }
 
@@ -140,7 +118,7 @@ async function parseAndInsertQuestions(file: File, parentId: string) {
     }
   }
 
-  console.log(`[CSV] Complete. Success: ${insertedCount}`)
+  console.log(`[CSV] Complete. Inserted: ${insertedCount}, Skipped: ${skippedCount}`)
 
   if (insertedCount === 0) {
     return { error: `Failed to insert questions. Errors: ${errors.slice(0, 3).join(', ')}` }
@@ -149,6 +127,7 @@ async function parseAndInsertQuestions(file: File, parentId: string) {
   return { success: true, inserted: insertedCount }
 }
 
+// --- MAIN ACTION: Upload Bank & Trigger Auto-Generation ---
 export async function uploadQuestionBankAction(formData: FormData) {
   const supabase = await createClient()
   
@@ -159,11 +138,11 @@ export async function uploadQuestionBankAction(formData: FormData) {
 
   if (!csvFile || csvFile.size === 0) return { error: 'No file uploaded' }
 
-  // Create Bank
+  // 1. Create Question Bank Container (This appends to the Subject Pool)
   const { data: bank, error } = await supabase
     .from('question_banks')
     .insert({ 
-      title, 
+      title: title || `Upload ${new Date().toLocaleDateString()}`, 
       description, 
       subject_id 
     })
@@ -172,14 +151,40 @@ export async function uploadQuestionBankAction(formData: FormData) {
 
   if (error) return { error: `Failed to create bank: ${error.message}` }
 
+  // 2. Parse CSV & Insert Questions
   const result = await parseAndInsertQuestions(csvFile, bank.id)
 
   if (result?.error) {
     console.error("CSV Processing Failed:", result.error)
+    // Rollback: Delete the empty bank if CSV fails
     await supabase.from('question_banks').delete().eq('id', bank.id)
     return { error: result.error || "CSV Upload Failed" }
   }
 
+  // ------------------------------------------------------------------
+  // 3. ✅ AUTO-GENERATE SUBJECT CONTENT (Incremental)
+  // ------------------------------------------------------------------
+  if (subject_id) {
+    console.log(`[Auto-Gen] Updating Subject content for: ${subject_id}...`)
+    
+    // Wrap in separate try/catch so we don't fail the upload if generation has a hiccup
+    try {
+      // A. Create new Practice Sets for the NEW (unused) questions
+      const practiceRes = await generatePracticeTestsAction(subject_id)
+      if (!practiceRes.success) console.warn("Practice Gen Warning:", practiceRes.message)
+      
+      // B. Create a NEW Subject Mock using the EXPANDED pool (Archives old one)
+      const mockRes = await generateSubjectMockAction(subject_id)
+      if (!mockRes.success) console.warn("Mock Gen Warning:", mockRes.message)
+
+    } catch (genError) {
+      console.error("[Auto-Gen] Critical Error during generation:", genError)
+      // Note: We do NOT throw here. The questions are uploaded safely.
+    }
+  }
+
   revalidatePath(`/dashboard/admin/subjects/${subject_id}/edit`)
+  revalidatePath(`/dashboard/admin/manage-content`)
+  
   return { success: true }
 }

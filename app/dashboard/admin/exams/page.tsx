@@ -20,7 +20,7 @@ export default async function ExamsAdminPage() {
           title,
           prep_modules (id, title, is_published, created_at),
           practice_tests (id, title, is_published, created_at),
-          exams (id, title, is_published, created_at, category)
+          mock_tests (id, title, is_active, created_at)
         )
       )
     `)

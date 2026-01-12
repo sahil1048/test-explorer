@@ -77,6 +77,7 @@ export default async function TestPage({
   let questionsData = null
   
   if (testType === 'practice') {
+     // A. PRACTICE TESTS (Standard 1:Many)
      const { data } = await supabase.from('practice_tests').select('*').eq('id', examId).single()
      examData = data
      if(data) {
@@ -88,19 +89,60 @@ export default async function TestPage({
         questionsData = q
      }
   } else {
-     // MOCK
-     const { data } = await supabase.from('exams').select('*').eq('id', examId).single()
-     examData = data
-     if(data) {
-        const { data: q } = await supabase
-          .from('questions')
-          .select('id, text, options:question_options(id, text), direction')
-          .eq('exam_id', examId)
-          .order('order_index')
-        questionsData = q
+     // B. MOCK TESTS (Subject-Wise & Exam-Wise)
+     
+     // 1. Fetch the Mock Header
+     const { data: mockTestData } = await supabase
+        .from('mock_tests')
+        .select('*')
+        .eq('id', examId)
+        .single()
+     
+     if (mockTestData) {
+        examData = mockTestData
+        
+        // 2. Fetch Questions via Junction Table (mock_test_questions)
+        // ✅ FIX: Query the junction table to get the linked questions
+        const { data: junctionData } = await supabase
+          .from('mock_test_questions')
+          .select(`
+            question:questions (
+              id, 
+              text, 
+              direction,
+              options:question_options (
+                id, 
+                text
+              )
+            )
+          `)
+          .eq('mock_test_id', examId)
+        
+        // 3. Flatten the data structure
+        // The query returns [ { question: { ... } }, { question: { ... } } ]
+        // We need [ { ... }, { ... } ]
+        if (junctionData) {
+           questionsData = junctionData
+             .map((item: any) => item.question)
+             .filter((q: any) => q !== null) // Safety check
+        }
+
+     } else {
+        // 3. Fallback to Legacy 'exams' table (Only if needed)
+        const { data } = await supabase.from('exams').select('*').eq('id', examId).single()
+        examData = data
+        if(data) {
+           const { data: q } = await supabase
+             .from('questions')
+             .select('id, text, options:question_options(id, text), direction')
+             .eq('exam_id', examId)
+             .order('order_index')
+           questionsData = q
+        }
      }
   }
 
+  // If we still didn't find the exam header, 404
   if (!examData) return notFound()
 
   // 5. RENDER MOCK INTERFACE
