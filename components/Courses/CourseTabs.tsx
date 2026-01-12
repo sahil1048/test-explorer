@@ -29,10 +29,12 @@ export default function CourseTabs({
   isAdmin 
 }: CourseTabsProps) {
   const [activeTab, setActiveTab] = useState<'subjects' | 'mocks'>('subjects')
+  const examMocks = mocks.filter((mock: any) => !mock.subject_id)
 
   const handleAccessCheck = (e: React.MouseEvent, id: string, type: 'subject' | 'mock') => {
     // 1. If Admin, always allow
     if (isAdmin) return
+
 
     // 2. Check Subject Access
     if (type === 'subject') {
@@ -128,8 +130,8 @@ export default function CourseTabs({
       {/* MOCKS TAB */}
       {activeTab === 'mocks' && (
         <div className="grid gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {mocks.length === 0 ? <EmptyState icon={Trophy} text="No full mock tests generated yet." /> :
-            mocks.map((mock: any) => {
+          {examMocks.length === 0 ? <EmptyState icon={Trophy} text="No full mock tests generated yet." /> :
+            examMocks.map((mock: any) => {
               // Lock Mocks if user has NO enrollments in this course
               const isLocked = !isAdmin && enrolledSubjectIds.length === 0
 

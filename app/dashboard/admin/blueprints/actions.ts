@@ -3,25 +3,26 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
-// --- 1. Create a Blueprint & Auto-Generate Mocks ---
+// -----------------------------------------------------------------------------
+// 1. CREATE BLUEPRINT & GENERATE MOCKS
+// -----------------------------------------------------------------------------
 export async function createBlueprintAction(formData: FormData) {
   const supabase = await createClient()
   
+  // 1. Parse Form Data
   const course_id = formData.get('course_id') as string
   const title = formData.get('title') as string
   const duration = parseInt(formData.get('duration') as string)
   const total_marks = parseInt(formData.get('marks') as string)
   
-  // ✅ NEW: Capture Marking Scheme
+  // Marking Scheme
   const marks_correct = parseFloat(formData.get('marks_correct') as string) || 4
   const marks_incorrect = parseFloat(formData.get('marks_incorrect') as string) || -1
   const marks_unattempted = parseFloat(formData.get('marks_unattempted') as string) || 0
 
   const subjectCounts = parseSubjectCounts(formData)
 
-  // 1. Create Blueprint Header
-  // (Optional: If you added these columns to 'mock_blueprints' table, save them here too. 
-  // For now, we just use them for generation.)
+  // 2. Insert Blueprint Header
   const { data: blueprint, error: bpError } = await supabase
     .from('mock_blueprints')
     .insert({
@@ -30,39 +31,43 @@ export async function createBlueprintAction(formData: FormData) {
       total_duration_minutes: duration,
       total_marks: total_marks
     })
-    .select('id, title, course_id, total_duration_minutes, total_marks')
+    .select()
     .single()
 
-  if (bpError) return { error: bpError.message }
+  if (bpError) return { error: `Blueprint creation failed: ${bpError.message}` }
 
-  // 2. Create Items
+  // 3. Insert Blueprint Items (Rules)
   const items = subjectCounts.map(item => ({
     blueprint_id: blueprint.id,
     subject_id: item.subjectId,
     question_count: item.count
   }))
 
-  const { error: itemError } = await supabase.from('mock_blueprint_items').insert(items)
-  if (itemError) return { error: itemError.message }
+  if (items.length > 0) {
+    const { error: itemError } = await supabase.from('mock_blueprint_items').insert(items)
+    if (itemError) return { error: `Failed to save items: ${itemError.message}` }
+  }
 
-  // 3. AUTO-GENERATE MOCKS (Pass the marking scheme)
+  // 4. AUTO-GENERATE MOCKS
   const result = await generateBulkMocks(blueprint, items, { 
     marks_correct, 
     marks_incorrect, 
     marks_unattempted 
   })
 
-  // Handle Result
+  revalidatePath('/dashboard/admin/blueprints')
+  revalidatePath('/dashboard/admin/mocktest') 
+
   if (typeof result === 'object' && result !== null && 'error' in result) {
     return { success: true, generatedCount: 0, warning: result.error }
   }
 
-  revalidatePath('/dashboard/admin/blueprints')
-  revalidatePath('/dashboard/admin/mocktest') 
   return { success: true, generatedCount: result as number }
 }
 
-// --- 2. Update Blueprint & Auto-Generate Mocks ---
+// -----------------------------------------------------------------------------
+// 2. UPDATE BLUEPRINT & RE-GENERATE MOCKS
+// -----------------------------------------------------------------------------
 export async function updateBlueprintAction(formData: FormData) {
   const supabase = await createClient()
   
@@ -71,7 +76,6 @@ export async function updateBlueprintAction(formData: FormData) {
   const duration = parseInt(formData.get('duration') as string)
   const total_marks = parseInt(formData.get('marks') as string)
 
-  // ✅ NEW: Capture Marking Scheme
   const marks_correct = parseFloat(formData.get('marks_correct') as string) || 4
   const marks_incorrect = parseFloat(formData.get('marks_incorrect') as string) || -1
   const marks_unattempted = parseFloat(formData.get('marks_unattempted') as string) || 0
@@ -87,14 +91,13 @@ export async function updateBlueprintAction(formData: FormData) {
       total_marks: total_marks
     })
     .eq('id', id)
-    .select('id, title, course_id, total_duration_minutes, total_marks')
+    .select()
     .single()
 
   if (bpError) return { error: bpError.message }
 
-  // 2. Replace Items
-  const { error: deleteError } = await supabase.from('mock_blueprint_items').delete().eq('blueprint_id', id)
-  if (deleteError) return { error: deleteError.message }
+  // 2. Update Items (Delete Old -> Insert New)
+  await supabase.from('mock_blueprint_items').delete().eq('blueprint_id', id)
 
   const items = subjectCounts.map(item => ({
     blueprint_id: id,
@@ -102,22 +105,25 @@ export async function updateBlueprintAction(formData: FormData) {
     question_count: item.count
   }))
 
-  const { error: insertError } = await supabase.from('mock_blueprint_items').insert(items)
-  if (insertError) return { error: insertError.message }
+  if (items.length > 0) {
+    const { error: insertError } = await supabase.from('mock_blueprint_items').insert(items)
+    if (insertError) return { error: insertError.message }
+  }
 
-  // 3. AUTO-GENERATE MOCKS (Pass the marking scheme)
+  // 3. AUTO-GENERATE MOCKS
   const result = await generateBulkMocks(blueprint, items, {
     marks_correct, 
     marks_incorrect, 
     marks_unattempted 
   })
 
+  revalidatePath('/dashboard/admin/blueprints')
+  revalidatePath('/dashboard/admin/mocktest')
+
   if (typeof result === 'object' && result !== null && 'error' in result) {
     return { success: true, generatedCount: 0, warning: result.error }
   }
 
-  revalidatePath('/dashboard/admin/blueprints')
-  revalidatePath('/dashboard/admin/mocktest')
   return { success: true, generatedCount: result as number }
 }
 
@@ -129,7 +135,9 @@ export async function deleteBlueprintAction(id: string) {
   return { success: true }
 }
 
-// --- INTERNAL: Bulk Generator Logic (MOCK_TESTS Table) ---
+// -----------------------------------------------------------------------------
+// INTERNAL: BULK MOCK GENERATOR
+// -----------------------------------------------------------------------------
 async function generateBulkMocks(
   blueprint: any, 
   items: any[], 
@@ -138,49 +146,65 @@ async function generateBulkMocks(
   const supabase = await createClient()
   const errors: string[] = []
 
-  // 0. Fetch IDs of questions ALREADY used in other mock tests
-  const { data: usedQuestions } = await supabase.from('mock_test_questions').select('question_id')
-  const usedQuestionIds = new Set(usedQuestions?.map(u => u.question_id) || [])
+  // 1. Identify "Used" Questions
+  // To ensure Exam Mocks are unique, we find questions already used in OTHER Exam Mocks.
+  // We do NOT filter out questions used in Subject Mocks (practice), allowing overlap there.
+  
+  const { data: existingExamMocks } = await supabase
+    .from('mock_tests')
+    .select('id')
+    .is('subject_id', null) // Only check Exam-Wise mocks
 
-  // 1. Prepare Pools
+  let usedQuestionIds = new Set<string>()
+
+  if (existingExamMocks && existingExamMocks.length > 0) {
+    const mockIds = existingExamMocks.map(m => m.id)
+    const { data: usedQuestions } = await supabase
+      .from('mock_test_questions')
+      .select('question_id')
+      .in('mock_test_id', mockIds)
+    
+    usedQuestions?.forEach(q => usedQuestionIds.add(q.question_id))
+  }
+
+  // 2. Prepare Question Pools per Subject
   const subjectQuestionPool: Record<string, string[]> = {}
 
   for (const item of items) {
     if (item.question_count <= 0) continue
 
-    // A. Get Banks
+    // A. Get Question Banks for Subject
     const { data: banks } = await supabase.from('question_banks').select('id').eq('subject_id', item.subject_id)
     const bankIds = banks?.map(b => b.id) || []
     
     if (bankIds.length === 0) {
-       const { data: sub } = await supabase.from('subjects').select('title').eq('id', item.subject_id).single()
-       errors.push(`${sub?.title || 'Subject'} has NO Question Banks.`)
        subjectQuestionPool[item.subject_id] = []
        continue
     }
 
-    // B. Fetch Questions
+    // B. Fetch All Questions for these Banks
     const { data: questions } = await supabase
       .from('questions')
       .select('id')
       .in('question_bank_id', bankIds)
-      .is('exam_id', null) 
     
-    // C. Filter Used
-    const availableIds = questions?.map(q => q.id).filter(id => !usedQuestionIds.has(id)) || []
+    // C. Filter out "Used in Exam" questions
+    const availableIds = questions
+      ?.map(q => q.id)
+      .filter(id => !usedQuestionIds.has(id)) || []
     
-    // Shuffle
+    // Shuffle the available pool
     subjectQuestionPool[item.subject_id] = availableIds.sort(() => 0.5 - Math.random())
 
     if (availableIds.length < item.question_count) {
-       const { data: sub } = await supabase.from('subjects').select('title').eq('id', item.subject_id).single()
-       errors.push(`${sub?.title}: Needs ${item.question_count}/test, found ${availableIds.length} unused.`)
+       errors.push(`Subject ID ${item.subject_id}: Needs ${item.question_count}, found ${availableIds.length} unique questions.`)
     }
   }
 
-  if (errors.length > 0) console.error("Auto-Gen Errors:", errors)
-
-  // 2. Calculate Capacity
+  // 3. Calculate "Max Possible Tests"
+  // E.g., if Physics has 100 Qs and we need 10 per test, we can make 10 tests.
+  // If Math has 20 Qs and we need 5 per test, we can make 4 tests.
+  // The limit is the lowest number (4).
   let maxTests = Infinity
   for (const item of items) {
     if (item.question_count <= 0) continue
@@ -191,30 +215,35 @@ async function generateBulkMocks(
 
   if (maxTests === Infinity) maxTests = 0 
   if (maxTests === 0) {
-    if (errors.length > 0) return { error: errors.join(" | ") }
+    if (errors.length > 0) return { error: `Not enough unique questions. ${errors[0]}` }
     return 0
   }
 
-  // 3. Generate Loop
+  // 4. Generation Loop
   let testsCreated = 0
 
   for (let i = 0; i < maxTests; i++) {
-    const mockTitle = `${blueprint.title} - Mock ${new Date().getTime().toString().slice(-4)}${i + 1}`
+    const timestamp = new Date().getTime().toString().slice(-4)
+    const mockTitle = `${blueprint.title} - Set ${i + 1} (${timestamp})`
     
-    // A. Create Mock Test Record WITH MARKING SCHEME
+    // A. Create Mock Header (Exam-Wise)
     const { data: mockTest, error: mockError } = await supabase
       .from('mock_tests')
       .insert({
         title: mockTitle,
-        description: `Auto-generated from ${blueprint.title}`,
+        description: `Full syllabus mock generated from ${blueprint.title}.`,
         course_id: blueprint.course_id,
+        subject_id: null, // ✅ NULL = Exam-Wise Mock (Critical for architecture)
+        
         duration_minutes: blueprint.total_duration_minutes,
         total_marks: blueprint.total_marks,
         
-        // ✅ INSERT MARKING SCHEME HERE
+        // ✅ Marking Scheme
         marks_correct: markingScheme.marks_correct,
         marks_incorrect: markingScheme.marks_incorrect,
-        marks_unattempted: markingScheme.marks_unattempted
+        marks_unattempted: markingScheme.marks_unattempted,
+        
+        is_active: true
       })
       .select('id')
       .single()
@@ -224,10 +253,13 @@ async function generateBulkMocks(
       continue
     }
 
-    // B. Assign Questions
+    // B. Allocate Questions
     let allQuestionsForMock: any[] = []
+    
     for (const item of items) {
       if (item.question_count <= 0) continue
+      
+      // Cut questions from the pool so they aren't reused in the next iteration
       const pool = subjectQuestionPool[item.subject_id]
       const selectedIds = pool.splice(0, item.question_count)
       
@@ -240,10 +272,13 @@ async function generateBulkMocks(
       }
     }
 
+    // C. Save Links
     if (allQuestionsForMock.length > 0) {
       const { error: linkError } = await supabase.from('mock_test_questions').insert(allQuestionsForMock)
       if (linkError) {
         console.error("Failed to link questions", linkError)
+        // Optional: Cleanup the empty mock header if linking failed
+        await supabase.from('mock_tests').delete().eq('id', mockTest.id)
       } else {
         testsCreated++
       }
@@ -253,7 +288,7 @@ async function generateBulkMocks(
   return testsCreated
 }
 
-// --- Helper ---
+// --- HELPER ---
 function parseSubjectCounts(formData: FormData) {
   const subjectCounts: { subjectId: string, count: number }[] = []
   for (const [key, value] of formData.entries()) {

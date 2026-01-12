@@ -80,12 +80,11 @@ export default async function SubjectDetailsPage({
       
     // C. Mock Tests
     supabase
-      .from('exams')
-      .select('*, questions(count)')
-      .eq('subject_id', subjectId)
-      .eq('category', 'mock')
-      .eq('is_published', true)
-      .order('created_at', { ascending: true })
+      .from('mock_tests')
+      .select('*, questions:mock_test_questions(count)')
+      .eq('subject_id', subjectId) // <--- FILTER BY SUBJECT ID
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
   ])
 
   // Helper to extract count safely
@@ -141,7 +140,7 @@ export default async function SubjectDetailsPage({
           </h1>
         </div>
 
-        <SubjectContent 
+        <SubjectContent
           modules={formatData(modulesRes.data)}
           practiceTests={formatData(practiceRes.data)}
           mockTests={formatData(mockRes.data)}

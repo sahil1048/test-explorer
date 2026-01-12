@@ -4,9 +4,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { 
-  Plus, Pencil, Trash2, 
+  Pencil, Trash2, Plus,
   PlayCircle, Trophy, FileText, 
-  Layers, FolderOpen, BookOpen, ChevronDown, ChevronRight 
+  Layers, FolderOpen, BookOpen
 } from 'lucide-react'
 import { deleteExamAction } from './actions'
 import {
@@ -17,13 +17,22 @@ import {
 } from "@/components/ui/accordion"
 
 // --- TYPES ---
-type Item = { id: string; title: string; is_published: boolean; created_at: string; category?: string }
+type Item = { 
+  id: string; 
+  title: string; 
+  is_published?: boolean; 
+  is_active?: boolean;
+  created_at: string; 
+  category?: string 
+}
+
 type Subject = { 
   id: string; title: string; 
   prep_modules: Item[]; 
   practice_tests: Item[]; 
-  exams: Item[] 
+  mock_tests: Item[]; // ✅ Uses the correct relation for Subject-Wise Mocks
 }
+
 type Course = { id: string; title: string; subjects: Subject[] }
 type Stream = { id: string; title: string; courses: Course[] }
 
@@ -35,9 +44,7 @@ export default function ExamsClient({ streams }: { streams: Stream[] }) {
     switch (activeTab) {
       case 'prep': return subject.prep_modules || []
       case 'practice': return subject.practice_tests || []
-      case 'mock': 
-        // Filter exams table for category 'mock' (just in case)
-        return subject.exams?.filter(e => e.category === 'mock') || []
+      case 'mock': return subject.mock_tests || [] // ✅ Returns Subject-Wise Mocks
       default: return []
     }
   }
@@ -70,19 +77,21 @@ export default function ExamsClient({ streams }: { streams: Stream[] }) {
           <TabButton id="practice" label="Practice Tests" icon={FileText} />
         </div>
 
-        {/* Add Button */}
-        <Link 
-          href={`/dashboard/admin/exams/new?type=${activeTab}`}
-          className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all"
-        >
-          <Plus className="w-4 h-4" /> Create {activeTab === 'prep' ? 'Module' : activeTab === 'mock' ? 'Mock Test' : 'Practice Test'}
-        </Link>
+        {/* Add Button - Only for Prep Modules */}
+        {activeTab === 'prep' && (
+          <Link 
+            href={`/dashboard/admin/exams/new?type=${activeTab}`}
+            className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all"
+          >
+            <Plus className="w-4 h-4" /> Create Module
+          </Link>
+        )}
       </div>
 
       {/* --- HIERARCHY LIST --- */}
       <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
         {(!streams || streams.length === 0) ? (
-          <div className="p-12 text-center text-gray-400">No content found.</div>
+          <div className="p-12 text-center text-gray-400">No content found. Please create Streams/Courses/Subjects first.</div>
         ) : (
           <Accordion type="multiple" className="w-full">
             {streams.map((stream) => (
@@ -102,14 +111,14 @@ export default function ExamsClient({ streams }: { streams: Stream[] }) {
                   <div className="bg-gray-50/50 border-t border-gray-100 pl-6 md:pl-10">
                     
                     {(!stream.courses || stream.courses.length === 0) && (
-                       <p className="py-4 text-sm text-gray-400 italic">No exams found in this stream.</p>
+                       <p className="py-4 text-sm text-gray-400 italic">No courses found in this stream.</p>
                     )}
 
                     {stream.courses.map((course) => (
                       <Accordion key={course.id} type="multiple" className="border-l border-gray-200 ml-4">
                         <AccordionItem value={course.id} className="border-0">
                           
-                          {/* LEVEL 2: COURSE (EXAM) */}
+                          {/* LEVEL 2: COURSE */}
                           <AccordionTrigger className="hover:no-underline py-3 px-4 hover:text-blue-600 text-gray-700">
                              <div className="flex items-center gap-2">
                                 <FolderOpen className="w-4 h-4 text-gray-400" />
@@ -119,14 +128,12 @@ export default function ExamsClient({ streams }: { streams: Stream[] }) {
 
                           <AccordionContent className="pb-4 pt-0 pl-8 pr-4">
                              {(!course.subjects || course.subjects.length === 0) ? (
-                                <p className="text-xs text-gray-400 italic py-2">No subjects.</p>
+                                <p className="text-xs text-gray-400 italic py-2">No subjects found.</p>
                              ) : (
                                 <div className="grid gap-4 mt-2">
                                    {course.subjects.map((subject) => {
                                       const items = getItems(subject)
 
-                                      // Only show subject if it has items OR allow showing empty to indicate where to add?
-                                      // Let's show it so users know the structure exists.
                                       return (
                                         <div key={subject.id} className="bg-white rounded-xl border border-gray-200 p-4">
                                           
@@ -139,15 +146,24 @@ export default function ExamsClient({ streams }: { streams: Stream[] }) {
                                           {/* LEVEL 4: ACTUAL ITEMS (Modules/Tests) */}
                                           <div className="space-y-2">
                                              {items.length === 0 ? (
-                                                <p className="text-xs text-gray-400 italic">No {activeTab}s created yet.</p>
+                                                <div className="text-xs text-gray-400 italic py-2 flex items-center gap-2">
+                                                  <span>No {activeTab.replace('_', ' ')}s generated yet.</span>
+                                                  <Link href="/dashboard/admin/question-uploads" className="text-blue-600 hover:underline">
+                                                    Upload Questions
+                                                  </Link>
+                                                </div>
                                              ) : (
-                                                items.map((item) => (
+                                                items.map((item) => {
+                                                  // Determine Status Label
+                                                  const isLive = item.is_published ?? item.is_active ?? false;
+                                                  
+                                                  return (
                                                   <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-blue-50 hover:border-blue-100 border border-transparent transition-all group/item">
                                                      <div>
                                                         <h4 className="font-bold text-gray-800 text-sm mb-0.5">{item.title}</h4>
                                                         <div className="flex items-center gap-2">
-                                                           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${item.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>
-                                                              {item.is_published ? 'Live' : 'Draft'}
+                                                           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isLive ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>
+                                                              {isLive ? 'Live' : 'Inactive'}
                                                            </span>
                                                            <span className="text-[10px] text-gray-400">
                                                               {new Date(item.created_at).toLocaleDateString()}
@@ -156,12 +172,15 @@ export default function ExamsClient({ streams }: { streams: Stream[] }) {
                                                      </div>
 
                                                      <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover/item:opacity-100 transition-opacity">
+                                                        {/* Edit Button (Keep for fixing titles/descriptions manually) */}
                                                         <Link 
                                                           href={`/dashboard/admin/exams/${item.id}/edit?type=${activeTab}`}
                                                           className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-white rounded-md transition-colors"
                                                         >
                                                           <Pencil className="w-3.5 h-3.5" />
                                                         </Link>
+                                                        
+                                                        {/* Delete Button */}
                                                         <form onSubmit={async (e) => {
                                                           e.preventDefault()
                                                           const formData = new FormData(e.currentTarget)
@@ -183,7 +202,7 @@ export default function ExamsClient({ streams }: { streams: Stream[] }) {
                                                         </form>
                                                      </div>
                                                   </div>
-                                                ))
+                                                )})
                                              )}
                                           </div>
 
