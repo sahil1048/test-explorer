@@ -17,16 +17,34 @@ export default function SubjectUploader({ streams }: { streams: any[] }) {
   const toggleStream = (id: string) => setOpenStreams(p => ({ ...p, [id]: !p[id] }))
   const toggleCourse = (id: string) => setOpenCourses(p => ({ ...p, [id]: !p[id] }))
 
-  const handleClose = () => {
-    setSelectedSubject(null)
-    setFileName(null)
-    setLoading(false)
-  }
-
-  // Handle file selection to show name
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setFileName(e.target.files[0].name)
+    }
+  }
+
+  // ✅ FIX: Use a standard onSubmit handler for reliable loading state
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault() // Prevent browser reload
+    setLoading(true)   // Force loading state immediately
+
+    const formData = new FormData(e.currentTarget)
+
+    try {
+      const result = await uploadQuestionBankAction(formData)
+      
+      if (result?.error) {
+        toast.error(result.error)
+      } else {
+        toast.success(`Success! Uploaded questions.`)
+        setSelectedSubject(null)
+        setFileName(null)
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error("An unexpected error occurred.")
+    } finally {
+      setLoading(false) // Stop loading regardless of success/failure
     }
   }
 
@@ -107,8 +125,9 @@ export default function SubjectUploader({ streams }: { streams: any[] }) {
           <div className="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl relative">
             
             <button 
-              onClick={() => setSelectedSubject(null)} 
-              className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200 text-gray-500"
+              onClick={() => !loading && setSelectedSubject(null)} 
+              disabled={loading}
+              className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200 text-gray-500 disabled:opacity-50"
             >
               <X className="w-4 h-4" />
             </button>
@@ -123,21 +142,8 @@ export default function SubjectUploader({ streams }: { streams: any[] }) {
               </p>
             </div>
 
-            <form 
-              action={async (formData) => {
-                setLoading(true)
-                try {
-                  await uploadQuestionBankAction(formData)
-                  toast.success("Questions added to the subject pool!")
-                  setSelectedSubject(null)
-                } catch (error) {
-                  toast.error("Upload failed. Check CSV format.")
-                } finally {
-                  setLoading(false)
-                }
-              }}
-              className="space-y-4"
-            >
+            {/* ✅ UPDATED FORM TAG */}
+            <form onSubmit={handleSubmit} className="space-y-4">
               <input type="hidden" name="subject_id" value={selectedSubject.id} />
 
               <div>
@@ -193,7 +199,7 @@ export default function SubjectUploader({ streams }: { streams: any[] }) {
                 </div>
                 
                 <p className="text-[10px] text-gray-400 mt-2 bg-gray-100 p-2 rounded">
-                  <strong>Required Columns:</strong> description, question, option_a, option_b, option_c, option_d, correct_option, explanation
+                  <strong>Required Columns:</strong> question, option_a, option_b, option_c, option_d, correct_option
                 </p>
               </div>
 

@@ -19,7 +19,9 @@ export async function submitExamAction(
   // ---------------------------------------------------------
   // 2. FETCH EXAM SETTINGS (Marking Scheme)
   // ---------------------------------------------------------
-  let settingsTable = testType === 'mock' ? 'mock_tests' : 'exams';
+  let settingsTable = 'exams'; 
+  if (testType === 'mock') settingsTable = 'mock_tests';
+  else if (testType === 'practice') settingsTable = 'practice_tests';
   
   const { data: examSettings, error: settingsError } = await supabase
     .from(settingsTable)
@@ -52,7 +54,6 @@ export async function submitExamAction(
   let questions = [];
 
   if (testType === 'mock') {
-    // Mock Tests: Fetch via the join table
     const { data: mockData, error: fetchError } = await supabase
       .from('mock_test_questions')
       .select(`question:questions (${selectQuery})`)
@@ -64,7 +65,6 @@ export async function submitExamAction(
     questions = mockData?.map((item: any) => item.question).filter((q: any) => q !== null) || [];
 
   } else {
-    // Standard/Practice Tests: Fetch directly
     let query = supabase.from('questions').select(selectQuery);
 
     if (testType === 'practice') query = query.eq('practice_test_id', examId);
@@ -84,38 +84,31 @@ export async function submitExamAction(
   let incorrectCount = 0;
   let unattemptedCount = 0;
   
-  // Data structure for Sectional Analysis
   const subjectAnalysis: Record<string, { total: number, score: number }> = {}
 
   questions.forEach(q => {
     // @ts-ignore
     const subjectName = q.question_bank?.subject?.title || 'General';
     
-    // Init subject entry if missing
     if (!subjectAnalysis[subjectName]) {
       subjectAnalysis[subjectName] = { total: 0, score: 0 };
     }
 
-    // Add potential marks to the total for this subject
     subjectAnalysis[subjectName].total += Number(MARKS_CORRECT); 
 
-    // Determine correctness
     // @ts-ignore
     const correctOption = q.options.find((o: any) => o.is_correct);
     const userSelectedOptionId = answers[q.id];
     let questionScore = 0;
     
     if (!userSelectedOptionId) {
-      // Case: Not Attempted
       unattemptedCount += 1;
       questionScore = Number(MARKS_UNATTEMPTED);
     } else {
       if (correctOption && userSelectedOptionId === correctOption.id) {
-        // Case: Correct
         correctCount += 1;
         questionScore = Number(MARKS_CORRECT);
       } else {
-        // Case: Incorrect
         incorrectCount += 1;
         questionScore = Number(MARKS_INCORRECT); 
       }
@@ -128,7 +121,31 @@ export async function submitExamAction(
   const totalMaxMarks = questions.length * MARKS_CORRECT;
 
   // ---------------------------------------------------------
-  // 5. SAVE ATTEMPT
+  // 5. ✅ NEW: RANK PREDICTION LOGIC
+  // ---------------------------------------------------------
+  let predictedRank = null
+  let predictedPercentile = null
+
+  // Only attempt prediction if we have a courseId (rank data is linked to courses)
+  if (courseId) {
+    // Find the range where the score fits: min_score <= currentScore <= max_score
+    const { data: prediction } = await supabase
+      .from('exam_rank_predictions')
+      .select('approx_rank, approx_percentile')
+      .eq('course_id', courseId)
+      .lte('min_score', currentScore)
+      .gte('max_score', currentScore)
+      .limit(1)
+      .maybeSingle() // Use maybeSingle to avoid errors if no range matches
+
+    if (prediction) {
+      predictedRank = prediction.approx_rank
+      predictedPercentile = prediction.approx_percentile
+    }
+  }
+
+  // ---------------------------------------------------------
+  // 6. SAVE ATTEMPT
   // ---------------------------------------------------------
   const attemptPayload = {
     user_id: user.id,
@@ -137,7 +154,6 @@ export async function submitExamAction(
     percentage: totalMaxMarks > 0 ? (currentScore / totalMaxMarks) * 100 : 0,
     time_taken_seconds: timeTaken,
     answers: answers,
-    // Correctly map IDs based on test type
     mock_test_id: testType === 'mock' ? examId : null, 
     practice_test_id: testType === 'practice' ? examId : null,
     exam_id: (testType !== 'mock' && testType !== 'practice') ? examId : null
@@ -155,9 +171,8 @@ export async function submitExamAction(
   }
 
   // ---------------------------------------------------------
-  // 6. RETURN DATA
+  // 7. RETURN DATA (With Predicted Rank)
   // ---------------------------------------------------------
-  // Transform analysis object to array for frontend
   const sections = Object.entries(subjectAnalysis).map(([subject, stats]) => ({
     subject,
     score: stats.score,
@@ -166,6 +181,7 @@ export async function submitExamAction(
 
   return { 
     success: true, 
+    attemptId: attempt.id,
     redirectUrl: `/courses/${courseId}/subjects/${subjectId}/test/${testType}/${examId}/result/${attempt.id}`,
     examTitle: EXAM_TITLE,
     score: currentScore,
@@ -173,6 +189,10 @@ export async function submitExamAction(
     correct: correctCount,
     incorrect: incorrectCount,
     unattempted: unattemptedCount,
-    sections: sections
+    sections: sections,
+    
+    // ✅ Include these in the return type
+    predictedRank,
+    predictedPercentile
   }
 }

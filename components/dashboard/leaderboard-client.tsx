@@ -24,7 +24,7 @@ interface Subject {
 interface LeaderboardEntry {
   student_id: string;
   student_name: string;
-  school_name: string;
+  organization_name: string; // <--- Renamed from school_name
   total_score: number;
   tests_taken: number;
   avg_percentage: number;
@@ -92,12 +92,14 @@ export default function LeaderboardClient({ courses, schoolId }: Props) {
       setLoadingLeaderboard(true);
       
       const { data, error } = await supabase.rpc(
-        'get_subject_leaderboard', 
+        'get_leaderboard_v6', 
         { 
           target_subject_id: selectedSubject,
-          target_school_id: schoolId || null
+          target_organization_id: schoolId || null
         }
       );
+
+      console.log("🔍 SUPABASE RESPONSE:", { data, error, selectedSubject });
 
       if (error) console.error("Leaderboard Error:", error);
       setLeaderboardData(data || []);
@@ -213,7 +215,7 @@ export default function LeaderboardClient({ courses, schoolId }: Props) {
                     <td className="p-4">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <School className="w-3.5 h-3.5 text-gray-400" />
-                        {row.school_name || 'Individual'}
+                        {row.organization_name || 'Individual'}
                       </div>
                     </td>
                     <td className="p-4 text-center text-gray-600 font-medium">{row.tests_taken}</td>

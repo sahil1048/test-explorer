@@ -2,8 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { Phone, MapPin, ArrowLeft, User, GraduationCap } from 'lucide-react'
 import Link from 'next/link'
 import EnrollmentManager from '@/components/admin/enrollment-manager'
-import ExportStudentsBtn from '@/components/admin/export-students-btn' // Import Export Btn
-import StudentSearch from '@/components/admin/student-search' // Import Search Component
+import ExportStudentsBtn from '@/components/admin/export-students-btn'
+import StudentSearch from '@/components/admin/student-search'
 import StudentSort from '@/components/admin/student-sort'
 
 export default async function SchoolStudentsPage({
@@ -31,26 +31,35 @@ export default async function SchoolStudentsPage({
     dbQuery = dbQuery.eq('organization_id', schoolId)
   }
 
-  // 2. Apply Search (Server Side Filtering)
+  // 2. Apply Search
   if (query) {
     dbQuery = dbQuery.ilike('full_name', `%${query}%`)
   }
 
-  // 3. Fetch Data
+  // 3. Fetch Data WITH HIERARCHY (Subject -> Course -> Category/Exam)
   const { data: allSubjects } = await supabase
     .from('subjects')
-    .select('*')
+    .select(`
+      id, 
+      title, 
+      courses (
+        title,
+        categories (
+          title
+        )
+      )
+    `)
     .order('title')
 
   const { data: rawStudents } = await dbQuery
   let students = rawStudents || []
 
-if (sort === 'name_asc') {
+  // Sort logic
+  if (sort === 'name_asc') {
     students.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''))
   } else if (sort === 'name_desc') {
     students.sort((a, b) => (b.full_name || '').localeCompare(a.full_name || ''))
   } else {
-    // Default: Newest
     students.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }
 
@@ -77,20 +86,13 @@ if (sort === 'name_asc') {
         </div>
       </div>
 
-      {/* Toolbar: Search & Export */}
+      {/* Toolbar */}
       <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4">
-        
-        {/* Search Component */}
         <StudentSearch placeholder="Search students by name..." />
-
         <div className="flex gap-2">
-           {/* Sort Button */}
            <StudentSort />
-           
-           {/* Export Button */}
            <ExportStudentsBtn data={students} />
         </div>
-        
       </div>
 
       {/* Table */}
@@ -109,15 +111,13 @@ if (sort === 'name_asc') {
             <tbody className="divide-y divide-gray-100">
               {students.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-8 py-12 text-center text-gray-400 font-medium">
+                  <td colSpan={5} className="px-8 py-12 text-center text-gray-400 font-medium">
                     No students found matching your filters.
                   </td>
                 </tr>
               ) : (
                 students.map((student) => (
                   <tr key={student.id} className="hover:bg-gray-50/80 transition-colors group">
-                    
-                    {/* NAME */}
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-linear-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center text-gray-600 font-bold border border-gray-200 shadow-sm">
@@ -129,7 +129,6 @@ if (sort === 'name_asc') {
                         </div>
                       </div>
                     </td>
-
                     <td className="px-8 py-5">
                        <div className="flex items-center gap-2 text-sm font-medium text-gray-700 bg-blue-50 px-3 py-1 rounded-full w-fit border border-blue-100">
                          <GraduationCap className="w-4 h-4 text-blue-500" />
@@ -137,16 +136,12 @@ if (sort === 'name_asc') {
                          {student.stream || <span className="text-gray-400">N/A</span>}
                        </div>
                     </td>
-                    
-                    {/* PHONE */}
                     <td className="px-8 py-5">
                        <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
                          <Phone className="w-4 h-4 text-gray-300" />
                          {student.phone || student.phone_no || <span className="text-gray-300 italic">--</span>}
                        </div>
                     </td>
-
-                    {/* ADDRESS */}
                     <td className="px-8 py-5">
                        <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
                          <MapPin className="w-4 h-4 text-gray-300" />
@@ -154,8 +149,6 @@ if (sort === 'name_asc') {
                          {student.city && student.state ? `${student.city}, ${student.state}` : <span className="text-gray-300 italic">No address</span>}
                        </div>
                     </td>
-
-                    {/* MANAGE ACCESS BUTTON */}
                     <td className="px-8 py-5 text-right">
                       <EnrollmentManager 
                         studentId={student.id}

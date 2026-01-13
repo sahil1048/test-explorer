@@ -8,7 +8,7 @@ export default async function MyExamsPage() {
 
   if (!user) return <div>Please login.</div>
 
-  // Fetch all attempts with full hierarchy to build links
+  // 1. UPDATE: Added 'mock_tests' to the query
   const { data: attempts } = await supabase
     .from('exam_attempts')
     .select(`
@@ -30,10 +30,19 @@ export default async function MyExamsPage() {
           id,
           course_id
         )
+      ),
+      mock_tests (
+        id,
+        title,
+        subject_id,
+        subjects (
+          id,
+          course_id
+        )
       )
     `)
     .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+    .order('started_at', { ascending: false })
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -57,44 +66,68 @@ export default async function MyExamsPage() {
         ) : (
           <div className="divide-y divide-gray-100">
             {attempts.map((attempt) => {
-              // Determine Type & Data
-              const isMock = !!attempt.exam_id
-              const testData = isMock ? attempt.exams : attempt.practice_tests
+              // 2. UPDATE: Determine Type based on which relationship is populated
+              // @ts-ignore
+              const mockData = attempt.mock_tests
+              // @ts-ignore
+              const practiceData = attempt.practice_tests
+              // @ts-ignore
+              const examData = attempt.exams
+
+              let testData = null
+              let type = ''
+              let testId = ''
+
+              if (mockData) {
+                testData = mockData
+                type = 'mock'
+                testId = attempt.mock_test_id
+              } else if (practiceData) {
+                testData = practiceData
+                type = 'practice'
+                testId = attempt.practice_test_id
+              } else if (examData) {
+                testData = examData
+                type = 'exam' // Standard Exam
+                testId = attempt.exam_id
+              }
               
-              // Safeguard if test was deleted
+              // Safeguard if test was deleted or data is missing
               if (!testData) return null
 
               const title = testData.title
-              // @ts-ignore - Supabase types join
+              // @ts-ignore
               const subjectId = testData.subject_id
               // @ts-ignore
               const courseId = testData.subjects?.course_id
               
-              const type = isMock ? 'mock' : 'practice'
-              const examId = isMock ? attempt.exam_id : attempt.practice_test_id
-
               // Construct Links
               const returnPath = encodeURIComponent('/dashboard/exams')
-              const resultLink = `/courses/${courseId}/subjects/${subjectId}/test/${type}/${examId}/result/${attempt.id}?returnTo=${returnPath}`
-              const reviewLink = `/courses/${courseId}/subjects/${subjectId}/test/${type}/${examId}/review/${attempt.id}?returnTo=${returnPath}`
+              const resultLink = `/courses/${courseId}/subjects/${subjectId}/test/${type}/${testId}/result/${attempt.id}?returnTo=${returnPath}`
+              const reviewLink = `/courses/${courseId}/subjects/${subjectId}/test/${type}/${testId}/review/${attempt.id}?returnTo=${returnPath}`
 
               const date = new Date(attempt.created_at).toLocaleDateString('en-US', { 
                 weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' 
               })
               const time = new Date(attempt.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 
+              // Helper for styling based on type
+              const isPractice = type === 'practice'
+              const badgeColor = isPractice ? 'bg-green-50 text-green-700' : 'bg-purple-50 text-purple-700'
+              const iconColor = isPractice ? 'bg-green-100 text-green-600' : 'bg-purple-100 text-purple-600'
+
               return (
                 <div key={attempt.id} className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-gray-50 transition-colors">
                    
                    <div className="flex items-start gap-4 flex-1">
-                      <div className={`mt-1 w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${isMock ? 'bg-purple-100 text-purple-600' : 'bg-green-100 text-green-600'}`}>
-                         {isMock ? <Trophy className="w-6 h-6" /> : <PlayCircle className="w-6 h-6" />}
+                      <div className={`mt-1 w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${iconColor}`}>
+                         {isPractice ? <PlayCircle className="w-6 h-6" /> : <Trophy className="w-6 h-6" />}
                       </div>
                       <div>
                         <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{title}</h3>
                         <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mt-1 font-medium">
-                           <span className={`px-2 py-0.5 rounded text-xs uppercase font-bold tracking-wide ${isMock ? 'bg-purple-50 text-purple-700' : 'bg-green-50 text-green-700'}`}>
-                             {isMock ? 'Mock' : 'Practice'}
+                           <span className={`px-2 py-0.5 rounded text-xs uppercase font-bold tracking-wide ${badgeColor}`}>
+                             {type}
                            </span>
                            <span className="flex items-center gap-1">
                              <Calendar className="w-3.5 h-3.5" /> {date} <span className="text-gray-300">|</span> {time}
@@ -113,7 +146,7 @@ export default async function MyExamsPage() {
                         <div>
                           <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Accuracy</div>
                           <div className={`text-lg font-black ${attempt.percentage >= 70 ? 'text-green-600' : attempt.percentage >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
-                            {attempt.percentage}%
+                            {attempt.percentage ? attempt.percentage.toFixed(0) : 0}%
                           </div>
                         </div>
                       </div>
