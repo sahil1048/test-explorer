@@ -56,7 +56,7 @@ async function parseAndInsertQuestions(file: File, parentId: string) {
       const optC = row.option_c || row.c || row.opt_c || row.option3
       const optD = row.option_d || row.d || row.opt_d || row.option4
       
-      const correctVal = row.correct_option || row.answer || row.correct || row.ans || row.correct_answer || row.right_answer
+      const correctVal = row.correct_option || row.answer || row.correct || row.ans || row.correct_answer || row.right_answer || row.answer_key
 
       // Validate critical fields
       if (!qText || !optA || !optB || !correctVal) {

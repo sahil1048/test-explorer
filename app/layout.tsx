@@ -4,6 +4,16 @@ import { getSchoolBySubdomain } from "@/lib/db/school";
 import { SiteHeader } from "@/components/layout/site-header";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { Metadata } from "next"; // Import Metadata type
+
+// 1. ADD METADATA EXPORT
+export const metadata: Metadata = {
+  title: "Test Explorer",
+  description: "Your learning journey starts here.",
+  icons: {
+    icon: "/favicon.ico", // This path works for both local and prod
+  },
+};
 
 export default async function RootLayout({
   children,

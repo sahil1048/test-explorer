@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Info, Loader2 } from 'lucide-react' 
-import { submitExamAction } from '@/app/courses/[courseId]/subjects/[subjectId]/test/[testType]/[examId]/actions' // Adjust path if needed
+import { submitExamAction } from '@/app/courses/[courseId]/subjects/[subjectId]/test/[testType]/[examId]/actions' 
 import { InstructionStage } from '@/components/exam/stages/InstructionStage'
 import { ConsentStage } from '@/components/exam/stages/ConsentStage'
 import { ResultReportModal } from '@/components/exam/modals/ResultReportModal'
@@ -31,6 +31,8 @@ export default function MockTestInterface({
   const [questionStatus, setQuestionStatus] = useState<Record<string, string>>({}) 
   const [reportData, setReportData] = useState<any>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const [reviewUrl, setReviewUrl] = useState<string | undefined>(undefined)
 
   // -- Empty State --
   if (!questions || questions.length === 0) {
@@ -103,6 +105,16 @@ export default function MockTestInterface({
         return
       }
 
+      // 1. Construct the Review URL
+      const attemptId = result.attemptId 
+      
+      if (attemptId) {
+        const returnPath = encodeURIComponent('/dashboard')
+        const url = `/courses/${courseId}/subjects/${subjectId}/test/mock/${examId}/review/${attemptId}?returnTo=${returnPath}`
+        setReviewUrl(url)
+      }
+
+      // 2. Set Report Data (Including Rank Prediction)
       setReportData({
         examTitle: result.examTitle || 'Test Result',
         sections: result.sections || [],
@@ -111,7 +123,10 @@ export default function MockTestInterface({
         correctCount: result.correct ?? 0,
         incorrectCount: result.incorrect ?? 0,
         unattemptedCount: result.unattempted ?? 0,
-        timeTaken: timeTaken
+        timeTaken: timeTaken,
+        // ✅ NEW: Capture Rank Data from Action
+        predictedRank: result.predictedRank,
+        predictedPercentile: result.predictedPercentile
       })
   
       setStage('report')
@@ -175,6 +190,10 @@ export default function MockTestInterface({
           incorrectCount={reportData.incorrectCount}
           unattemptedCount={reportData.unattemptedCount}
           timeTaken={reportData.timeTaken}
+          reviewUrl={reviewUrl} 
+          // ✅ NEW: Pass Rank Data to Modal
+          predictedRank={reportData.predictedRank}
+          predictedPercentile={reportData.predictedPercentile}
           onClose={() => router.push('/dashboard')} 
         />
       )}

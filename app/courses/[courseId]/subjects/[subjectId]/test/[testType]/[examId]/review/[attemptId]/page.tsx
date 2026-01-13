@@ -24,33 +24,59 @@ export default async function ReviewPage({
 
   // 2. Fetch Exam Title
   let examTitle = 'Unknown Test'
+  
   if (testType === 'practice') {
     const { data } = await supabase.from('practice_tests').select('title').eq('id', examId).single()
+    if (data) examTitle = data.title
+  } else if (testType === 'mock') {
+    const { data } = await supabase.from('mock_tests').select('title').eq('id', examId).single()
     if (data) examTitle = data.title
   } else {
     const { data } = await supabase.from('exams').select('title').eq('id', examId).single()
     if (data) examTitle = data.title
   }
 
-  // 3. Fetch Questions with Explanations & Correct Options
-  // Note: We check against the correct FK based on testType
-  let query = supabase
-    .from('questions')
-    .select(`
-      id, 
-      text, 
-      explanation,
-      options:question_options(id, text, is_correct)
-    `)
-    .order('order_index')
+  // 3. Fetch Questions
+  const questionSelect = `
+    id, 
+    text, 
+    explanation,
+    options:question_options(id, text, is_correct)
+  `
 
-  if (testType === 'practice') {
-    query = query.eq('practice_test_id', examId)
+  // Use 'any[]' here to avoid TypeScript conflicts during the data gathering phase
+  let questions: any[] = []
+
+  if (testType === 'mock') {
+    // MOCK TESTS: Fetch via the join table
+    const { data: mockData } = await supabase
+      .from('mock_test_questions')
+      .select(`question:questions(${questionSelect})`)
+      .eq('mock_test_id', examId)
+    
+    // FIX: Handle if 'question' is returned as an array or object
+    questions = mockData?.map((item: any) => {
+      const q = item.question
+      // If it's an array (Supabase one-to-many inference), take the first item
+      return Array.isArray(q) ? q[0] : q
+    }).filter((q) => q !== null) || []
+    
   } else {
-    query = query.eq('exam_id', examId)
-  }
+    // PRACTICE & STANDARD EXAMS: Direct fetch
+    let query = supabase
+      .from('questions')
+      .select(questionSelect)
+      .order('order_index')
 
-  const { data: questions } = await query
+    if (testType === 'practice') {
+      query = query.eq('practice_test_id', examId)
+    } else {
+      query = query.eq('exam_id', examId)
+    }
+
+    const { data } = await query
+    questions = data || []
+  }
 
   if (!questions) return <div>Failed to load questions.</div>
 
@@ -62,7 +88,7 @@ export default async function ReviewPage({
     <ReviewInterface 
       examTitle={examTitle}
       questions={questions}
-      userAnswers={attempt.answers || {}} // Ensure defaults if null
+      userAnswers={attempt.answers || {}} 
       backLink={backLink}
     />
   )

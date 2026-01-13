@@ -32,38 +32,59 @@ export default async function ResultPage({
 
   if (!attempt) return <div>Result not found</div>
 
-  // 2. Fetch Exam Title & Questions to calculate stats
-  let examTitle = 'Test Result'
-  let questions = []
+  // 2. Determine Tables & FK
+  const examTable = testType === 'practice' ? 'practice_tests' : 'exams' // or 'mock_tests' if separate
+  // Note: Adjust 'exams' to 'mock_tests' if your DB separates them completely
+  const actualTable = (testType === 'mock') ? 'mock_tests' : (testType === 'practice' ? 'practice_tests' : 'exams')
+  
+  const questionFK = testType === 'practice' ? 'practice_test_id' : (testType === 'mock' ? 'mock_test_id' : 'exam_id')
 
-  // Determine table based on testType
-  const examTable = testType === 'practice' ? 'practice_tests' : 'exams'
-  const questionFK = testType === 'practice' ? 'practice_test_id' : 'exam_id'
-
-  // Fetch Exam Title
+  // 3. Fetch Exam Settings (Title & Marking Scheme)
+  // We try to fetch marking columns. If they don't exist (e.g. practice), we fallback.
   const { data: examData } = await supabase
-    .from(examTable)
-    .select('title')
+    .from(actualTable)
+    .select('title, marks_correct, marks_incorrect, marks_unattempted')
     .eq('id', examId)
     .single()
+    
   
-  if (examData) examTitle = examData.title
+  const examTitle = examData?.title || 'Test Result'
 
-  // Fetch Questions (needed to know counts for the chart)
-  const { data: questionData } = await supabase
-    .from('questions')
-    .select('id, options:question_options(id, is_correct)')
-    .eq(questionFK, examId)
-  
-  questions = questionData || []
+  // -- DEFINE MARKING SCHEME --
+  // Default: Correct = 4, Incorrect = -1, Unattempted = 0
+  const MARK_CORRECT = examData?.marks_correct
+  const MARK_INCORRECT = examData?.marks_incorrect
+  const MARK_UNATTEMPTED = examData?.marks_unattempted ?? 0
 
-  // 3. Calculate Detailed Stats
+  // 4. Fetch Questions
+  // For Mock tests, we might need to query the join table 'mock_test_questions'
+  let questions = []
+
+  if (testType === 'mock') {
+     const { data: mockQ } = await supabase
+      .from('mock_test_questions')
+      .select('question:questions(id, options:question_options(id, is_correct))')
+      .eq('mock_test_id', examId)
+     
+     // @ts-ignore
+     questions = mockQ?.map(item => item.question).filter(Boolean) || []
+  } else {
+     const { data: stdQ } = await supabase
+      .from('questions')
+      .select('id, options:question_options(id, is_correct)')
+      .eq(questionFK, examId)
+     
+     questions = stdQ || []
+  }
+
+  // 5. Calculate Detailed Stats based on Marking Scheme
   const totalQuestions = questions.length
   const userAnswers = attempt.answers || {}
   
   let correctCount = 0
   let incorrectCount = 0
   let skippedCount = 0
+  let calculatedScore = 0
 
   questions.forEach((q: any) => {
     const selectedOptionId = userAnswers[q.id]
@@ -72,41 +93,34 @@ export default async function ResultPage({
 
     if (!selectedOptionId) {
       skippedCount++
+      calculatedScore += MARK_UNATTEMPTED
     } else if (correctOption && selectedOptionId === correctOption.id) {
       correctCount++
+      calculatedScore += MARK_CORRECT
     } else {
       incorrectCount++
+      calculatedScore += MARK_INCORRECT
     }
   })
 
-  // Calculate Chart Proportions (Based on Question Count, NOT Marks)
+  // Final Calculations
+  const totalMaxMarks = totalQuestions * MARK_CORRECT
+  const finalScore = calculatedScore // Use our fresh calculation to be safe
+  const percentage = totalMaxMarks > 0 ? ((finalScore / totalMaxMarks) * 100).toFixed(1) : "0.0"
+
+  // Chart Logic
   const correctPercent = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0
   const incorrectPercent = totalQuestions > 0 ? (incorrectCount / totalQuestions) * 100 : 0
   
-  // Create Conic Gradient String
-  // Green (Correct) -> Red (Incorrect) -> Yellow (Skipped)
   const chartGradient = `conic-gradient(
     #4CAF50 0% ${correctPercent}%, 
     #FF4D4D ${correctPercent}% ${correctPercent + incorrectPercent}%, 
     #FFB020 ${correctPercent + incorrectPercent}% 100%
   )`
-
-  // --- SCORE LOGIC ---
-  const score = attempt.score || 0
-  
-  // Fallback for total_marks if old attempts exist without it
-  // Mock: Q * 5, Practice: Q * 1
-  const defaultTotalMarks = testType === 'mock' ? totalQuestions * 5 : totalQuestions
-  const totalMarks = attempt.total_marks || defaultTotalMarks
-
-  // Percentage based on Marks
-  const percentage = totalMarks > 0 ? ((score / totalMarks) * 100).toFixed(1) : "0.0"
   
   const timeUsed = `${Math.floor(attempt.time_taken_seconds / 60)}m ${attempt.time_taken_seconds % 60}s`
-
-  // Dummy Topper Data (Logic: slightly higher than user or 98%)
-  const topperScore = Math.min(totalMarks, Math.ceil(totalMarks * 0.98)) // 98% Score
-  const topperTime = `${Math.floor(attempt.time_taken_seconds * 0.8 / 60)}m` // 20% faster
+  const topperScore = Math.min(totalMaxMarks, Math.ceil(totalMaxMarks * 0.95)) // Dummy 95%
+  const topperTime = `${Math.floor(attempt.time_taken_seconds * 0.8 / 60)}m` 
 
   return (
     <div className="min-h-screen bg-black/40 flex items-center justify-center p-4 backdrop-blur-sm fixed inset-0 z-50">
@@ -130,7 +144,7 @@ export default async function ResultPage({
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <StatCard label="Marks" value={`${score}/${totalMarks}`} icon={Target} color="text-blue-600" bg="bg-blue-50" />
+            <StatCard label="Marks" value={`${finalScore}/${totalMaxMarks}`} icon={Target} color="text-blue-600" bg="bg-blue-50" />
             <StatCard label="Questions" value={`${correctCount}/${totalQuestions}`} icon={Trophy} color="text-orange-600" bg="bg-orange-50" />
             <StatCard label="Time" value={timeUsed} icon={Clock} color="text-purple-600" bg="bg-purple-50" />
             <StatCard label="Percentage" value={`${percentage}%`} icon={BarChart2} color="text-green-600" bg="bg-green-50" />
@@ -150,7 +164,7 @@ export default async function ResultPage({
                    <span className="text-3xl font-black text-gray-900">{totalQuestions}</span>
                  </div>
                </div>
-               {/* Legend */}
+               
                <div className="flex gap-4 mt-6 text-xs font-bold text-gray-500">
                  <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-[#4CAF50]"/> {correctCount} Correct</div>
                  <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-[#FF4D4D]"/> {incorrectCount} Wrong</div>
@@ -171,8 +185,8 @@ export default async function ResultPage({
                   <tbody>
                     <tr className="border-b border-gray-50">
                       <td className="p-4 font-medium text-gray-600">Marks Scored</td>
-                      <td className="p-4 font-bold text-gray-900">{score} / {totalMarks}</td>
-                      <td className="p-4 text-gray-500">{topperScore} / {totalMarks}</td>
+                      <td className="p-4 font-bold text-gray-900">{finalScore} / {totalMaxMarks}</td>
+                      <td className="p-4 text-gray-500">{topperScore} / {totalMaxMarks}</td>
                     </tr>
                     <tr className="border-b border-gray-50">
                       <td className="p-4 font-medium text-gray-600">Time Taken</td>

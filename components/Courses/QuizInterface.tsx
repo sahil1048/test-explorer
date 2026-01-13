@@ -9,6 +9,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
+  PaginationEllipsis,
 } from "@/components/ui/pagination"
 
 type Option = { id: string; text: string; is_correct: boolean }
@@ -22,11 +23,17 @@ export default function QuizInterface({ questions }: { questions: Question[] }) 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 5
+  const PAGES_PER_VIEW = 10 // Show 10 page numbers at a time
 
   // --- LOGIC ---
   const totalPages = Math.ceil(questions.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const currentQuestions = questions.slice(startIndex, startIndex + itemsPerPage)
+
+  // Calculate Pagination Range (Block Logic)
+  const currentBlock = Math.ceil(currentPage / PAGES_PER_VIEW)
+  const startPage = (currentBlock - 1) * PAGES_PER_VIEW + 1
+  const endPage = Math.min(currentBlock * PAGES_PER_VIEW, totalPages)
 
   const handleSelect = (questionId: string, optionId: string) => {
     if (selections[questionId]) return 
@@ -136,7 +143,7 @@ export default function QuizInterface({ questions }: { questions: Question[] }) 
 
       {/* PAGINATION CONTROLS */}
       {totalPages > 1 && (
-        <div className="pt-8 pb-12">
+        <div className="pt-8 pb-12 overflow-x-auto">
           <Pagination>
             <PaginationContent>
               
@@ -152,24 +159,35 @@ export default function QuizInterface({ questions }: { questions: Question[] }) 
                 />
               </PaginationItem>
 
-              {/* Page Numbers */}
-              {Array.from({ length: totalPages }).map((_, i) => {
-                const page = i + 1
-                return (
-                  <PaginationItem key={page}>
-                    <PaginationLink 
-                      href="#"
-                      isActive={currentPage === page}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        handlePageChange(page)
-                      }}
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              })}
+              {/* Optional: Show ellipsis if not in first block */}
+              {startPage > 1 && (
+                <PaginationItem>
+                    <PaginationEllipsis />
+                </PaginationItem>
+              )}
+
+              {/* Page Numbers Loop (Only shows current block of 10) */}
+              {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink 
+                    href="#"
+                    isActive={currentPage === page}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      handlePageChange(page)
+                    }}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+              {/* Optional: Show ellipsis if not in last block */}
+              {endPage < totalPages && (
+                 <PaginationItem>
+                    <PaginationEllipsis />
+                 </PaginationItem>
+              )}
 
               {/* Next Button */}
               <PaginationItem>
