@@ -4,61 +4,50 @@ import { ArrowUpRight, Sparkles, Layers } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
 import { redirect } from 'next/navigation'
 
+// Mapping Profile Stream -> Database Category Keyword
 const STREAM_KEYWORDS: Record<string, string> = {
-  'Non-Medical': 'Engineering', // Will search for category like '%Engineering%' or '%JEE%'
-  'Medical': 'Medical',     // Will search for category like '%Medical%' or '%NEET%'
-  'Commerce': 'Management',
-  'Arts/Humanities': 'Law',
+  'Non-Medical': 'Engineering', // Matches "Engineering Entrance", "JEE", etc.
+  'Medical': 'Medical',         // Matches "Medical Entrance", "NEET", etc.
+  'Commerce': 'Management',     // Matches "Management", "BBA", etc.
+  'Arts/Humanities': 'Law',     // Matches "Law", "CLAT", etc.
 }
- 
 
 export default async function CategoriesPage() {
   const supabase = await createClient()
 
+  // 1. Check User Session
   const { data: { user } } = await supabase.auth.getUser()
-  
-  // 2. SMART REDIRECT LOGIC
-  if (user) {
-    // Fetch user's stream
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('stream')
-      .eq('id', user.id)
-      .single()
+  if (!user) return redirect('/login')
 
-    if (profile?.stream) {
-      const streamName = profile.stream
-      
-      // Only redirect if the user's stream matches one of our keywords
-      if (STREAM_KEYWORDS[streamName]) {
-        const searchKeyword = STREAM_KEYWORDS[streamName]
+  // 2. Fetch User's Stream
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('stream')
+    .eq('id', user.id)
+    .single()
 
-        // Find the category ID that matches this stream
-        // We use 'ilike' for a case-insensitive fuzzy match
-        const { data: matchedCategory } = await supabase
-          .from('categories')
-          .select('id')
-          .ilike('title', `%${searchKeyword}%`) 
-          .limit(1)
-          .single()
-
-        // If we found a matching category, REDIRECT user immediately
-        if (matchedCategory) {
-          redirect(`/categories/${matchedCategory.id}`)
-        }
-      }
-    }
-  }
-
-  // 1. Fetch Categories
-  const { data: categories } = await supabase
+  // 3. Construct Query
+  // Start by selecting all categories
+  let query = supabase
     .from('categories')
     .select('*')
     .order('order_index')
 
+  // 4. Apply Smart Filter (Stream + CUET)
+  if (profile?.stream) {
+    const streamKeyword = STREAM_KEYWORDS[profile.stream]
+
+    if (streamKeyword) {
+      // Filter: Title matches User's Stream Keyword OR Title matches 'CUET'
+      // We use 'ilike' for case-insensitive partial matching (e.g. "Engineering" matches "Engineering Exams")
+      query = query.or(`title.ilike.%${streamKeyword}%,title.ilike.%CUET%`)
+    }
+  }
+
+  const { data: categories } = await query
+
   return (
     <div className="min-h-screen bg-white">
-
       <main className="container mx-auto px-6 py-16">
         
         <div className="max-w-3xl mb-16">
@@ -70,24 +59,21 @@ export default async function CategoriesPage() {
             What are you <br/><span className="text-blue-600">aiming</span> for?
           </h1>
           <p className="text-xl text-gray-500 font-medium max-w-xl">
-            Choose your field to find the perfect exams and preparation material tailored for you.
+            Based on your stream <strong>{profile?.stream}</strong>, we have curated the best exam categories for you (including CUET).
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {categories?.map((cat) => {
-            // --- 2. DYNAMIC ICON LOGIC ---
+            // --- DYNAMIC ICON LOGIC ---
             // @ts-ignore
             const Icon = LucideIcons[cat.icon_key] || Layers
 
-            // --- 3. DYNAMIC COLOR LOGIC ---
+            // --- DYNAMIC COLOR LOGIC ---
             const rawBg = cat.bg_color || 'bg-gray-50'
-            // Check if it is a custom hex class like "bg-[#123456]"
             const isArbitrary = rawBg.startsWith('bg-[#') && rawBg.endsWith(']')
-            // Extract the hex code if it is arbitrary, otherwise null
             const hexColor = isArbitrary ? rawBg.slice(4, -1) : null
             
-            // If we have a hex, remove the class. If not, keep the Tailwind class.
             const finalClass = hexColor ? '' : rawBg
             const finalStyle = hexColor ? { backgroundColor: hexColor } : undefined
 
@@ -127,6 +113,12 @@ export default async function CategoriesPage() {
               </Link>
             )
           })}
+
+          {(!categories || categories.length === 0) && (
+            <div className="col-span-full py-20 text-center border-2 border-dashed border-gray-200 rounded-[2.5rem] bg-gray-50">
+              <p className="text-gray-500 font-bold">No categories found matching your stream.</p>
+            </div>
+          )}
         </div>
 
       </main>

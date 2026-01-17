@@ -42,7 +42,7 @@ export default async function MyExamsPage() {
       )
     `)
     .eq('user_id', user.id)
-    .order('started_at', { ascending: false })
+    .order('completed_at', { ascending: true })
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -106,10 +106,10 @@ export default async function MyExamsPage() {
               const resultLink = `/courses/${courseId}/subjects/${subjectId}/test/${type}/${testId}/result/${attempt.id}?returnTo=${returnPath}`
               const reviewLink = `/courses/${courseId}/subjects/${subjectId}/test/${type}/${testId}/review/${attempt.id}?returnTo=${returnPath}`
 
-              const date = new Date(attempt.created_at).toLocaleDateString('en-US', { 
+              const date = new Date(attempt.started_at).toLocaleDateString('en-US', { 
                 weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' 
               })
-              const time = new Date(attempt.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+              const time = new Date(attempt.started_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 
               // Helper for styling based on type
               const isPractice = type === 'practice'
