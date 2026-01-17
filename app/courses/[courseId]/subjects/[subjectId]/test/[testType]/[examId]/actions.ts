@@ -61,7 +61,7 @@ export async function submitExamAction(
 
     if (fetchError) return { error: 'Failed to load questions.' };
     
-    // Flatten the array
+    // Flatten the array (mock questions are joined via a junction table)
     questions = mockData?.map((item: any) => item.question).filter((q: any) => q !== null) || [];
 
   } else {
@@ -121,14 +121,12 @@ export async function submitExamAction(
   const totalMaxMarks = questions.length * MARKS_CORRECT;
 
   // ---------------------------------------------------------
-  // 5. ✅ NEW: RANK PREDICTION LOGIC
+  // 5. RANK PREDICTION LOGIC
   // ---------------------------------------------------------
   let predictedRank = null
   let predictedPercentile = null
 
-  // Only attempt prediction if we have a courseId (rank data is linked to courses)
   if (courseId) {
-    // Find the range where the score fits: min_score <= currentScore <= max_score
     const { data: prediction } = await supabase
       .from('exam_rank_predictions')
       .select('approx_rank, approx_percentile')
@@ -136,7 +134,7 @@ export async function submitExamAction(
       .lte('min_score', currentScore)
       .gte('max_score', currentScore)
       .limit(1)
-      .maybeSingle() // Use maybeSingle to avoid errors if no range matches
+      .maybeSingle()
 
     if (prediction) {
       predictedRank = prediction.approx_rank
@@ -145,8 +143,24 @@ export async function submitExamAction(
   }
 
   // ---------------------------------------------------------
-  // 6. SAVE ATTEMPT
+  // 6. SAVE OR UPDATE ATTEMPT (FIXED)
   // ---------------------------------------------------------
+  
+  // A. Determine which column ID to check based on test type
+  const foreignKeyCol = testType === 'mock' ? 'mock_test_id' 
+                      : testType === 'practice' ? 'practice_test_id' 
+                      : 'exam_id';
+
+  // B. Look for an existing "in_progress" attempt to update
+  const { data: existingAttempt } = await supabase
+    .from('exam_attempts')
+    .select('id, started_at')
+    .eq('user_id', user.id)
+    .eq(foreignKeyCol, examId)
+    .eq('status', 'in_progress')
+    .maybeSingle()
+
+  // C. Prepare the data payload
   const attemptPayload = {
     user_id: user.id,
     score: currentScore,
@@ -154,16 +168,44 @@ export async function submitExamAction(
     percentage: totalMaxMarks > 0 ? (currentScore / totalMaxMarks) * 100 : 0,
     time_taken_seconds: timeTaken,
     answers: answers,
+    status: 'completed',           
+    completed_at: new Date().toISOString(),
+    
+    // Ensure correct foreign key is set
     mock_test_id: testType === 'mock' ? examId : null, 
     practice_test_id: testType === 'practice' ? examId : null,
     exam_id: (testType !== 'mock' && testType !== 'practice') ? examId : null
   }
-  
-  const { data: attempt, error: saveError } = await supabase
-    .from('exam_attempts')
-    .insert(attemptPayload)
-    .select()
-    .single()
+
+  let finalAttemptId;
+  let saveError;
+
+  if (existingAttempt) {
+    // SCENARIO 1: UPDATE (Merge with existing start record)
+    const { data: updated, error } = await supabase
+      .from('exam_attempts')
+      .update(attemptPayload)
+      .eq('id', existingAttempt.id)
+      .select()
+      .single()
+      
+    finalAttemptId = updated?.id
+    saveError = error
+  } else {
+    // SCENARIO 2: INSERT (Fallback if no start record found)
+    const { data: inserted, error } = await supabase
+      .from('exam_attempts')
+      .insert({
+        ...attemptPayload,
+        // Back-calculate started_at so duration makes sense
+        started_at: new Date(Date.now() - (timeTaken * 1000)).toISOString()
+      })
+      .select()
+      .single()
+      
+    finalAttemptId = inserted?.id
+    saveError = error
+  }
 
   if (saveError) {
     console.error('Submission Error:', saveError)
@@ -171,7 +213,7 @@ export async function submitExamAction(
   }
 
   // ---------------------------------------------------------
-  // 7. RETURN DATA (With Predicted Rank)
+  // 7. RETURN DATA
   // ---------------------------------------------------------
   const sections = Object.entries(subjectAnalysis).map(([subject, stats]) => ({
     subject,
@@ -181,8 +223,8 @@ export async function submitExamAction(
 
   return { 
     success: true, 
-    attemptId: attempt.id,
-    redirectUrl: `/courses/${courseId}/subjects/${subjectId}/test/${testType}/${examId}/result/${attempt.id}`,
+    attemptId: finalAttemptId,
+    redirectUrl: `/courses/${courseId}/subjects/${subjectId}/test/${testType}/${examId}/result/${finalAttemptId}`,
     examTitle: EXAM_TITLE,
     score: currentScore,
     totalMarks: totalMaxMarks,
@@ -190,8 +232,6 @@ export async function submitExamAction(
     incorrect: incorrectCount,
     unattempted: unattemptedCount,
     sections: sections,
-    
-    // ✅ Include these in the return type
     predictedRank,
     predictedPercentile
   }

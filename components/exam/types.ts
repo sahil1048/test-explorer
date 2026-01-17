@@ -7,6 +7,9 @@ export interface ExamData {
   total_marks?: number
   total_questions?: number
   negative_marking?: boolean
+  marks_correct?: number
+  marks_incorrect?: number
+  
 }
 
 export interface UserData {

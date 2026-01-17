@@ -39,14 +39,12 @@ export const TestStage = ({
   const getCount = (status: string) => Object.values(questionStatus).filter(s => s === status).length
 
   // --- DYNAMIC DATA CALCULATIONS ---
-  const marksPerQuestion = exam.total_marks && exam.total_questions 
-    ? Math.round((exam.total_marks / exam.total_questions) * 100) / 100 
-    : 5;
+  const marksPerQuestion = exam.marks_correct
     
   // Assuming negative marking is usually 1/4th of positive or specific value. 
   // If you have a specific column for 'negative_marks' in DB, use that instead.
   // For now, based on your boolean 'negative_marking', we display logic:
-  const negativeMarks = exam.negative_marking ? (marksPerQuestion * 0.25) : 1;
+  const negativeMarks = exam.marks_incorrect
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600)
