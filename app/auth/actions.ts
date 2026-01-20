@@ -68,6 +68,9 @@ export async function login(formData: FormData) {
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  
+  // Optional: support redirect on login too if you decide to add the hidden input there
+  const customRedirect = formData.get('redirectTo') as string
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -80,6 +83,12 @@ export async function login(formData: FormData) {
 
   revalidatePath('/', 'layout')
   
+  // 1. Check for custom redirect (Ad Funnel)
+  if (customRedirect && customRedirect.startsWith('/')) {
+    return { success: true, redirectUrl: customRedirect }
+  }
+
+  // 2. Default redirect
   const destination = await getRedirectPath(data.user.id)
   
   return { success: true, redirectUrl: destination }
@@ -89,6 +98,10 @@ export async function signup(formData: FormData) {
   const rawData = Object.fromEntries(formData.entries())
   console.log("SERVER ACTION: Signup received data:", rawData)
   
+  // 1. EXTRACT CUSTOM REDIRECT (For Ad Funnel)
+  const customRedirect = formData.get('redirectTo') as string
+
+  // Keep Service Role Key Check
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     console.error("CRITICAL ERROR: SUPABASE_SERVICE_ROLE_KEY is missing in environment variables.")
     return { error: "Server configuration error. Please contact support." }
@@ -139,6 +152,7 @@ export async function signup(formData: FormData) {
     if (data.user) {
       userId = data.user.id
       
+      // Use Admin Client to create profile (Bypassing RLS if necessary)
       const { error: profileError } = await adminClient
         .from('profiles')
         .upsert({ 
@@ -167,6 +181,12 @@ export async function signup(formData: FormData) {
   revalidatePath('/', 'layout')
   
   if (userId) {
+    // 2. CHECK CUSTOM REDIRECT FIRST
+    if (customRedirect && customRedirect.startsWith('/')) {
+        return { success: true, redirectUrl: customRedirect }
+    }
+
+    // 3. Fallback to default logic
     const destination = await getRedirectPath(userId)
     return { success: true, redirectUrl: destination }
   } else {

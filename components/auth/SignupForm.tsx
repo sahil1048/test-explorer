@@ -11,9 +11,11 @@ import { useRouter } from 'next/navigation'
 
 interface SignupFormProps {
   school?: { id: string; name: string } | null
+  redirectTo?: string     // For Ad Funnel Redirects
+  prefilledEmail?: string // For Admin Invite Links
 }
 
-export default function SignupForm({ school }: SignupFormProps) {
+export default function SignupForm({ school, redirectTo, prefilledEmail }: SignupFormProps) {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -22,17 +24,22 @@ export default function SignupForm({ school }: SignupFormProps) {
   const [selectedStream, setSelectedStream] = useState<string>("") 
   const [selectedStateIso, setSelectedStateIso] = useState<string>("")
   const [selectedCity, setSelectedCity] = useState<string>("")
-  const [selectedSchoolId, setSelectedSchoolId] = useState<string>('')
+  
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setLoading(true)
+    setError(null)
     
     const formData = new FormData(event.currentTarget)
     
-    // Append the selected school ID manually if needed
-    if (selectedSchoolId) {
-      formData.set('schoolId', selectedSchoolId)
+    // FIX 4: Convert State ISO Code (e.g. "HR") to Name (e.g. "Haryana")
+    // The select input returns the Code, but database usually wants the Name.
+    if (selectedStateIso) {
+      const stateData = State.getStateByCodeAndCountry(selectedStateIso, 'IN')
+      if (stateData) {
+        formData.set('state', stateData.name)
+      }
     }
 
     const toastId = toast.loading('Creating your account...')
@@ -43,12 +50,13 @@ export default function SignupForm({ school }: SignupFormProps) {
       if (result?.error) {
         toast.dismiss(toastId)
         toast.error(result.error)
+        setError(result.error)
         setLoading(false)
       } else if (result?.success && result?.redirectUrl) {
         toast.dismiss(toastId)
         toast.success('Account created successfully!')
+        // Redirect to the URL returned by the server action (Ad funnel or Dashboard)
         router.push(result.redirectUrl)
-        // Keep loading true while redirecting
       }
     } catch (err) {
       toast.dismiss(toastId)
@@ -56,42 +64,6 @@ export default function SignupForm({ school }: SignupFormProps) {
       setLoading(false)
     }
   }
-
-  // const handleSubmit = async (formData: FormData) => {
-  //   setLoading(true)
-  //   setError(null)
-
-  //   if (!selectedStream) {
-  //     toast.error('Please select your stream (Medical, Non-Medical, etc.)')
-  //     setLoading(false)
-  //     return
-  //   }
-
-  //   if (!selectedStateIso || !selectedCity) {
-  //     toast.error('Please select your state and city')
-  //     setLoading(false)
-  //     return
-  //   }
-
-  //   const stateName = State.getStateByCodeAndCountry(selectedStateIso, 'IN')?.name || selectedStateIso
-
-  //   formData.set('stream', selectedStream)
-  //   formData.set('state', stateName)
-  //   formData.set('city', selectedCity)
-    
-  //   if (school?.id && school.id !== 'undefined') {
-  //     formData.set('schoolId', school.id)
-  //   }
-
-
-  //   const result = await signup(formData)
-    
-  //   if (result?.error) {
-  //     setError(result.error)
-  //     toast.error(result.error)
-  //     setLoading(false)
-  //   }
-  // }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden p-4">
@@ -110,6 +82,11 @@ export default function SignupForm({ school }: SignupFormProps) {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             
+            {/* Hidden Input for Redirect (Ad Funnel) */}
+            {redirectTo && (
+               <input type="hidden" name="redirectTo" value={redirectTo} />
+            )}
+            
             <div>
               <label className="block text-sm font-bold text-gray-900 mb-2">Full Name</label>
               <input 
@@ -127,7 +104,13 @@ export default function SignupForm({ school }: SignupFormProps) {
                 name="email" 
                 type="email" 
                 required 
-                className="w-full px-5 py-4 rounded-xl bg-gray-100 border-2 border-transparent focus:bg-white focus:border-orange-500 outline-none transition-all placeholder-gray-400 font-medium"
+                defaultValue={prefilledEmail || ''} // Handle prefilled email
+                readOnly={!!prefilledEmail}         // Lock it if prefilled (Invite mode)
+                className={`w-full px-5 py-4 rounded-xl border-2 outline-none transition-all font-medium 
+                  ${prefilledEmail 
+                    ? 'bg-orange-50/50 border-orange-100 text-gray-600 cursor-not-allowed' 
+                    : 'bg-gray-100 border-transparent focus:bg-white focus:border-orange-500 placeholder-gray-400'
+                  }`}
                 placeholder="john@example.com"
               />
             </div>
@@ -135,7 +118,7 @@ export default function SignupForm({ school }: SignupFormProps) {
             <div className="space-y-2">
                  <SearchSchoolInput 
                    prefilledSchool={school}
-                   readOnly={!!school} 
+                   readOnly={!!school}
                  />
             </div>
 
@@ -256,8 +239,6 @@ export default function SignupForm({ school }: SignupFormProps) {
             >
               {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Create Account"}
             </button>
-
-            
           </form>
         </div>
 
