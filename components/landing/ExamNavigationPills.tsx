@@ -21,6 +21,8 @@ export default function ExamNavigationPills() {
     { id: 'counselling', label: 'Counselling' },
     { id: 'universities', label: 'Universities' },
     { id: 'faqs', label: 'FAQs' },
+    { id: 'important-dates', label: 'Important Dates' },
+    { id: 'expired-events', label: 'Expired Events' },
   ]
 
   useEffect(() => {

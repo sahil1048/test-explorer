@@ -18,7 +18,7 @@ const SYSTEM_ROUTES = new Set([
   'login', 'signup', 'dashboard', 'api', 'about', 'contact', 
   'streams', 'categories', 'blogs', 'forgot-password', 
   'update-password', 'auth', 'profile', 'logout',
-  'courses', 'exams', 'search', 'privacy', 'terms', 'robots.txt', 'sitemap.xml', 'mocktest', 'complete-profile'
+  'courses', 'exams', 'search', 'privacy', 'terms', 'robots.txt', 'sitemap.xml', 'mocktest', 'complete-profile', 'reset-password', 
 ])
 
 export async function middleware(request: NextRequest) {

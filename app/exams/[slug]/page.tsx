@@ -16,6 +16,7 @@ import ExamNavigationPills from '@/components/landing/ExamNavigationPills'
 // --- Types ---
 type ExamTab = {
   highlights_intro?: string;
+  whats_new?: string;
   highlights?: { label: string; value: string }[];
   important_dates?: { event: string; date: string }[];
   important_dates_intro?: string;
@@ -114,6 +115,12 @@ type ExamTab = {
   };
   faqs?: { question: string; answer: string }[];
   news?: { title: string; date: string }[];
+  updates_section?: {
+    current_title: string;
+    current_events: { event: string; date: string; status?: string }[];
+    expired_title: string;
+    expired_events: { event: string; date: string }[];
+  };
 }
 
 type ExamDetails = {
@@ -302,6 +309,18 @@ export default async function ExamLandingPage({ params }: PageProps) {
                    </tbody>
                  </table>
                </div>
+
+               {tabs.whats_new && (
+                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 mt-8">
+                    <h3 className="text-lg font-bold text-blue-900 mb-3 flex items-center gap-2">
+                       <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs">NEW</span>
+                       What&apos;s New in JEE Main 2026?
+                    </h3>
+                    <p className="text-sm text-gray-700 leading-7 text-justify">
+                       {tabs.whats_new}
+                    </p>
+                 </div>
+               )}
             </div>
           )}
 
@@ -1204,7 +1223,91 @@ export default async function ExamLandingPage({ params }: PageProps) {
              </div>
           )}
 
-   
+   {/* IMPORTANT UPDATES & EXPIRED EVENTS */}
+          {tabs.updates_section && (
+            <div>
+            <div id="important-dates" className="scroll-mt-40">
+               
+               {/* 1. Current Updates Table */}
+               {tabs.updates_section.current_events && (
+                 <div className="mb-10">
+                    <div className="flex items-center justify-between mb-4">
+                       <h2 className="text-2xl font-bold text-gray-900">
+                          {tabs.updates_section.current_title || "CUET Important Update"}
+                       </h2>
+                       <button className="flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors">
+                          <Download className="w-4 h-4" /> Download Report
+                       </button>
+                    </div>
+
+                    <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm font-sans">
+                      <table className="w-full text-sm text-left border-collapse">
+                        <thead className="bg-[#2563EB] text-white">
+                          <tr>
+                            <th className="px-6 py-4 font-bold border-r border-blue-400 w-1/3 text-base">Event</th>
+                            <th className="px-6 py-4 font-bold border-r border-blue-400 w-1/3 text-base">Description</th>
+                            <th className="px-6 py-4 font-bold text-base w-1/3">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 bg-white">
+                          {tabs.updates_section.current_events.map((item, i) => (
+                            <tr key={i} className="hover:bg-gray-50 transition-colors">
+                              <td className="px-6 py-4 font-medium text-gray-900 border-r border-gray-200 align-top">
+                                {item.event}
+                              </td>
+                              <td className="px-6 py-4 text-gray-700 border-r border-gray-200 align-top">
+                                {item.date}
+                              </td>
+                              <td className="px-6 py-4 align-top">
+                                <span className="text-red-600 font-medium bg-red-50 px-2 py-1 rounded text-xs border border-red-100">
+                                   {item.status || "Tentative"}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                 </div>
+               )}
+               </div>
+
+               <div>
+
+               {/* 2. Expired Events Table */}
+               {tabs.updates_section.expired_events && (
+                 <div id='expired-events'>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                       {tabs.updates_section.expired_title || "CUET Expired Events"}
+                    </h2>
+                    
+                    <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm font-sans">
+                      <table className="w-full text-sm text-left border-collapse">
+                        <thead className="bg-[#2563EB] text-white">
+                          <tr>
+                            <th className="px-6 py-4 font-bold border-r border-blue-400 w-1/2 text-base">Events</th>
+                            <th className="px-6 py-4 font-bold text-base w-1/2">Dates</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 bg-white">
+                          {tabs.updates_section.expired_events.map((item, i) => (
+                            <tr key={i} className="hover:bg-gray-50 transition-colors">
+                              <td className="px-6 py-4 font-medium text-gray-900 border-r border-gray-200 align-top">
+                                {item.event}
+                              </td>
+                              <td className="px-6 py-4 text-gray-700 align-top">
+                                {item.date}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                 </div>
+               )}
+            </div>
+            </div>
+          )}
 
         </div>
 
