@@ -58,12 +58,14 @@ export default async function DashboardLayout({
     { label: 'Mock Tests', href: '/dashboard/admin/mocktest', iconName: 'Pen', roles: ['super_admin'] },
     { label: 'Manage Content', href: '/dashboard/admin/manage-content', iconName: 'BookOpen', roles: ['super_admin'] },
     { label: 'Courses', href: '/dashboard/admin/exams', iconName: 'FileText', roles: ['super_admin'] },
-    { label: 'Question Pool', href: '/dashboard/admin/question-uploads', iconName: 'FileText', roles: ['super_admin'] },
+    { label: 'Question Pool', href: '/dashboard/admin/question-uploads', iconName: 'Database', roles: ['super_admin'] },
     { label: 'Users', href: '/dashboard/admin/users', iconName: 'Users', roles: ['super_admin'] },
     { label: 'Tags', href: '/dashboard/admin/tags', iconName: 'TagIcon', roles: ['super_admin'] },
     { label: 'Blogs', href: '/dashboard/admin/blogs', iconName: 'Newspaper', roles: ['super_admin'] },
     { label: 'Leaderboard', href: '/dashboard/admin/leaderboard', iconName: 'Trophy', roles: ['super_admin'] },
     { label: 'Rank Config', href: '/dashboard/admin/rank-prediction', iconName: 'BarChart3', roles: ['super_admin'] },
+    { label: 'Exam Landing Pages', href: '/dashboard/admin/exam-landing-pages', iconName: 'Globe', roles: ['super_admin'] },
+
   ]
 
   const visibleItems = rawNavItems

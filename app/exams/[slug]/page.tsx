@@ -20,7 +20,7 @@ type ExamTab = {
   highlights?: { label: string; value: string }[];
   important_dates?: { event: string; date: string }[];
   important_dates_intro?: string;
-  eligibility?: { title?: string; intro?: string; components: { label: string; text: string }[]; outro?: string }; // Updated structure
+  eligibility?: { title?: string; intro?: string; components: { label: string; text: string }[]; outro?: string }; 
   application_fee?: { category: string; fee: string; extra_subject?: string }[];
   application_process?: { 
     intro?: string;
@@ -138,7 +138,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
   const supabase = await createClient()
   const { slug } = await params
 
-  // 1. Fetch Course Data
+  // 1. Fetch Current Course Data
   const { data: course } = await supabase
     .from('courses')
     .select('*')
@@ -147,15 +147,36 @@ export default async function ExamLandingPage({ params }: PageProps) {
 
   if (!course) return notFound()
 
+  // 2. Fetch Other Exams for Sidebar (Upcoming/Similar)
+  // Fetching 6 random exams other than current one
+  const { data: relatedExams } = await supabase
+    .from('courses')
+    .select('id, title, slug, details')
+    .neq('slug', slug)
+    .limit(6)
+
   const details = (course.details || {}) as ExamDetails
   const tabs = details.tabs || {}
 
-  // Mock data for sidebar if DB empty
-  const upcomingExams = [
-    { name: "NIFT 2026", date: "Feb 9, 2026", logo: "N" },
-    { name: "IPU CET 2026", date: "Apr 18 - Jun 9, 2026", logo: "I" },
-    { name: "AMUEEE 2026", date: "Apr 26, 2026", logo: "A" },
-  ]
+  // Helper to extract top universities for sidebar
+  const getSidebarUniversities = () => {
+    if (!tabs.participating_universities?.groups) return []
+    // Flatten all university names and take top 5
+    return tabs.participating_universities.groups
+      .flatMap(g => g.names)
+      .slice(0, 5)
+  }
+
+  const sidebarUniversities = getSidebarUniversities()
+  const upcomingExamsList = relatedExams?.slice(0, 3) || []
+  const similarExamsList = relatedExams?.slice(3, 6) || []
+
+  // Helper to get a display date for sidebar exams
+  const getExamDate = (examDetails: any) => {
+    const dates = examDetails?.tabs?.important_dates
+    if (dates && dates.length > 0) return dates[0].date // Return first available date
+    return "Date TBA"
+  }
 
   return (
     <div className="min-h-screen bg-[#f3f4f6] font-sans text-gray-900 pb-20">
@@ -176,8 +197,8 @@ export default async function ExamLandingPage({ params }: PageProps) {
            <div className="flex flex-col md:flex-row justify-between items-start gap-6 pb-4">
               <div className="flex gap-4 items-start">
                  <div className="w-16 h-16 rounded-full bg-white border border-gray-200 p-1 shadow-sm flex-shrink-0">
-                    <div className="w-full h-full rounded-full bg-green-50 flex items-center justify-center text-green-600 font-bold text-xl">
-                        {course.title.substring(0, 2)}
+                    <div className="w-full h-full rounded-full bg-green-50 flex items-center justify-center text-green-600 font-bold text-xl uppercase">
+                       {course.title.substring(0, 2)}
                     </div>
                  </div>
                  <div>
@@ -192,9 +213,9 @@ export default async function ExamLandingPage({ params }: PageProps) {
                  </div>
               </div>
 
-                    <div className="[&>button]:bg-[#1e293b] [&>button]:text-white [&>button]:rounded-lg [&>button]:px-6 [&>button]:py-2 [&>button]:text-sm [&>button]:font-semibold [&>button]:hover:bg-slate-800">
-                        <JoinExamButton courseId={course.id} label="Get Free Mock Tests" />
-                    </div>
+              <div className="[&>button]:bg-[#1e293b] [&>button]:text-white [&>button]:rounded-lg [&>button]:px-6 [&>button]:py-2 [&>button]:text-sm [&>button]:font-semibold [&>button]:hover:bg-slate-800">
+                 <JoinExamButton courseId={course.id} label="Get Free Mock Tests" />
+              </div>
            </div>
         </div>
       </div>
@@ -202,16 +223,16 @@ export default async function ExamLandingPage({ params }: PageProps) {
       {/* ================= 2. PILL NAVIGATION (Sticky) ================= */}
       <ExamNavigationPills />
 
-          <div className="text-xs text-gray-500 flex items-center gap-2 max-w-[90%] ml-28 mt-4">
-             <span className="w-2 h-2 rounded-full bg-green-500"></span>
-             Updated on Jan 20, 2026 by <span className="text-blue-600 font-medium">TestExplorer Team</span>
-          </div>
+      <div className="text-xs text-gray-500 flex items-center gap-2 max-w-[90%] ml-28 mt-4">
+         <span className="w-2 h-2 rounded-full bg-green-500"></span>
+         Updated on {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} by <span className="text-blue-600 font-medium">TestExplorer Team</span>
+      </div>
+
       {/* ================= 3. CONTENT LAYOUT ================= */}
       <div className="max-w-[90%] mx-auto px-4 py-6 grid lg:grid-cols-12 gap-6 ">
         
         {/* LEFT COLUMN (Main Content) */}
         <div className="lg:col-span-9 space-y-6 bg-white px-8 py-4 rounded-sm">
-
 
           {/* DESCRIPTION */}
           <div >
@@ -233,9 +254,9 @@ export default async function ExamLandingPage({ params }: PageProps) {
                      {/* First 5 Items (Always Visible) */}
                      {details.table_of_contents.slice(0, 5).map((item, i) => (
                         <a 
-                          key={i} 
-                          href={`#${item.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} 
-                          className="block px-4 py-2.5 text-sm text-blue-600 border-b border-gray-100 hover:underline hover:bg-blue-50 transition-colors"
+                           key={i} 
+                           href={`#${item.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} 
+                           className="block px-4 py-2.5 text-sm text-blue-600 border-b border-gray-100 hover:underline hover:bg-blue-50 transition-colors"
                         >
                            {item}
                         </a>
@@ -314,7 +335,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 mt-8">
                     <h3 className="text-lg font-bold text-blue-900 mb-3 flex items-center gap-2">
                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs">NEW</span>
-                       What&apos;s New in JEE Main 2026?
+                       What&apos;s New in {course.title}?
                     </h3>
                     <p className="text-sm text-gray-700 leading-7 text-justify">
                        {tabs.whats_new}
@@ -327,9 +348,8 @@ export default async function ExamLandingPage({ params }: PageProps) {
           {/* DATES SECTION */}
           {tabs.important_dates && (
             <div id="dates" className='scroll-mt-40'>
-               <h2 className="text-xl font-bold text-gray-900 mb-4">CUET 2026 Important Dates</h2>
+               <h2 className="text-xl font-bold text-gray-900 mb-4">{course.title} Important Dates</h2>
                
-               {/* NEW: Intro Paragraph */}
                {tabs.important_dates_intro && (
                  <p className="text-sm text-gray-700 leading-relaxed mb-6">
                    {tabs.important_dates_intro}
@@ -340,7 +360,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
                  <table className="w-full text-sm text-left">
                     <thead className="bg-[#2563EB] text-white">
                        <tr>
-                         <th className="px-6 py-4 font-bold border-r border-blue-400 w-1/2 text-base">CUET 2026 Events</th>
+                         <th className="px-6 py-4 font-bold border-r border-blue-400 w-1/2 text-base">{course.title} Events</th>
                          <th className="px-6 py-4 font-bold w-1/2 text-base">Dates</th>
                        </tr>
                     </thead>
@@ -403,7 +423,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
 
           {/* APPLICATION PROCESS */}
           <div id="application" className="scroll-mt-40">
-             <h2 className="text-2xl font-bold text-gray-900 mb-4">CUET 2026 Application Process</h2>
+             <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Application Process</h2>
              
              {/* 1. Intro */}
              {tabs.application_process?.intro && (
@@ -416,7 +436,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
              {tabs.application_process?.steps && (
                 <div className="mb-8">
                    <h3 className="font-bold text-gray-900 text-lg mb-2">
-                      {tabs.application_process.steps_title || "How to Apply for CUET 2026?"}
+                      {tabs.application_process.steps_title || `How to Apply for ${course.title}?`}
                    </h3>
                    {tabs.application_process.steps_intro && (
                       <p className="text-sm text-gray-700 mb-3">{tabs.application_process.steps_intro}</p>
@@ -436,7 +456,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
              {tabs.application_process?.documents_list && (
                 <div className="mb-8">
                    <h3 className="font-bold text-gray-900 text-lg mb-2">
-                     {tabs.application_process.documents_title || "Documents Required for CUET 2026 Application Process"}
+                     {tabs.application_process.documents_title || `Documents Required for ${course.title} Application Process`}
                    </h3>
                    {tabs.application_process.documents_intro && (
                       <p className="text-sm text-gray-700 mb-3">{tabs.application_process.documents_intro}</p>
@@ -521,7 +541,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
           {/* APPLICATION CORRECTION */}
           {tabs.application_process?.correction_window && (
              <div id="correction" className="scroll-mt-40">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">CUET 2026 Application Form Correction</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Application Form Correction</h2>
                 
                 {/* Intro Text */}
                 {tabs.application_process.correction_window.intro && (
@@ -534,7 +554,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
                 {tabs.application_process.correction_window.steps && (
                    <div className="mb-8">
                       <h3 className="font-bold text-gray-900 text-lg mb-2">
-                         {tabs.application_process.correction_window.steps_title || "How to Access the CUET 2026 Application Correction Window?"}
+                         {tabs.application_process.correction_window.steps_title || `How to Access the ${course.title} Application Correction Window?`}
                       </h3>
                       <p className="text-sm text-gray-700 mb-3">The candidates can follow the steps to unlock the application correction window:</p>
                       <ul className="list-disc pl-5 space-y-1.5 text-sm text-gray-700">
@@ -550,7 +570,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
                 {/* Editable Fields Section */}
                 {(tabs.application_process.correction_window.editable_any_one || tabs.application_process.correction_window.editable_all) && (
                    <div>
-                      <h3 className="font-bold text-gray-900 text-lg mb-2">CUET 2026 Application Editable Fields</h3>
+                      <h3 className="font-bold text-gray-900 text-lg mb-2">{course.title} Application Editable Fields</h3>
                       {tabs.application_process.correction_window.fields_intro && (
                          <p className="text-sm text-gray-700 mb-6 leading-relaxed text-justify">
                             {tabs.application_process.correction_window.fields_intro}
@@ -599,7 +619,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
                {/* 1. Exam Pattern Section */}
                {tabs.exam_pattern && (
                  <div className="mb-10">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">CUET 2026 Exam Pattern</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Exam Pattern</h2>
                     
                     {tabs.exam_pattern.intro && (
                       <p className="text-sm text-gray-700 leading-7 mb-6 text-justify">
@@ -634,10 +654,10 @@ export default async function ExamLandingPage({ params }: PageProps) {
                       </table>
                     </div>
 
-                    {/* "Also Read" Link if available (Mocked based on image) */}
+                    {/* "Also Read" Link if available */}
                     <div className="mt-4">
                        <a href="#" className="text-sm text-blue-600 font-medium hover:underline">
-                          Also Read: CUET 2026 Exam Pattern
+                          Also Read: {course.title} Exam Pattern
                        </a>
                     </div>
                  </div>
@@ -645,31 +665,31 @@ export default async function ExamLandingPage({ params }: PageProps) {
 
                {/* 2. Marking Scheme Section */}
                {tabs.marking_scheme && (
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">CUET 2026 Marking Scheme</h2>
-                    {tabs.marking_scheme.intro && (
-                       <p className="text-sm text-gray-700 mb-4 leading-relaxed">
-                          {tabs.marking_scheme.intro}
-                       </p>
-                    )}
+                 <div>
+                   <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Marking Scheme</h2>
+                   {tabs.marking_scheme.intro && (
+                      <p className="text-sm text-gray-700 mb-4 leading-relaxed">
+                         {tabs.marking_scheme.intro}
+                      </p>
+                   )}
 
-                    {/* Simple Bulleted List (Removed Cards & Icons) */}
-                    {tabs.marking_scheme.rules && (
-                      <ul className="list-disc pl-5 space-y-2 text-sm text-gray-700">
-                         {tabs.marking_scheme.rules.map((rule, i) => (
-                            <li key={i} className="leading-relaxed pl-1">
-                               {/* Render bold text logic if needed, otherwise plain text */}
-                               <span dangerouslySetInnerHTML={{ 
-                                  __html: rule
-                                    .replace(/\+5 marks/g, "<b>+5 marks</b>")
-                                    .replace(/penalty of 1 mark/g, "<b>penalty of 1 mark</b>")
-                                    .replace(/zero marks/g, "<b>zero marks</b>") 
-                               }} />
-                            </li>
-                         ))}
-                      </ul>
-                    )}
-                  </div>
+                   {/* Simple Bulleted List */}
+                   {tabs.marking_scheme.rules && (
+                     <ul className="list-disc pl-5 space-y-2 text-sm text-gray-700">
+                        {tabs.marking_scheme.rules.map((rule, i) => (
+                           <li key={i} className="leading-relaxed pl-1">
+                              {/* Render bold text logic if needed, otherwise plain text */}
+                              <span dangerouslySetInnerHTML={{ 
+                                 __html: rule
+                                   .replace(/\+5 marks/g, "<b>+5 marks</b>")
+                                   .replace(/penalty of 1 mark/g, "<b>penalty of 1 mark</b>")
+                                   .replace(/zero marks/g, "<b>zero marks</b>") 
+                              }} />
+                           </li>
+                        ))}
+                     </ul>
+                   )}
+                 </div>
                )}
             </div>
           )}
@@ -677,7 +697,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
           {/* SYLLABUS SECTION */}
           {tabs.syllabus && (
             <div id="syllabus" className="scroll-mt-40">
-               <h2 className="text-2xl font-bold text-gray-900 mb-4">CUET 2026 Syllabus</h2>
+               <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Syllabus</h2>
                
                {/* Intro Text */}
                {tabs.syllabus_intro && (
@@ -688,11 +708,11 @@ export default async function ExamLandingPage({ params }: PageProps) {
 
                <div className="space-y-10">
                   {/* --- SECTION 1: LANGUAGE --- */}
-                  {tabs.syllabus.filter(s => s.subject.includes("Section 1")).map((item, i) => (
+                  {/* {tabs.syllabus.filter(s => s.subject.includes("Section 1")).map((item, i) => (
                      <div key={i}>
                         <h3 className="text-lg font-bold text-gray-900 mb-3">{item.subject}</h3>
                         <p className="text-sm text-gray-700 mb-4 leading-relaxed">
-                           Section 1 of the CUET 2026 Exam is Language. The authority is offering 13 different languages for the CUET 2026 Exam, such as <strong>English, Hindi, Assamese, Bengali, Gujarati, Kannada, Marathi, Malayalam, Odia, Punjabi, Tamil, Telugu and Urdu.</strong>
+                           Section 1 of the {course.title} Exam is Language. The authority is offering 13 different languages for the {course.title} Exam, such as <strong>English, Hindi, Assamese, Bengali, Gujarati, Kannada, Marathi, Malayalam, Odia, Punjabi, Tamil, Telugu and Urdu.</strong>
                         </p>
                         <p className="text-sm text-gray-700 mb-4">
                            The Section 1 paper will have questions based on the <strong>Reading Comprehension and Verbal Ability.</strong> The breakdown of the Section 1 Syllabus is as follows:
@@ -702,8 +722,8 @@ export default async function ExamLandingPage({ params }: PageProps) {
                            <table className="w-full text-sm text-left border-collapse">
                               <thead className="bg-[#2563EB] text-white">
                                  <tr>
-                                    <th className="px-6 py-4 font-bold border-r border-blue-400 w-1/3 text-base">Topics</th>
-                                    <th className="px-6 py-4 font-bold text-base">Sub-Topics</th>
+                                    <th className="px-6 py-4 font-bold border-r border-blue-400 w-1/3 text-base">Subject</th>
+                                    <th className="px-6 py-4 font-bold text-base">Topics</th>
                                  </tr>
                               </thead>
                               <tbody className="divide-y divide-gray-200 bg-white">
@@ -729,13 +749,13 @@ export default async function ExamLandingPage({ params }: PageProps) {
                            </table>
                         </div>
                      </div>
-                  ))}
+                  ))} */}
 
                   {/* --- SECTION 2: DOMAIN SUBJECTS (NOW A TABLE) --- */}
                   <div>
-                     <h3 className="text-lg font-bold text-gray-900 mb-3">Section 2: Domain-Specific Subject</h3>
+                     <h3 className="text-lg font-bold text-gray-900 mb-3">Section 1: Domain-Specific Subject</h3>
                      <p className="text-sm text-gray-700 mb-6 leading-relaxed">
-                        The other section of the CUET 2026 Exam is the Domain-Specific Subject. The candidates will be allowed to <strong>choose up to 5 subjects</strong> as per the university. The breakdown of the Section 2 Syllabus is as follows:
+                        The other section of the {course.title} Exam is the Domain-Specific Subject. The candidates will be allowed to <strong>choose up to 5 subjects</strong> as per the university. The breakdown of the Section 1 Syllabus is as follows:
                      </p>
                      
                      <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm font-sans">
@@ -773,7 +793,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
                      <div key={i}>
                         <h3 className="text-lg font-bold text-gray-900 mb-3">{item.subject}</h3>
                         <p className="text-sm text-gray-700 mb-4 leading-relaxed">
-                           The last section of the CUET 2026 Exam is the General Test, and this section covers general knowledge, basic science questions, logical reasoning, current affairs, and basic mathematics. The breakdown of the Section 3 Syllabus is as follows:
+                           The last section of the {course.title} Exam is the General Test, and this section covers general knowledge, basic science questions, logical reasoning, current affairs, and basic mathematics. The breakdown of the Section 3 Syllabus is as follows:
                         </p>
                         
                         <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm font-sans">
@@ -824,7 +844,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
                {/* 1. Preparation Tips */}
                {tabs.preparation && (
                  <div className="mb-10">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">CUET 2026 Preparations</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Preparations</h2>
                     
                     {tabs.preparation.intro && (
                       <p className="text-sm text-gray-700 leading-relaxed mb-4 text-justify">
@@ -847,7 +867,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
                {tabs.books && (
                  <div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                       CUET 2026 Recommended Books
+                       {course.title} Recommended Books
                     </h2>
                     <p className="text-sm text-gray-700 mb-6">
                        The candidate may refer to the listed books for their preparation:
@@ -884,7 +904,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
           {/* ADMIT CARD SECTION */}
           {tabs.admit_card && (
             <div id="admit-card" className="scroll-mt-40">
-               <h2 className="text-2xl font-bold text-gray-900 mb-4">CUET 2026 Admit Card</h2>
+               <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Admit Card</h2>
                
                {/* 1. Intro */}
                {tabs.admit_card.intro && (
@@ -897,10 +917,10 @@ export default async function ExamLandingPage({ params }: PageProps) {
                {tabs.admit_card.download_steps && (
                   <div className="mb-8">
                      <h3 className="font-bold text-gray-900 text-lg mb-2">
-                        {tabs.admit_card.download_title || "How to Download CUET 2026 Admit Card?"}
+                        {tabs.admit_card.download_title || `How to Download ${course.title} Admit Card?`}
                      </h3>
                      <p className="text-sm text-gray-700 mb-3">
-                        The candidate can access the CUET 2026 Admit Card by following the steps mentioned below:
+                        The candidate can access the {course.title} Admit Card by following the steps mentioned below:
                      </p>
                      <ul className="list-disc pl-5 space-y-1.5 text-sm text-gray-700">
                         {tabs.admit_card.download_steps.map((step, i) => (
@@ -916,10 +936,10 @@ export default async function ExamLandingPage({ params }: PageProps) {
                {tabs.admit_card.details_list && (
                   <div className="mb-4">
                      <h3 className="font-bold text-gray-900 text-lg mb-2">
-                        {tabs.admit_card.details_title || "Details Mentioned On The CUET 2026 Admit Card"}
+                        {tabs.admit_card.details_title || `Details Mentioned On The ${course.title} Admit Card`}
                      </h3>
                      <p className="text-sm text-gray-700 mb-3">
-                        The following details will be present on the CUET 2026 Admit Card:
+                        The following details will be present on the {course.title} Admit Card:
                      </p>
                      <ul className="list-disc pl-5 space-y-1.5 text-sm text-gray-700">
                         {tabs.admit_card.details_list.map((detail, i) => (
@@ -943,7 +963,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
           {/* ANSWER KEY SECTION */}
           {tabs.answer_key && (
             <div id="answer-key" className="scroll-mt-40">
-               <h2 className="text-2xl font-bold text-gray-900 mb-4">CUET 2026 Answer Key</h2>
+               <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Answer Key</h2>
                
                {/* Intro */}
                {tabs.answer_key.intro && (
@@ -956,10 +976,10 @@ export default async function ExamLandingPage({ params }: PageProps) {
                {tabs.answer_key.access_steps && (
                   <div className="mb-8">
                      <h3 className="font-bold text-gray-900 text-lg mb-2">
-                        {tabs.answer_key.access_steps_title || "How to Access the CUET 2026 Answer Key?"}
+                        {tabs.answer_key.access_steps_title || `How to Access the ${course.title} Answer Key?`}
                      </h3>
                      <p className="text-sm text-gray-700 mb-3">
-                        The candidate can check the CUET 2026 Answer Key by following the steps mentioned below:
+                        The candidate can check the {course.title} Answer Key by following the steps mentioned below:
                      </p>
                      <ul className="list-disc pl-5 space-y-1.5 text-sm text-gray-700">
                         {tabs.answer_key.access_steps.map((step, i) => (
@@ -975,10 +995,10 @@ export default async function ExamLandingPage({ params }: PageProps) {
                {tabs.answer_key.challenge_steps && (
                   <div>
                      <h3 className="font-bold text-gray-900 text-lg mb-2">
-                        {tabs.answer_key.challenge_title || "How to Challenge the CUET 2026 Provisional Answer Key?"}
+                        {tabs.answer_key.challenge_title || `How to Challenge the ${course.title} Provisional Answer Key?`}
                      </h3>
                      <p className="text-sm text-gray-700 mb-3 leading-relaxed">
-                        The candidate is required to make a payment of the fee of <strong>{tabs.answer_key.challenge_fee || "INR 200 per question"}</strong> to object to the answer key. The candidate can object or challenge the CUET 2026 Provisional Answer Key by following the instructions below:
+                        The candidate is required to make a payment of the fee of <strong>{tabs.answer_key.challenge_fee || "INR 200 per question"}</strong> to object to the answer key. The candidate can object or challenge the {course.title} Provisional Answer Key by following the instructions below:
                      </p>
                      <ul className="list-disc pl-5 space-y-1.5 text-sm text-gray-700">
                         {tabs.answer_key.challenge_steps.map((step, i) => (
@@ -995,7 +1015,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
           {/* RESULTS SECTION */}
           {tabs.results && (
             <div id="results" className="scroll-mt-40">
-               <h2 className="text-2xl font-bold text-gray-900 mb-4">CUET 2026 Results</h2>
+               <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Results</h2>
                
                {/* Intro */}
                {tabs.results.intro && (
@@ -1008,10 +1028,10 @@ export default async function ExamLandingPage({ params }: PageProps) {
                {tabs.results.check_steps && (
                   <div className="mb-8">
                      <h3 className="font-bold text-gray-900 text-lg mb-2">
-                        {tabs.results.check_steps_title || "How to Check the CUET 2026 Results?"}
+                        {tabs.results.check_steps_title || `How to Check the ${course.title} Results?`}
                      </h3>
                      <p className="text-sm text-gray-700 mb-3">
-                        The candidates will be able to unlock and download their CUET 2026 Results by following the steps mentioned below:
+                        The candidates will be able to unlock and download their {course.title} Results by following the steps mentioned below:
                      </p>
                      <ul className="list-disc pl-5 space-y-1.5 text-sm text-gray-700">
                         {tabs.results.check_steps.map((step, i) => (
@@ -1027,10 +1047,10 @@ export default async function ExamLandingPage({ params }: PageProps) {
                {tabs.results.details_list && (
                   <div>
                      <h3 className="font-bold text-gray-900 text-lg mb-2">
-                        {tabs.results.details_printed_title || "Key Details Printed on CUET 2026 Results"}
+                        {tabs.results.details_printed_title || `Key Details Printed on ${course.title} Results`}
                      </h3>
                      <p className="text-sm text-gray-700 mb-3 leading-relaxed">
-                        {tabs.results.details_printed_intro || "After downloading the CUET 2026 Results, the candidate must review the details mentioned on it and ensure that every detail is correct. The list of information printed on the CUET 2026 Results is as follows:"}
+                        {tabs.results.details_printed_intro || `After downloading the ${course.title} Results, the candidate must review the details mentioned on it and ensure that every detail is correct. The list of information printed on the ${course.title} Results is as follows:`}
                      </p>
                      
                      <ul className="list-disc pl-5 space-y-1.5 text-sm text-gray-700">
@@ -1048,7 +1068,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
           {/* CUTOFFS SECTION */}
           {tabs.cutoffs && (
             <div id="cutoffs" className="scroll-mt-40">
-               <h2 className="text-2xl font-bold text-gray-900 mb-4">CUET 2026 Cutoff</h2>
+               <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Cutoff</h2>
                
                {/* Intro Text */}
                {tabs.cutoffs.intro && (
@@ -1057,14 +1077,14 @@ export default async function ExamLandingPage({ params }: PageProps) {
                  </p>
                )}
                
-               {/* Factors Text (Bolded part logic handled via dangerouslySetInnerHTML or just text) */}
+               {/* Factors Text */}
                {tabs.cutoffs.factors_text && (
                  <p className="text-sm text-gray-700 leading-7 mb-6 text-justify">
                    {tabs.cutoffs.factors_text}
                  </p>
                )}
 
-               {/* Table Title (if separate) or just spacing */}
+               {/* Table Title */}
                {tabs.cutoffs.table_title && (
                  <p className="text-sm text-gray-700 mb-4 font-medium">
                    {tabs.cutoffs.table_title}
@@ -1114,23 +1134,23 @@ export default async function ExamLandingPage({ params }: PageProps) {
           {/* COUNSELLING SECTION */}
           {tabs.counselling && (
             <div id="counselling" className="scroll-mt-40">
-               <h2 className="text-2xl font-bold text-gray-900 mb-4">CUET 2026 Counselling</h2>
+               <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Counselling</h2>
                
                {/* Intro */}
                {tabs.counselling.intro && (
-                 <p className="text-sm text-gray-700 leading-7 mb-6 text-justify">
-                   {tabs.counselling.intro}
-                 </p>
+                  <p className="text-sm text-gray-700 leading-7 mb-6 text-justify">
+                    {tabs.counselling.intro}
+                  </p>
                )}
 
                {/* Documents Required */}
                {tabs.counselling.documents_list && (
                   <div>
                      <h3 className="font-bold text-gray-900 text-lg mb-2">
-                        {tabs.counselling.documents_title || "CUET 2026 Counselling Documents Required"}
+                        {tabs.counselling.documents_title || `${course.title} Counselling Documents Required`}
                      </h3>
                      <p className="text-sm text-gray-700 mb-3 leading-relaxed">
-                        {tabs.counselling.documents_intro || "The candidate must arrange the following documents that are required during the CUET 2026 Counselling:"}
+                        {tabs.counselling.documents_intro || `The candidate must arrange the following documents that are required during the ${course.title} Counselling:`}
                      </p>
                      
                      <ul className="list-disc pl-5 space-y-1.5 text-sm text-gray-700">
@@ -1148,7 +1168,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
           {/* PARTICIPATING UNIVERSITIES SECTION */}
           {tabs.participating_universities && (
             <div id="universities" className="scroll-mt-40">
-               <h2 className="text-2xl font-bold text-gray-900 mb-4">CUET 2026 Participating Universities</h2>
+               <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Participating Universities</h2>
                
                {/* Main Intro */}
                {tabs.participating_universities.intro && (
@@ -1161,12 +1181,12 @@ export default async function ExamLandingPage({ params }: PageProps) {
                <div className="space-y-10">
                   {tabs.participating_universities.groups.map((group, i) => (
                      <div key={i}>
-                        {/* Group Heading (e.g., Central Universities...) */}
+                        {/* Group Heading */}
                         <h3 className="text-lg font-bold text-gray-900 mb-2">
-                           {group.type} Participating in CUET 2026
+                           {group.type} Participating in {course.title}
                         </h3>
                         <p className="text-sm text-gray-700 mb-4">
-                           The following list of {group.type.toLowerCase()} will accept CUET 2026 for admission to various courses:
+                           The following list of {group.type.toLowerCase()} will accept {course.title} for admission to various courses:
                         </p>
 
                         {/* Table Structure */}
@@ -1206,7 +1226,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
           {/* FAQs SECTION */}
           {tabs.faqs && (
              <div id="faqs" className='scroll-mt-40'>
-                <h2 className="text-xl font-bold text-gray-900 mb-4">CUET 2026 FAQs</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">{course.title} FAQs</h2>
                 <div className="space-y-4">
                   {tabs.faqs.map((faq, i) => (
                     <details key={i} className="group border border-gray-200 bg-white rounded-lg [&_summary::-webkit-details-marker]:hidden">
@@ -1223,7 +1243,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
              </div>
           )}
 
-   {/* IMPORTANT UPDATES & EXPIRED EVENTS */}
+          {/* IMPORTANT UPDATES & EXPIRED EVENTS */}
           {tabs.updates_section && (
             <div>
             <div id="important-dates" className="scroll-mt-40">
@@ -1233,7 +1253,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
                  <div className="mb-10">
                     <div className="flex items-center justify-between mb-4">
                        <h2 className="text-2xl font-bold text-gray-900">
-                          {tabs.updates_section.current_title || "CUET Important Update"}
+                          {tabs.updates_section.current_title || `${course.title} Important Update`}
                        </h2>
                        <button className="flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors">
                           <Download className="w-4 h-4" /> Download Report
@@ -1278,7 +1298,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
                {tabs.updates_section.expired_events && (
                  <div id='expired-events'>
                     <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                       {tabs.updates_section.expired_title || "CUET Expired Events"}
+                       {tabs.updates_section.expired_title || `${course.title} Expired Events`}
                     </h2>
                     
                     <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm font-sans">
@@ -1321,22 +1341,26 @@ export default async function ExamLandingPage({ params }: PageProps) {
                  <h3 className="font-bold text-white text-sm uppercase tracking-wide">Upcoming Exams</h3>
               </div>
               <div className="divide-y divide-gray-100">
-                 {upcomingExams.map((exam, i) => (
-                    <div key={i} className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors cursor-pointer group">
-                       <div className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 font-bold bg-white group-hover:border-blue-500 group-hover:text-blue-600">
-                          {exam.logo}
-                       </div>
-                       <div>
-                          <div className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{exam.name}</div>
-                          <div className="text-xs text-gray-500 mt-0.5">{exam.date}</div>
-                       </div>
-                    </div>
-                 ))}
+                 {upcomingExamsList.length > 0 ? (
+                    upcomingExamsList.map((exam, i) => (
+                       <Link href={`/exams/${exam.slug}`} key={i} className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors cursor-pointer group">
+                          <div className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 font-bold bg-white group-hover:border-blue-500 group-hover:text-blue-600 uppercase">
+                             {exam.title.charAt(0)}
+                          </div>
+                          <div>
+                             <div className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{exam.title}</div>
+                             <div className="text-xs text-gray-500 mt-0.5">{getExamDate(exam.details)}</div>
+                          </div>
+                       </Link>
+                    ))
+                 ) : (
+                    <div className="p-4 text-xs text-gray-500">No upcoming exams found.</div>
+                 )}
               </div>
            </div>
 
-           {/* 2. NEWS WIDGET */}
-           {tabs.news && (
+           {/* 2. NEWS WIDGET (Dynamic if available) */}
+           {tabs.news && tabs.news.length > 0 && (
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                 <div className="bg-[#1e293b] px-4 py-3 flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-white" />
@@ -1389,41 +1413,43 @@ export default async function ExamLandingPage({ params }: PageProps) {
            {/* 5. ACCEPTING UNIVERSITIES (*** STICKY START ***) */}
            <div className="sticky top-32 z-30 space-y-6">
               
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                 <div className="bg-[#1e293b] px-4 py-3 flex items-center justify-between">
-                    <h3 className="font-bold text-white text-sm uppercase tracking-wide flex items-center gap-2">
-                       <Building2 className="w-4 h-4" /> Participating Colleges
-                    </h3>
-                 </div>
-                 <div className="p-5">
-                    {/* Count Header */}
-                    <div className="text-center mb-6 border-b border-gray-100 pb-6">
-                       <div className="text-3xl font-bold text-gray-900 mb-1">
-                          {tabs.participating_universities?.groups.reduce((acc, g) => acc + g.names.length, 0) || "250+"}
+              {sidebarUniversities.length > 0 && (
+                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                    <div className="bg-[#1e293b] px-4 py-3 flex items-center justify-between">
+                       <h3 className="font-bold text-white text-sm uppercase tracking-wide flex items-center gap-2">
+                          <Building2 className="w-4 h-4" /> Participating Colleges
+                       </h3>
+                    </div>
+                    <div className="p-5">
+                       {/* Count Header */}
+                       <div className="text-center mb-6 border-b border-gray-100 pb-6">
+                          <div className="text-3xl font-bold text-gray-900 mb-1">
+                             {tabs.participating_universities?.groups.reduce((acc, g) => acc + g.names.length, 0) || "50+"}
+                          </div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Universities Accepting Score</p>
                        </div>
-                       <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Universities Accepting Score</p>
-                    </div>
 
-                    {/* Top 5 Colleges List */}
-                    <div className="mb-6">
-                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Top Universities</div>
-                        <div className="space-y-3">
-                           {['University of Delhi', 'Banaras Hindu University', 'Jawaharlal Nehru University', 'Jamia Millia Islamia', 'Aligarh Muslim University'].map((uni, i) => (
-                              <div key={i} className="flex items-center gap-3 text-sm text-gray-700 group cursor-pointer hover:text-blue-600">
-                                 <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                    {uni.substring(0, 1)}
+                       {/* Top Colleges List */}
+                       <div className="mb-6">
+                           <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Top Universities</div>
+                           <div className="space-y-3">
+                              {sidebarUniversities.map((uni, i) => (
+                                 <div key={i} className="flex items-center gap-3 text-sm text-gray-700 group cursor-pointer hover:text-blue-600">
+                                    <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors shrink-0">
+                                       {uni.substring(0, 1)}
+                                    </div>
+                                    <span className="font-medium truncate leading-tight">{uni}</span>
                                  </div>
-                                 <span className="font-medium truncate leading-tight">{uni}</span>
-                              </div>
-                           ))}
-                        </div>
+                              ))}
+                           </div>
+                       </div>
+                       
+                       <a href="#universities" className="block w-full bg-[#1e293b] text-white text-sm font-bold py-2.5 rounded-lg text-center hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md">
+                          View All Colleges
+                       </a>
                     </div>
-                    
-                    <a href="#universities" className="block w-full bg-[#1e293b] text-white text-sm font-bold py-2.5 rounded-lg text-center hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md">
-                       View All Colleges
-                    </a>
                  </div>
-              </div>
+              )}
 
               {/* 6. AD BANNER 2 */}
               <div className="w-full h-[300px] bg-white border border-gray-200 rounded-xl flex flex-col items-center justify-center text-center p-4">
@@ -1437,12 +1463,16 @@ export default async function ExamLandingPage({ params }: PageProps) {
                     <h3 className="font-bold text-white text-sm">Similar Exams</h3>
                  </div>
                  <div className="divide-y divide-gray-100">
-                    {['JEE Main 2026', 'NEET UG 2026', 'IPU CET 2026'].map((exam, i) => (
-                       <div key={i} className="p-3 flex items-center justify-between hover:bg-gray-50 cursor-pointer group">
-                          <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600">{exam}</span>
-                          <ChevronRight className="w-4 h-4 text-gray-400" />
-                       </div>
-                    ))}
+                    {similarExamsList.length > 0 ? (
+                       similarExamsList.map((exam, i) => (
+                          <Link href={`/exams/${exam.slug}`} key={i} className="p-3 flex items-center justify-between hover:bg-gray-50 cursor-pointer group">
+                             <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600">{exam.title}</span>
+                             <ChevronRight className="w-4 h-4 text-gray-400" />
+                          </Link>
+                       ))
+                    ) : (
+                       <div className="p-3 text-xs text-gray-500">No similar exams found.</div>
+                    )}
                  </div>
               </div>
 
