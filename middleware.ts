@@ -111,6 +111,7 @@ export async function middleware(request: NextRequest) {
     internalPath.startsWith('/auth') ||           
     internalPath.startsWith('/api') ||
     internalPath.startsWith('/mocktest') ||
+    internalPath.startsWith('/exams') ||
     isAuthRoute 
 
     if (!user && !isPublicPath) {
