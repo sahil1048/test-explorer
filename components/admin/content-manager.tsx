@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link"; // <--- IMPORT LINK
+import Link from "next/link";
 import {
   Plus,
   Pencil,
@@ -155,9 +155,15 @@ export default function ContentManager({ streams }: { streams: Stream[] }) {
                 const formData = new FormData(e.currentTarget);
                 formData.set("bg_color", `bg-[${streamForm.color}]`);
                 formData.set("icon_key", streamForm.icon);
+                
+                const toastId = toast.loading(isEdit ? "Updating stream..." : "Creating stream...");
+                
                 const result = isEdit
                   ? await updateStreamAction(formData)
                   : await createStreamAction(formData);
+
+                toast.dismiss(toastId);
+                
                 if (result && 'error' in result) {
                   toast.error(result.error);
                 } else {
@@ -363,9 +369,14 @@ export default function ContentManager({ streams }: { streams: Stream[] }) {
             onSubmit={async (e) => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
+              const toastId = toast.loading("Saving changes...");
+              
               const result = await action(formData) as any;
-              if (result && 'error' in result) toast.error(result.error);
-              else {
+              
+              toast.dismiss(toastId);
+              if (result && 'error' in result) {
+                toast.error(result.error);
+              } else {
                 toast.success("Saved successfully");
                 setModal(null);
               }
@@ -516,24 +527,16 @@ export default function ContentManager({ streams }: { streams: Stream[] }) {
                   <form
                     onSubmit={async (e) => {
                       e.preventDefault();
+                      const toastId = toast.loading("Deleting stream...");
                       const formData = new FormData(e.currentTarget);
                       const result = await deleteStreamAction(formData);
-                      if (result && 'error' in result) toast.error(result.error);
-                      else toast.success("Stream deleted");
-                    }}
-                  >
-                    <input type="hidden" name="id" value={stream.id} />
-                    <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </form>
-                  <form
-                    onSubmit={async (e) => {
-                      e.preventDefault();
-                      const formData = new FormData(e.currentTarget);
-                      const result = await deleteStreamAction(formData);
-                      if (result && 'error' in result) toast.error(result.error);
-                      else toast.success("Stream deleted");
+                      
+                      toast.dismiss(toastId);
+                      if (result && 'error' in result) {
+                         toast.error(result.error);
+                      } else {
+                         toast.success("Stream deleted");
+                      }
                     }}
                   >
                     <input type="hidden" name="id" value={stream.id} />
@@ -610,12 +613,18 @@ export default function ContentManager({ streams }: { streams: Stream[] }) {
                             <form
                               onSubmit={async (e) => {
                                 e.preventDefault();
+                                const toastId = toast.loading("Deleting exam...");
                                 const formData = new FormData(e.currentTarget);
                                 const result = await deleteCourseAction(
                                   formData
                                 );
-                                if (result && 'error' in result) toast.error(result.error);
-                                else toast.success("Exam deleted");
+                                
+                                toast.dismiss(toastId);
+                                if (result && 'error' in result) {
+                                  toast.error(result.error);
+                                } else {
+                                  toast.success("Exam deleted");
+                                }
                               }}
                             >
                               <input type="hidden" name="id" value={exam.id} />
@@ -671,10 +680,14 @@ export default function ContentManager({ streams }: { streams: Stream[] }) {
                                   <form
                                     onSubmit={async (e) => {
                                       e.preventDefault();
+                                      const toastId = toast.loading("Deleting subject...");
                                       const formData = new FormData(
                                         e.currentTarget
                                       );
                                       const result = await deleteSubjectAction(formData) as any;
+                                      
+                                      toast.dismiss(toastId);
+                                      
                                       if (result && 'error' in result)
                                         toast.error(result.error);
                                       else toast.success("Subject deleted");

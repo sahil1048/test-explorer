@@ -35,12 +35,52 @@ export async function updateSubjectAction(formData: FormData) {
 export async function deleteSubjectAction(formData: FormData) {
   const supabase = await createClient()
   const id = formData.get('id') as string
-  
-  const { error } = await supabase.from('subjects').delete().eq('id', id)
-  
-  if (error) throw new Error(error.message)
-  revalidatePath('/dashboard/admin/manage-content')
-  revalidatePath('/dashboard/admin/subjects')
+
+  try {
+    // 1. CLEANUP: Delete Related Mock Tests
+    const { data: mocks } = await supabase.from('mock_tests').select('id').eq('subject_id', id)
+    if (mocks && mocks.length > 0) {
+      const mockIds = mocks.map(m => m.id)
+      await supabase.from('mock_test_questions').delete().in('mock_test_id', mockIds)
+      await supabase.from('mock_tests').delete().in('id', mockIds)
+    }
+
+    // 2. CLEANUP: Delete Related Prep Modules
+    const { data: modules } = await supabase.from('prep_modules').select('id').eq('subject_id', id)
+    if (modules && modules.length > 0) {
+      const moduleIds = modules.map(m => m.id)
+      await supabase.from('questions').update({ module_id: null }).in('module_id', moduleIds)
+      await supabase.from('prep_modules').delete().in('id', moduleIds)
+    }
+
+    // 3. CLEANUP: Delete Related Practice Tests
+    const { data: practiceTests } = await supabase.from('practice_tests').select('id').eq('subject_id', id)
+    if (practiceTests && practiceTests.length > 0) {
+      const testIds = practiceTests.map(t => t.id)
+      await supabase.from('questions').update({ practice_test_id: null }).in('practice_test_id', testIds)
+      await supabase.from('practice_tests').delete().in('id', testIds)
+    }
+
+    // 4. CLEANUP: Delete Related Question Banks
+    const { data: banks } = await supabase.from('question_banks').select('id').eq('subject_id', id)
+    if (banks && banks.length > 0) {
+      const bankIds = banks.map(b => b.id)
+      await supabase.from('questions').delete().in('question_bank_id', bankIds)
+      await supabase.from('question_banks').delete().in('id', bankIds)
+    }
+
+    // 5. DELETE SUBJECT
+    const { error } = await supabase.from('subjects').delete().eq('id', id)
+    
+    if (error) return { error: error.message }
+
+    revalidatePath('/dashboard/admin/manage-content')
+    revalidatePath('/dashboard/admin/subjects')
+    return { success: true }
+    
+  } catch (error: any) {
+    return { error: error.message || 'Failed to delete subject' }
+  }
 }
 
 // -----------------------------------------------------------------------------
