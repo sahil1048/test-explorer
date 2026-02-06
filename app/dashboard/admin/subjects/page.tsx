@@ -8,6 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
+import DeleteSubjectButton from './delete-button'
 
 export default async function SubjectsAdminPage() {
   const supabase = await createClient()
