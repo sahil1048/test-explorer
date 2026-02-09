@@ -47,7 +47,7 @@ export default function SubjectContent({
   subjectId,
   hasFullAccess
 }: SubjectContentProps) {
-  const [activeTab, setActiveTab] = useState<'prep' | 'practice' | 'mock'>('prep')
+  const [activeTab, setActiveTab] = useState<'prep' | 'practice' | 'mock'>('practice')
 
   // const isLocked = (index: number) => !hasFullAccess && index >= 2
   const isLocked = (index: number) => false
@@ -78,9 +78,9 @@ export default function SubjectContent({
     <div>
       {/* --- Tabs Navigation --- */}
       <div className="flex flex-wrap gap-4 mb-10">
-        <TabButton id="prep" label="Prep Modules" icon={PlayCircle} />
         <TabButton id="practice" label="Practice Tests" icon={FileText} />
         <TabButton id="mock" label="Mock Tests" icon={Trophy} />
+        <TabButton id="prep" label="Prep Modules" icon={PlayCircle} />
       </div>
 
       {/* --- Tab Content --- */}
