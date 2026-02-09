@@ -4,11 +4,17 @@ import SignupForm from "@/components/auth/SignupForm";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
-export default async function SignupPage({
-  searchParams,
-}: {
-  searchParams: { next?: string; school?: string; email?: string }
+type SearchParams = { 
+  next?: string; 
+  school?: string; 
+  email?: string 
+};
+
+export default async function SignupPage(props: {
+  // In Next.js 15, searchParams is a Promise
+  searchParams: Promise<SearchParams>;
 }) {
+  const searchParams = await props.searchParams;
   // 1. AUTH CHECK: If user is already logged in, redirect them immediately
   // This handles the case where a logged-in user clicks an Ad button
   const supabase = await createClient();
