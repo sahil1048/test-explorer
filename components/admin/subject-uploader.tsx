@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronRight, ChevronDown, Folder, BookOpen, Upload, X, FileText, Loader2, Database, CheckCircle } from 'lucide-react'
+import { ChevronRight, ChevronDown, Folder, BookOpen, Upload, X, FileText, Loader2, Database, CheckCircle, HelpCircle } from 'lucide-react'
 import { uploadQuestionBankAction } from '@/app/dashboard/admin/question-uploads/actions'
 import { toast } from 'sonner'
 
@@ -97,6 +97,10 @@ export default function SubjectUploader({ streams }: { streams: any[] }) {
                                 <Database className="w-3 h-3" />
                                 {subject.question_banks?.[0]?.count || 0} Batches Uploaded
                               </p>
+                               <p className="text-xs text-gray-500 flex items-center gap-1">
+                                  <HelpCircle className="w-3 h-3" />
+                                  {subject.total_questions || 0} Questions
+                               </p>
                             </div>
                             
                             <button 
