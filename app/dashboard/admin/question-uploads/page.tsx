@@ -5,8 +5,7 @@ import SubjectUploader from '@/components/admin/subject-uploader'
 export default async function QuestionUploadsPage() {
   const supabase = await createClient()
 
-  // Fetch Hierarchy with Question Bank Counts
-  const { data: streams } = await supabase
+  const { data: rawStreams } = await supabase
     .from('categories')
     .select(`
       id, 
@@ -17,11 +16,33 @@ export default async function QuestionUploadsPage() {
         subjects (
           id, 
           title,
-          question_banks (count)
+          question_banks (
+            id,
+            questions (count)
+          )
         )
       )
     `)
     .order('title')
+
+  const streams = rawStreams?.map((stream: any) => ({
+    ...stream,
+    courses: stream.courses.map((course: any) => ({
+      ...course,
+      subjects: course.subjects.map((subject: any) => {
+        const totalQuestions = subject.question_banks.reduce((sum: number, bank: any) => {
+          const bankQuestionCount = bank.questions?.[0]?.count || 0
+          return sum + bankQuestionCount
+        }, 0)
+
+        return {
+          ...subject,
+          banks_count: subject.question_banks.length, 
+          total_questions: totalQuestions 
+        }
+      })
+    }))
+  })) || []
 
   return (
     <div className="max-w-6xl mx-auto p-8">
@@ -35,7 +56,7 @@ export default async function QuestionUploadsPage() {
         </div>
       </div>
 
-      <SubjectUploader streams={streams || []} />
+      <SubjectUploader streams={streams} />
     </div>
   )
 }
