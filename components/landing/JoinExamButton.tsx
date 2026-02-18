@@ -40,7 +40,7 @@ export default function JoinExamButton({ courseId, label = "Try Free Mock Test" 
     <button 
       onClick={handleClick}
       disabled={loading}
-      className="bg-orange-600 text-white font-bold py-4 px-8 rounded-full text-lg hover:bg-orange-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center gap-2"
+      className="bg-orange-600 text-white font-bold py-4 px-8 justify-center rounded-full text-lg hover:bg-orange-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center gap-2"
     >
       {loading && <Loader2 className="w-5 h-5 animate-spin" />}
       {label}

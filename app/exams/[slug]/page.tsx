@@ -179,171 +179,183 @@ export default async function ExamLandingPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f3f4f6] font-sans text-gray-900 pb-20">
+    <div className="min-h-screenbg-red-500 min-w-full font-sans text-gray-900 pb-20">
       
       {/* ================= 1. HEADER SECTION ================= */}
-      <div className="bg-white pt-4 pb-2">
-        <div className="max-w-[80%] mx-auto px-4">
-           {/* Breadcrumbs */}
-           <div className="flex items-center text-xs text-gray-500 mb-4 gap-2">
-              <Link href="/" className="hover:text-blue-600">Home</Link>
-              <ChevronRight className="w-3 h-3" />
-              <Link href="/exams" className="hover:text-blue-600">Exams</Link>
-              <ChevronRight className="w-3 h-3" />
-              <span className="text-gray-800 font-medium">{course.title}</span>
-           </div>
+      <div className="bg-white pt-4 pb-2 shadow-sm">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    {/* Breadcrumbs - Wrapped for small screens */}
+    <div className="flex flex-wrap items-center text-xs text-gray-500 mb-4 gap-2">
+      <Link href="/" className="hover:text-blue-600">Home</Link>
+      <ChevronRight className="w-3 h-3" />
+      <Link href="/exams" className="hover:text-blue-600">Exams</Link>
+      <ChevronRight className="w-3 h-3" />
+      <span className="text-gray-800 font-medium truncate max-w-[200px]">
+        {course.title}
+      </span>
+    </div>
 
-           {/* Title & Actions */}
-           <div className="flex flex-col md:flex-row justify-between items-start gap-6 pb-4">
-              <div className="flex gap-4 items-start">
-                 <div className="w-16 h-16 rounded-full bg-white border border-gray-200 p-1 shadow-sm flex-shrink-0">
-                    <div className="w-full h-full rounded-full bg-green-50 flex items-center justify-center text-green-600 font-bold text-xl uppercase">
-                       {course.title.substring(0, 2)}
-                    </div>
-                 </div>
-                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
-                       {details.tagline || course.title}
-                    </h1>
-                    <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-600">
-                       <span className="flex items-center gap-1"><Trophy className="w-4 h-4 text-gray-400" /> National Level</span>
-                       <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                       <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-gray-400" /> 200+ Cities</span>
-                    </div>
-                 </div>
-              </div>
-
-              <div className="[&>button]:bg-[#1e293b] [&>button]:text-white [&>button]:rounded-lg [&>button]:px-6 [&>button]:py-2 [&>button]:text-sm [&>button]:font-semibold [&>button]:hover:bg-slate-800">
-                 <JoinExamButton courseId={course.id} label="Get Free Mock Tests" />
-              </div>
-           </div>
+    {/* Title & Actions */}
+    <div className="flex flex-col md:flex-row justify-between items-start gap-6 pb-4">
+      
+      {/* Left Side: Logo & Title */}
+      <div className="flex gap-4 items-start w-full md:w-auto">
+        <div className="w-16 h-16 rounded-full bg-white border border-gray-200 p-1 shadow-sm flex-shrink-0">
+          <div className="w-full h-full rounded-full bg-green-50 flex items-center justify-center text-green-600 font-bold text-xl uppercase">
+            {course.title.substring(0, 2)}
+          </div>
+        </div>
+        
+        <div className="flex-1">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
+            {details.tagline || course.title}
+          </h1>
+          
+          {/* Metadata badges - Flex wrap ensures they don't overflow on mobile */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2 text-sm text-gray-600">
+            <span className="flex items-center gap-1">
+              <Trophy className="w-4 h-4 text-gray-400" /> National Level
+            </span>
+            <span className="hidden sm:inline w-1 h-1 rounded-full bg-gray-300"></span>
+            <span className="flex items-center gap-1">
+              <MapPin className="w-4 h-4 text-gray-400" /> 200+ Cities
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* ================= 2. PILL NAVIGATION (Sticky) ================= */}
-      <ExamNavigationPills />
+      {/* Right Side: Action Button */}
+      {/* w-full on mobile, auto on desktop. Added specific selector for the button width */}
+      <div className="w-full md:w-auto [&>button]:w-full md:[&>button]:w-auto [&>button]:bg-[#1e293b] [&>button]:text-white [&>button]:rounded-lg [&>button]:px-6 [&>button]:py-2.5 [&>button]:text-sm [&>button]:font-semibold [&>button]:hover:bg-slate-800">
+        <JoinExamButton courseId={course.id} label="Get Free Mock Tests" />
+      </div>
+    </div>
+  </div>
+</div>
 
-      <div className="text-xs text-gray-500 flex items-center gap-2 max-w-[90%] ml-28 mt-4">
+      {/* ================= 2. PILL NAVIGATION (Sticky) ================= */}
+      <div className='hidden md:block'>
+      <ExamNavigationPills />
+      </div>
+
+      <div className="text-xs text-gray-500 items-center gap-2 max-w-[90%] ml-28 mt-4 hidden md:flex">
          <span className="w-2 h-2 rounded-full bg-green-500"></span>
          Updated on {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} by <span className="text-blue-600 font-medium">TestExplorer Team</span>
       </div>
 
       {/* ================= 3. CONTENT LAYOUT ================= */}
-      <div className="max-w-[90%] mx-auto px-4 py-6 grid lg:grid-cols-12 gap-6 ">
+      <div className="md:max-w-[90%] max-w-7xl mx-auto px-2 md:px-4 py-6 grid lg:grid-cols-12 gap-6">
         
         {/* LEFT COLUMN (Main Content) */}
-        <div className="lg:col-span-9 space-y-6 bg-white px-8 py-4 rounded-sm">
+         <div className="max-w-1/ md:w-full lg:col-span-9 space-y-6 bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
 
           {/* DESCRIPTION */}
-          <div >
-             {/* Dynamic Description Text */}
-             <div className="text-sm text-gray-700 leading-7 mb-6 whitespace-pre-line">
-                {details.description}
-             </div>
+          <div>
+       {/* Dynamic Description Text */}
+       <div className="text-sm text-gray-700 leading-7 mb-6 whitespace-pre-line text-justify">
+          {details.description}
+       </div>
 
-             {/* Table of Contents - Exact UI Match */}
-             {details.table_of_contents && details.table_of_contents.length > 0 && (
-               <div className="border border-blue-200 rounded-lg overflow-hidden font-sans">
-                  {/* Header */}
-                  <div className="bg-[#2563EB] text-white px-4 py-2.5 text-sm font-medium">
-                     Table of Contents
-                  </div>
-                  
-                  {/* List Container */}
-                  <div className="bg-white flex flex-col">
-                     {/* First 5 Items (Always Visible) */}
-                     {details.table_of_contents.slice(0, 5).map((item, i) => (
-                        <a 
-                           key={i} 
-                           href={`#${item.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} 
-                           className="block px-4 py-2.5 text-sm text-blue-600 border-b border-gray-100 hover:underline hover:bg-blue-50 transition-colors"
-                        >
-                           {item}
-                        </a>
-                     ))}
-                     
-                     {/* Remaining Items (Collapsible) */}
-                     {details.table_of_contents.length > 5 && (
-                        <details className="group">
-                           {/* Toggle Button */}
-                           <summary className="list-none cursor-pointer px-4 py-2.5 text-sm font-bold text-blue-600 hover:bg-blue-50 transition-colors select-none">
-                              <span className="group-open:hidden flex items-center gap-1">
-                                 + {details.table_of_contents.length - 5} View More
-                              </span>
-                              <span className="hidden group-open:block">
-                                 - View Less
-                              </span>
-                           </summary>
-                           
-                           {/* Hidden Items */}
-                           <div className="border-t border-gray-100">
-                              {details.table_of_contents.slice(5).map((item, i) => (
-                                 <a 
-                                    key={i} 
-                                    href={`#${item.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} 
-                                    className="block px-4 py-2.5 text-sm text-blue-600 border-b border-gray-100 hover:underline hover:bg-blue-50 transition-colors last:border-0"
-                                 >
-                                    {item}
-                                 </a>
-                              ))}
-                           </div>
-                        </details>
-                     )}
-                  </div>
-               </div>
-             )}
-          </div>
+       {/* Table of Contents */}
+       {details.table_of_contents && details.table_of_contents.length > 0 && (
+         <div className="border border-blue-200 rounded-lg overflow-hidden font-sans">
+            {/* Header */}
+            <div className="bg-[#2563EB] text-white px-4 py-2.5 text-sm font-medium">
+               Table of Contents
+            </div>
+            
+            {/* List Container */}
+            <div className="bg-white flex flex-col">
+               {/* First 5 Items */}
+               {details.table_of_contents.slice(0, 5).map((item, i) => (
+                  <a 
+                     key={i} 
+                     href={`#${item.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} 
+                     className="block px-4 py-2.5 text-sm text-blue-600 border-b border-gray-100 hover:underline hover:bg-blue-50 transition-colors"
+                  >
+                     {item}
+                  </a>
+               ))}
+               
+               {/* Remaining Items (Collapsible) */}
+               {details.table_of_contents.length > 5 && (
+                  <details className="group">
+                     <summary className="list-none cursor-pointer px-4 py-2.5 text-sm font-bold text-blue-600 hover:bg-blue-50 transition-colors select-none">
+                        <span className="group-open:hidden flex items-center gap-1">
+                           + {details.table_of_contents.length - 5} View More
+                        </span>
+                        <span className="hidden group-open:block">
+                           - View Less
+                        </span>
+                     </summary>
+                     <div className="border-t border-gray-100">
+                        {details.table_of_contents.slice(5).map((item, i) => (
+                           <a 
+                              key={i} 
+                              href={`#${item.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} 
+                              className="block px-4 py-2.5 text-sm text-blue-600 border-b border-gray-100 hover:underline hover:bg-blue-50 transition-colors last:border-0"
+                           >
+                              {item}
+                           </a>
+                        ))}
+                     </div>
+                  </details>
+               )}
+            </div>
+         </div>
+       )}
+    </div>
 
           {/* HIGHLIGHTS SECTION */}
           {tabs.highlights && (
-            <div id="overview" className="scroll-mt-40">
-               <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Highlights</h2>
-               
-               {/* Intro Paragraph */}
-               {tabs.highlights_intro && (
-                 <p className="text-sm text-gray-700 leading-relaxed mb-6">
-                   {tabs.highlights_intro}
-                 </p>
-               )}
+      <div id="overview" className="scroll-mt-40">
+         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">{course.title} Highlights</h2>
+         
+         {tabs.highlights_intro && (
+           <p className="text-sm text-gray-700 leading-relaxed mb-6">
+             {tabs.highlights_intro}
+           </p>
+         )}
 
-               {/* Table with Blue Header */}
-               <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm font-sans">
-                 <table className="w-full text-sm text-left border-collapse table-fixed">
-                   <thead className="bg-[#2563EB] text-white">
-                     <tr>
-                       <th className="px-6 py-4 font-bold border-r border-blue-400 w-1/2 text-base">Particulars</th>
-                       <th className="px-6 py-4 font-bold w-1/2 text-base">Details</th>
-                     </tr>
-                   </thead>
-                   <tbody className="divide-y divide-gray-200 bg-white">
-                     {tabs.highlights.map((row, i) => (
-                       <tr key={i} className="hover:bg-gray-50 transition-colors">
-                         <td className="px-6 py-4 font-bold text-gray-900 border-r border-gray-200 align-top leading-relaxed bg-gray-50/30">
-                           {row.label}
-                         </td>
-                         
-                         <td className="px-6 py-4 text-gray-700 align-top leading-relaxed whitespace-pre-line">
-                           {row.value}
-                         </td>
-                       </tr>
-                     ))}
-                   </tbody>
-                 </table>
-               </div>
+         {/* Responsive Table Wrapper */}
+         <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm font-sans">
+           <div className="overflow-x-auto">
+             <table className="w-full min-w-[600px] text-sm text-left border-collapse table-fixed">
+               <thead className="bg-[#2563EB] text-white">
+                 <tr>
+                   <th className="px-4 sm:px-6 py-4 font-bold border-r border-blue-400 w-1/3 text-base">Particulars</th>
+                   <th className="px-4 sm:px-6 py-4 font-bold w-2/3 text-base">Details</th>
+                 </tr>
+               </thead>
+               <tbody className="divide-y divide-gray-200 bg-white">
+                 {tabs.highlights.map((row, i) => (
+                   <tr key={i} className="hover:bg-gray-50 transition-colors">
+                     <td className="px-4 sm:px-6 py-4 font-bold text-gray-900 border-r border-gray-200 align-top leading-relaxed bg-gray-50/30">
+                       {row.label}
+                     </td>
+                     <td className="px-4 sm:px-6 py-4 text-gray-700 align-top leading-relaxed whitespace-pre-line">
+                       {row.value}
+                     </td>
+                   </tr>
+                 ))}
+               </tbody>
+             </table>
+           </div>
+         </div>
 
-               {tabs.whats_new && (
-                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 mt-8">
-                    <h3 className="text-lg font-bold text-blue-900 mb-3 flex items-center gap-2">
-                       <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs">NEW</span>
-                       What&apos;s New in {course.title}?
-                    </h3>
-                    <p className="text-sm text-gray-700 leading-7 text-justify">
-                       {tabs.whats_new}
-                    </p>
-                 </div>
-               )}
-            </div>
-          )}
+         {tabs.whats_new && (
+           <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 sm:p-6 mt-8">
+              <h3 className="text-lg font-bold text-blue-900 mb-3 flex items-center gap-2">
+                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs shrink-0">NEW</span>
+                 What&apos;s New in {course.title}?
+              </h3>
+              <p className="text-sm text-gray-700 leading-7 text-justify">
+                 {tabs.whats_new}
+              </p>
+           </div>
+         )}
+      </div>
+    )}
 
           {/* DATES SECTION */}
           {tabs.important_dates && (
@@ -376,6 +388,13 @@ export default async function ExamLandingPage({ params }: PageProps) {
                </div>
             </div>
           )}
+
+          {/* Ad Section */}
+          <div>
+               <div className="bg-gray-100 border border-gray-300 rounded-lg p-6 text-center mt-6">
+                  Advertisement
+               </div>
+          </div>
 
           {/* ELIGIBILITY SECTION */}
           {tabs.eligibility && (
@@ -707,50 +726,6 @@ export default async function ExamLandingPage({ params }: PageProps) {
                )}
 
                <div className="space-y-10">
-                  {/* --- SECTION 1: LANGUAGE --- */}
-                  {/* {tabs.syllabus.filter(s => s.subject.includes("Section 1")).map((item, i) => (
-                     <div key={i}>
-                        <h3 className="text-lg font-bold text-gray-900 mb-3">{item.subject}</h3>
-                        <p className="text-sm text-gray-700 mb-4 leading-relaxed">
-                           Section 1 of the {course.title} Exam is Language. The authority is offering 13 different languages for the {course.title} Exam, such as <strong>English, Hindi, Assamese, Bengali, Gujarati, Kannada, Marathi, Malayalam, Odia, Punjabi, Tamil, Telugu and Urdu.</strong>
-                        </p>
-                        <p className="text-sm text-gray-700 mb-4">
-                           The Section 1 paper will have questions based on the <strong>Reading Comprehension and Verbal Ability.</strong> The breakdown of the Section 1 Syllabus is as follows:
-                        </p>
-                        
-                        <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm font-sans">
-                           <table className="w-full text-sm text-left border-collapse">
-                              <thead className="bg-[#2563EB] text-white">
-                                 <tr>
-                                    <th className="px-6 py-4 font-bold border-r border-blue-400 w-1/3 text-base">Subject</th>
-                                    <th className="px-6 py-4 font-bold text-base">Topics</th>
-                                 </tr>
-                              </thead>
-                              <tbody className="divide-y divide-gray-200 bg-white">
-                                 <tr className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 font-medium text-gray-900 border-r border-gray-200 align-middle">Reading Comprehension</td>
-                                    <td className="px-6 py-4 text-gray-700 align-top space-y-2">
-                                       <p>Factual</p>
-                                       <p>Narrative</p>
-                                       <p>Literary</p>
-                                    </td>
-                                 </tr>
-                                 <tr className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 font-medium text-gray-900 border-r border-gray-200 align-middle">Verbal Ability</td>
-                                    <td className="px-6 py-4 text-gray-700 align-top space-y-2">
-                                       <p>Rearranging the parts</p>
-                                       <p>Match the following</p>
-                                       <p>Choosing the correct word</p>
-                                       <p>Synonyms</p>
-                                       <p>Antonyms</p>
-                                    </td>
-                                 </tr>
-                              </tbody>
-                           </table>
-                        </div>
-                     </div>
-                  ))} */}
-
                   {/* --- SECTION 2: DOMAIN SUBJECTS (NOW A TABLE) --- */}
                   <div>
                      <h3 className="text-lg font-bold text-gray-900 mb-3">Section 1: Domain-Specific Subject</h3>
@@ -837,6 +812,13 @@ export default async function ExamLandingPage({ params }: PageProps) {
                </div>
             </div>
           )}
+
+          {/* Ad Section */}
+          <div>
+               <div className="bg-gray-100 border border-gray-300 rounded-lg p-6 text-center mt-6">
+                  Advertisement
+               </div>
+          </div>
 
           {/* PREPARATION & BOOKS SECTION */}
           {(tabs.preparation || tabs.books) && (
@@ -1065,6 +1047,8 @@ export default async function ExamLandingPage({ params }: PageProps) {
             </div>
           )}
 
+          
+
           {/* CUTOFFS SECTION */}
           {tabs.cutoffs && (
             <div id="cutoffs" className="scroll-mt-40">
@@ -1130,6 +1114,13 @@ export default async function ExamLandingPage({ params }: PageProps) {
                </div>
             </div>
           )}
+
+          {/* Ad Section */}
+          <div>
+               <div className="bg-gray-100 border border-gray-300 rounded-lg p-6 text-center mt-6">
+                  Advertisement
+               </div>
+          </div>
 
           {/* COUNSELLING SECTION */}
           {tabs.counselling && (
@@ -1332,7 +1323,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
         </div>
 
         {/* RIGHT COLUMN (Sidebar) */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="lg:col-span-3 space-y-6 hidden lg:block">
            
            {/* 1. UPCOMING EXAMS (Normal Scroll) */}
            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
