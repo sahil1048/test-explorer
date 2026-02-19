@@ -79,10 +79,6 @@ export default async function LandingPage() {
 ) : (
   <Testimonials />
 )}
-
-{schoolData && (
-        <SchoolPromo schoolName={schoolData.name} />
-      )}
       <Faq />
 
       {/* === SECTION 3: FOOTER === */}

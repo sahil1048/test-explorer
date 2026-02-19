@@ -1,47 +1,67 @@
-import { Zap, Gift } from "lucide-react";
+import { Zap, Gift, CheckCircle2 } from "lucide-react";
 
 export default function SchoolPromo({ schoolName }: { schoolName: string }) {
   return (
-    <section className="py-12 px-4">
-      <div className="max-w-4xl mx-auto relative group">
-        {/* Decorative background glow */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-emerald-500 rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+    <section className="py-16 px-4">
+      <div className="max-w-5xl mx-auto relative group">
+        {/* Animated background glow */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-500 rounded-[2.5rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
         
-        <div className="relative bg-white border border-gray-100 rounded-[2rem] p-8 md:p-12 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden">
+        <div className="relative bg-white border border-gray-100 rounded-[2.5rem] p-8 md:p-14 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-12 overflow-hidden">
           
-          {/* Background Pattern Decor */}
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-blue-50 rounded-full blur-3xl opacity-50"></div>
+          {/* Decorative Rings */}
+          <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-60"></div>
 
-          <div className="flex-1 space-y-4 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold uppercase tracking-wider border border-emerald-100">
-              <Zap className="w-3 h-3 fill-current" /> Exclusive School Benefit
+          <div className="flex-1 space-y-6 text-center lg:text-left z-10">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-200">
+              <Zap className="w-3 h-3 fill-current" /> School Partnership
             </div>
             
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight">
-              Special Access for <br />
-              <span className="text-blue-600">{schoolName}</span> Students
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-[1.1] tracking-tight">
+              Premium Learning <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                100% Sponsored
+              </span>
             </h2>
             
-            <p className="text-gray-500 font-medium max-w-md">
-              Your institution has partnered with us to provide premium course access at no cost to you.
+            <p className="text-gray-500 text-lg font-medium max-w-lg mx-auto lg:mx-0">
+              Exclusive benefit for students of <span className="text-gray-900 font-bold underline decoration-blue-500/30 underline-offset-4">{schoolName}</span>. 
+              Get full access to all mock tests and materials.
             </p>
+
+            <div className="flex flex-wrap justify-center lg:justify-start gap-4 text-sm font-bold text-gray-600">
+                <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Full Syllabus</div>
+                <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Expert Analysis</div>
+            </div>
           </div>
 
-          <div className="shrink-0 bg-gray-50 p-8 rounded-[1.5rem] border border-gray-100 text-center min-w-[240px] relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase italic">
-              Limited Time
+          {/* Price Card */}
+          <div className="shrink-0 bg-slate-50 p-10 rounded-[2rem] border border-slate-100 text-center min-w-[280px] relative shadow-inner">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-tighter shadow-md">
+              School Discount Applied
             </div>
 
-            <div className="space-y-1">
-              <span className="text-gray-400 line-through text-lg font-bold">₹1000</span>
-              <div className="flex items-center justify-center gap-1">
-                <span className="text-5xl font-black text-gray-900 tracking-tighter">FREE</span>
+            <div className="space-y-2 mt-4">
+              <div className="relative inline-block">
+                {/* LARGE STRIKE-THROUGH PRICE */}
+                <span className="text-3xl md:text-4xl font-black text-gray-400 opacity-50 tracking-tighter">
+                  ₹1000
+                </span>
+                {/* THE RED BOLD LINE */}
+                <div className="absolute top-1/2 left-0 w-full h-[4px] md:h-[6px] bg-red-500 -rotate-12 rounded-full shadow-sm"></div>
+              </div>
+
+              <div className="flex flex-col items-center">
+                <span className="text-6xl md:text-7xl font-black text-blue-600 tracking-tighter drop-shadow-sm">
+                  FREE
+                </span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">For your lifetime</span>
               </div>
             </div>
 
-            <button className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2 group">
-              Claim Access
-              <Gift className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+            <button className="mt-8 w-full bg-gray-900 hover:bg-blue-600 text-white font-bold py-4 rounded-2xl transition-all duration-300 shadow-xl hover:shadow-blue-200 flex items-center justify-center gap-3 group active:scale-95">
+              Get Started Now
+              <Gift className="w-5 h-5 group-hover:rotate-12 transition-transform" />
             </button>
           </div>
 
