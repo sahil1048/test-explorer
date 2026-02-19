@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { Bell, Calendar, ArrowRight, Quote } from "lucide-react";
 import Image from "next/image";
+import SchoolPromo from "./school-promo";
 
 // Add this animation style for the vertical scroll
 const scrollAnimationStyles = {
@@ -107,7 +108,9 @@ export default async function SchoolUpdates({ school }: { school: any }) {
         </section>
       )}
 
-        <div className="container mx-auto px-4 sm:px-6 relative z-10 max-w-7xl">
+      <SchoolPromo schoolName={school.name} />
+
+        <div className="container mx-auto px-4 sm:px-6 relative z-10 max-w-7xl mt-12">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             
             {/* === LEFT COLUMN: Content === */}
