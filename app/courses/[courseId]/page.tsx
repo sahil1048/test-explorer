@@ -1,3 +1,4 @@
+// app/courses/[courseId]/page.tsx
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { ArrowLeft, Sparkles } from 'lucide-react'
@@ -12,11 +13,9 @@ export default async function CourseSubjectsPage({
   const supabase = await createClient()
   const { courseId } = await params
 
-  // 1. Authenticate User
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return redirect('/login')
 
-  // 2. Fetch User Role & Enrollments
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
@@ -25,10 +24,6 @@ export default async function CourseSubjectsPage({
 
   const isAdmin = profile?.role === 'super_admin' || profile?.role === 'school_admin'
 
-  // Fetch all enrollments for this user in this course's subjects
-  // Note: We assume 'student_enrollments' links to 'subjects' which link to 'courses'
-  // Or if you have a direct 'course_id' in enrollments, use that. 
-  // Here we fetch all enrollments and we will filter/match IDs.
   const { data: enrollments } = await supabase
     .from('student_enrollments')
     .select('subject_id')
@@ -36,7 +31,6 @@ export default async function CourseSubjectsPage({
 
   const enrolledSubjectIds = enrollments?.map(e => e.subject_id) || []
 
-  // 3. Fetch Course Details
   const { data: course } = await supabase
     .from('courses')
     .select('*')
@@ -45,14 +39,19 @@ export default async function CourseSubjectsPage({
 
   if (!course) return notFound()
 
-  // 4. Fetch Subjects
+  const isCuetCourse = 
+    course.title?.toLowerCase().includes('cuet') || 
+    course.slug?.toLowerCase().includes('cuet') || 
+    courseId.toLowerCase().includes('cuet')
+
+  const hasFullAccess = isAdmin || !!isCuetCourse
+
   const { data: subjects } = await supabase
     .from('subjects')
     .select('*, question_banks(count)')
     .eq('course_id', courseId)
     .order('title')
 
-  // 5. Fetch Mock Tests
   const { data: mocks } = await supabase
     .from('mock_tests')
     .select('*, mock_test_questions(count)') 
@@ -64,7 +63,6 @@ export default async function CourseSubjectsPage({
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
         <div className="container mx-auto px-6 h-16 flex items-center gap-4">
           <Link 
-            // href={`/categories/${course.category_id}`} 
             href="/categories" 
             className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-black transition-colors"
           >
@@ -89,15 +87,13 @@ export default async function CourseSubjectsPage({
           </p>
         </div>
 
-        {/* Pass Access Data to Client Component */}
         <CourseTabs 
           courseId={courseId}
           subjects={subjects || []}
           mocks={mocks || []}
           enrolledSubjectIds={enrolledSubjectIds}
-          isAdmin={isAdmin}
+          hasFullAccess={hasFullAccess}
         />
-
       </main>
     </div>
   )

@@ -1,3 +1,4 @@
+// components/Courses/CourseTabs.tsx
 "use client";
 
 import { useState } from "react";
@@ -27,7 +28,7 @@ interface CourseTabsProps {
   subjects: any[];
   mocks: any[];
   enrolledSubjectIds: string[];
-  isAdmin: boolean;
+  hasFullAccess: boolean;
 }
 
 export default function CourseTabs({
@@ -35,7 +36,7 @@ export default function CourseTabs({
   subjects,
   mocks,
   enrolledSubjectIds,
-  isAdmin,
+  hasFullAccess,
 }: CourseTabsProps) {
   const [activeTab, setActiveTab] = useState<"subjects" | "mocks">("subjects");
   const examMocks = mocks.filter((mock: any) => !mock.subject_id);
@@ -45,22 +46,16 @@ export default function CourseTabs({
     id: string,
     type: "subject" | "mock"
   ) => {
-    // 1. If Admin, always allow
-    if (isAdmin) return;
+    if (hasFullAccess) return;
 
-    // 2. Check Subject Access
     if (type === "subject") {
-      if (enrolledSubjectIds.includes(id)) return; // Allowed
+      if (enrolledSubjectIds.includes(id)) return;
     }
 
-    // 3. Check Mock Access
-    // Logic: If user has access to *at least one subject* in this course, we allow Mocks.
-    // (Or you can change this to require specific permissions)
     if (type === "mock") {
-      if (enrolledSubjectIds.length > 0) return; // Allowed (Freemium model: buy 1 subject, get course mocks)
+      if (enrolledSubjectIds.length > 0) return;
     }
 
-    // 4. Access Denied -> Prevent Navigation & Show Toast
     e.preventDefault();
     toast.error("Access Restricted", {
       description:
@@ -71,7 +66,6 @@ export default function CourseTabs({
 
   return (
     <div>
-      {/* Tab Switcher */}
       <div className="flex items-center gap-2 mb-8 bg-gray-100 p-1.5 rounded-2xl w-fit">
         <button
           onClick={() => setActiveTab("subjects")}
@@ -95,7 +89,6 @@ export default function CourseTabs({
         </button>
       </div>
 
-      {/* SUBJECTS TAB */}
       {activeTab === "subjects" && (
         <div className="grid gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {subjects.length === 0 ? (
@@ -105,15 +98,13 @@ export default function CourseTabs({
               const style = SUBJECT_COLORS[index % SUBJECT_COLORS.length];
               const [bgColor, borderColor] = style.split(" ");
 
-              // Visual Lock Indicator
-              const isLocked =
-                !isAdmin && !enrolledSubjectIds.includes(subject.id);
+              const isLocked = !hasFullAccess && !enrolledSubjectIds.includes(subject.id);
 
               return (
                 <Link
                   key={subject.id}
                   href={`/courses/${courseId}/subjects/${subject.id}`}
-                  onClick={(e) => handleAccessCheck(e, subject.id, "subject")} // <--- INTERCEPT CLICK
+                  onClick={(e) => handleAccessCheck(e, subject.id, "subject")}
                   className={`group block relative ${
                     isLocked ? "cursor-not-allowed" : ""
                   }`}
@@ -166,7 +157,6 @@ export default function CourseTabs({
         </div>
       )}
 
-      {/* MOCKS TAB */}
       {activeTab === "mocks" && (
         <div className="grid gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {examMocks.length === 0 ? (
@@ -176,8 +166,7 @@ export default function CourseTabs({
             />
           ) : (
             examMocks.map((mock: any) => {
-              // Lock Mocks if user has NO enrollments in this course
-              const isLocked = !isAdmin && enrolledSubjectIds.length === 0;
+              const isLocked = !hasFullAccess && enrolledSubjectIds.length === 0;
 
               return (
                 <div
@@ -185,17 +174,13 @@ export default function CourseTabs({
                   className={`group flex flex-col md:flex-row md:items-center justify-between p-6 rounded-3xl border-2 bg-white transition-all border-gray-100 hover:border-blue-200`}
                 >
                   <div className="flex gap-5 items-start">
-                    {/* <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center border-2 shrink-0 bg-red-50 border-red-100 text-red-600`}
-                    > */}
                       <Image
                         src="/nta.jpeg"
                         className="w-12 h-12 rounded-full"
                         alt="NTA"
-                        width={12}
-                        height={12}
+                        width={48}
+                        height={48}
                       />
-                    {/* </div> */}
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="text-xl font-black text-gray-900">
@@ -221,7 +206,7 @@ export default function CourseTabs({
                   <div className="mt-4 md:mt-0">
                     <Link
                       href={`/mocktest/exam/${mock.id}`}
-                      onClick={(e) => handleAccessCheck(e, mock.id, "mock")} // <--- INTERCEPT CLICK
+                      onClick={(e) => handleAccessCheck(e, mock.id, "mock")}
                       className={`
                         w-full md:w-auto px-6 py-3 font-bold rounded-xl transition-all flex items-center justify-center gap-2 bg-black text-white hover:bg-gray-800`}
                     >

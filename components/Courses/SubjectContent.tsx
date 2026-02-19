@@ -2,24 +2,15 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { 
-  PlayCircle, 
-  FileText, 
-  Timer, 
-  Trophy, 
-  ArrowRight, 
-  Lock,
-  HelpCircle // Added icon for questions
-} from 'lucide-react'
+import { PlayCircle, FileText, Timer, Trophy, ArrowRight, Lock, HelpCircle } from 'lucide-react'
 import { toast } from 'sonner' 
 
-// Updated Types
 type Module = { 
   id: string
   title: string
   description: string | null
   difficulty: string
-  question_count: number // <--- Added
+  question_count: number 
 }
 
 type Exam = { 
@@ -27,7 +18,7 @@ type Exam = {
   title: string
   description: string | null
   duration_minutes: number | null
-  question_count: number // <--- Added
+  question_count: number 
 }
 
 interface SubjectContentProps {
@@ -49,8 +40,7 @@ export default function SubjectContent({
 }: SubjectContentProps) {
   const [activeTab, setActiveTab] = useState<'prep' | 'practice' | 'mock'>('practice')
 
-  // const isLocked = (index: number) => !hasFullAccess && index >= 2
-  const isLocked = (index: number) => false
+  const isLocked = (index: number) => !hasFullAccess && index >= 2
 
   const handleLockedClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -76,17 +66,14 @@ export default function SubjectContent({
 
   return (
     <div>
-      {/* --- Tabs Navigation --- */}
       <div className="flex flex-wrap gap-4 mb-10">
         <TabButton id="practice" label="Practice Tests" icon={FileText} />
         <TabButton id="mock" label="Mock Tests" icon={Trophy} />
         <TabButton id="prep" label="Prep Modules" icon={PlayCircle} />
       </div>
 
-      {/* --- Tab Content --- */}
       <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
         
-        {/* 1. Preparatory Modules Tab */}
         {activeTab === 'prep' && (
           <div className="grid gap-4">
             {modules.length === 0 ? <EmptyState label="No modules available yet." /> : 
@@ -108,7 +95,6 @@ export default function SubjectContent({
                                 <span className="px-2 py-0.5 bg-black/5 text-[10px] font-bold uppercase tracking-wider rounded-md text-black/60">
                                   {item.difficulty || 'General'}
                                 </span>
-                                {/* --- NEW: Question Count for Prep --- */}
                                 <span className="flex items-center gap-1 text-[10px] font-bold text-gray-500">
                                    <HelpCircle className="w-3 h-3" /> {item.question_count} Qs
                                 </span>
@@ -137,7 +123,6 @@ export default function SubjectContent({
           </div>
         )}
 
-        {/* 2. Practice Tests Tab */}
         {activeTab === 'practice' && (
           <div className="grid gap-4">
             {practiceTests.length === 0 ? <EmptyState label="No practice tests added." /> : 
@@ -157,7 +142,6 @@ export default function SubjectContent({
                               <Timer className="w-4 h-4" /> {exam.duration_minutes} mins
                             </span>
                             <span>•</span>
-                            {/* --- NEW: Question Count for Practice --- */}
                             <span className="flex items-center gap-1">
                                <HelpCircle className="w-4 h-4" /> {exam.question_count} Questions
                             </span>
@@ -182,7 +166,6 @@ export default function SubjectContent({
           </div>
         )}
 
-        {/* 3. Mock Tests Tab */}
         {activeTab === 'mock' && (
           <div className="grid gap-4">
             {mockTests.length === 0 ? <EmptyState label="Mock tests coming soon." /> : 
@@ -205,7 +188,6 @@ export default function SubjectContent({
                         </div>
                         
                         {!locked ? (
-                           // --- NEW: Info Row for Mock ---
                            <div className="flex items-center gap-3 text-sm font-medium text-gray-600 mt-1">
                               <span className="flex items-center gap-1"><Timer className="w-3 h-3" /> {exam.duration_minutes}m</span>
                               <span>•</span>

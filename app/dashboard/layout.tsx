@@ -50,6 +50,7 @@ export default async function DashboardLayout({
     { label: 'My Students', href: '/dashboard/students', iconName: 'Users', roles: ['school_admin'] },
     { label: 'Announcements', href: '/dashboard/announcements', iconName: 'Megaphone', roles: ['school_admin'] },
     { label: 'Leaderboard', href: '/dashboard/leaderboard', iconName: 'Trophy', roles: ['school_admin'] },
+    {label: 'Testimonials', href: '/dashboard/testimonials', iconName: 'MessageSquare', roles: ['school_admin'] },
 
     // --- Super Admin Links ---
     { label: 'Overview', href: '/dashboard/admin', iconName: 'LayoutDashboard', roles: ['super_admin'] },

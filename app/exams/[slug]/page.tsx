@@ -9,9 +9,10 @@ import {
   Library, TrendingUp,
   UserCheck,
   AlertCircle,
-  Edit3
+  Edit3,
 } from 'lucide-react'
 import ExamNavigationPills from '@/components/landing/ExamNavigationPills'
+import TableOfContents from '@/components/landing/TableOfContents'
 
 // --- Types ---
 type ExamTab = {
@@ -244,10 +245,10 @@ export default async function ExamLandingPage({ params }: PageProps) {
       </div>
 
       {/* ================= 3. CONTENT LAYOUT ================= */}
-      <div className="md:max-w-[90%] max-w-7xl mx-auto px-2 md:px-4 py-6 grid lg:grid-cols-12 gap-6">
+      <div className="md:max-w-[90%] max-w-7xl mx-auto sm:px-2 md:px-4 sm:py-6 md:grid lg:grid-cols-12 gap-6 flex justify-center">
         
         {/* LEFT COLUMN (Main Content) */}
-         <div className="max-w-1/ md:w-full lg:col-span-9 space-y-6 bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+         <div className="w-full lg:col-span-9 space-y-6 sm:bg-white p-4 sm:p-6 sm:rounded-lg sm:shadow-sm sm:border border-gray-100">
 
           {/* DESCRIPTION */}
           <div>
@@ -257,53 +258,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
        </div>
 
        {/* Table of Contents */}
-       {details.table_of_contents && details.table_of_contents.length > 0 && (
-         <div className="border border-blue-200 rounded-lg overflow-hidden font-sans">
-            {/* Header */}
-            <div className="bg-[#2563EB] text-white px-4 py-2.5 text-sm font-medium">
-               Table of Contents
-            </div>
-            
-            {/* List Container */}
-            <div className="bg-white flex flex-col">
-               {/* First 5 Items */}
-               {details.table_of_contents.slice(0, 5).map((item, i) => (
-                  <a 
-                     key={i} 
-                     href={`#${item.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} 
-                     className="block px-4 py-2.5 text-sm text-blue-600 border-b border-gray-100 hover:underline hover:bg-blue-50 transition-colors"
-                  >
-                     {item}
-                  </a>
-               ))}
-               
-               {/* Remaining Items (Collapsible) */}
-               {details.table_of_contents.length > 5 && (
-                  <details className="group">
-                     <summary className="list-none cursor-pointer px-4 py-2.5 text-sm font-bold text-blue-600 hover:bg-blue-50 transition-colors select-none">
-                        <span className="group-open:hidden flex items-center gap-1">
-                           + {details.table_of_contents.length - 5} View More
-                        </span>
-                        <span className="hidden group-open:block">
-                           - View Less
-                        </span>
-                     </summary>
-                     <div className="border-t border-gray-100">
-                        {details.table_of_contents.slice(5).map((item, i) => (
-                           <a 
-                              key={i} 
-                              href={`#${item.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} 
-                              className="block px-4 py-2.5 text-sm text-blue-600 border-b border-gray-100 hover:underline hover:bg-blue-50 transition-colors last:border-0"
-                           >
-                              {item}
-                           </a>
-                        ))}
-                     </div>
-                  </details>
-               )}
-            </div>
-         </div>
-       )}
+       <TableOfContents items={details.table_of_contents || []} />
     </div>
 
           {/* HIGHLIGHTS SECTION */}
@@ -439,6 +394,24 @@ export default async function ExamLandingPage({ params }: PageProps) {
                )}
             </div>
           )}
+
+          <div className="w-full flex items-center justify-center p-1 
+    [&>button]:w-full 
+    [&>button]:bg-gradient-to-r [&>button]:from-blue-600 [&>button]:to-blue-700 
+    [&>button]:text-white [&>button]:rounded-xl 
+    [&>button]:px-6 [&>button]:py-4 
+    [&>button]:text-base [&>button]:font-black 
+    [&>button]:uppercase [&>button]:tracking-wider
+    [&>button]:shadow-[0_10px_20px_-10px_rgba(37,99,235,0.4)]
+    [&>button]:hover:shadow-[0_20px_25px_-5px_rgba(37,99,235,0.4)]
+    [&>button]:hover:-translate-y-0.5
+    [&>button]:transition-all [&>button]:duration-300
+    [&>button]:active:scale-95
+    [&>button]:relative
+    [&>button]:overflow-hidden">
+    
+    <JoinExamButton courseId={course.id} label="Get Free Mock Tests" />
+</div>
 
           {/* APPLICATION PROCESS */}
           <div id="application" className="scroll-mt-40">
@@ -682,6 +655,8 @@ export default async function ExamLandingPage({ params }: PageProps) {
                  </div>
                )}
 
+               
+
                {/* 2. Marking Scheme Section */}
                {tabs.marking_scheme && (
                  <div>
@@ -713,6 +688,24 @@ export default async function ExamLandingPage({ params }: PageProps) {
             </div>
           )}
 
+          <div className="w-full flex items-center justify-center p-1 
+    [&>button]:w-full 
+    [&>button]:bg-gradient-to-r [&>button]:from-blue-600 [&>button]:to-blue-700 
+    [&>button]:text-white [&>button]:rounded-xl 
+    [&>button]:px-6 [&>button]:py-4 
+    [&>button]:text-base [&>button]:font-black 
+    [&>button]:uppercase [&>button]:tracking-wider
+    [&>button]:shadow-[0_10px_20px_-10px_rgba(37,99,235,0.4)]
+    [&>button]:hover:shadow-[0_20px_25px_-5px_rgba(37,99,235,0.4)]
+    [&>button]:hover:-translate-y-0.5
+    [&>button]:transition-all [&>button]:duration-300
+    [&>button]:active:scale-95
+    [&>button]:relative
+    [&>button]:overflow-hidden">
+    
+    <JoinExamButton courseId={course.id} label="Get Free Mock Tests" />
+</div>
+
           {/* SYLLABUS SECTION */}
           {tabs.syllabus && (
             <div id="syllabus" className="scroll-mt-40">
@@ -727,41 +720,55 @@ export default async function ExamLandingPage({ params }: PageProps) {
 
                <div className="space-y-10">
                   {/* --- SECTION 2: DOMAIN SUBJECTS (NOW A TABLE) --- */}
-                  <div>
-                     <h3 className="text-lg font-bold text-gray-900 mb-3">Section 1: Domain-Specific Subject</h3>
-                     <p className="text-sm text-gray-700 mb-6 leading-relaxed">
-                        The other section of the {course.title} Exam is the Domain-Specific Subject. The candidates will be allowed to <strong>choose up to 5 subjects</strong> as per the university. The breakdown of the Section 1 Syllabus is as follows:
-                     </p>
-                     
-                     <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm font-sans">
-                        <table className="w-full text-sm text-left border-collapse">
-                           <thead className="bg-[#2563EB] text-white">
-                              <tr>
-                                 <th className="px-6 py-4 font-bold border-r border-blue-400 w-1/3 text-base">Subject</th>
-                                 <th className="px-6 py-4 font-bold text-base">Topics</th>
-                              </tr>
-                           </thead>
-                           <tbody className="divide-y divide-gray-200 bg-white">
-                              {tabs.syllabus
-                                 .filter(s => !s.subject.includes("Section 1") && !s.subject.includes("Section 3"))
-                                 .map((subject, i) => (
-                                 <tr key={i} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 font-bold text-gray-900 border-r border-gray-200 align-top bg-gray-50/30">
-                                       {subject.subject}
-                                    </td>
-                                    <td className="px-6 py-4 text-gray-700 align-top">
-                                       <ul className="list-disc pl-4 space-y-1">
-                                          {subject.topics.map((topic, t) => (
-                                             <li key={t}>{topic}</li>
-                                          ))}
-                                       </ul>
-                                    </td>
-                                 </tr>
-                              ))}
-                           </tbody>
-                        </table>
-                     </div>
-                  </div>
+  {/* --- SECTION 2: DOMAIN SUBJECTS (NOW A TABLE) --- */}
+  <div>
+    <h3 className="text-lg font-bold text-gray-900 mb-3">Section 1: Domain-Specific Subject</h3>
+    <p className="text-sm text-gray-700 mb-6 leading-relaxed">
+      The other section of the {course.title} Exam is the Domain-Specific Subject. The candidates will be allowed to <strong>choose up to 5 subjects</strong> as per the university. The breakdown of the Section 1 Syllabus is as follows:
+    </p>
+    
+    <div className="border border-gray-200 rounded-xl shadow-sm font-sans overflow-hidden">
+      {/* 1. Added 'overflow-x-auto' to the wrapper.
+          2. Added 'scrollbar-thin' (optional) for better appearance.
+      */}
+      <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
+        {/* 3. Added 'min-w-[600px]' to ensure the table doesn't 
+               collapse on mobile, forcing the scroll.
+        */}
+        <table className="w-full min-w-[600px] text-sm text-left border-collapse">
+          <thead className="bg-[#2563EB] text-white">
+            <tr>
+              <th className="px-6 py-4 font-bold border-r border-blue-400 w-1/3 text-base">Subject</th>
+              <th className="px-6 py-4 font-bold text-base">Topics</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 bg-white">
+            {tabs.syllabus
+              .filter(s => !s.subject.includes("Section 1") && !s.subject.includes("Section 3"))
+              .map((subject, i) => (
+              <tr key={i} className="hover:bg-gray-50 transition-colors">
+                <td className="px-6 py-4 font-bold text-gray-900 border-r border-gray-200 align-top bg-gray-50/30">
+                  {subject.subject}
+                </td>
+                <td className="px-6 py-4 text-gray-700 align-top">
+                  <ul className="list-disc pl-4 space-y-1">
+                    {subject.topics.map((topic, t) => (
+                      <li key={t}>{topic}</li>
+                    ))}
+                  </ul>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    {/* Optional: Mobile-only scroll indicator */}
+    <div className="md:hidden mt-2 text-center">
+      <p className="text-[10px] text-gray-400 animate-pulse">← Scroll horizontally to view full syllabus →</p>
+    </div>
+  </div>
 
                   {/* --- SECTION 3: GENERAL TEST --- */}
                   {tabs.syllabus.filter(s => s.subject.includes("Section 3")).map((item, i) => (
@@ -812,6 +819,24 @@ export default async function ExamLandingPage({ params }: PageProps) {
                </div>
             </div>
           )}
+
+          <div className="w-full flex items-center justify-center p-1 
+    [&>button]:w-full 
+    [&>button]:bg-gradient-to-r [&>button]:from-blue-600 [&>button]:to-blue-700 
+    [&>button]:text-white [&>button]:rounded-xl 
+    [&>button]:px-6 [&>button]:py-4 
+    [&>button]:text-base [&>button]:font-black 
+    [&>button]:uppercase [&>button]:tracking-wider
+    [&>button]:shadow-[0_10px_20px_-10px_rgba(37,99,235,0.4)]
+    [&>button]:hover:shadow-[0_20px_25px_-5px_rgba(37,99,235,0.4)]
+    [&>button]:hover:-translate-y-0.5
+    [&>button]:transition-all [&>button]:duration-300
+    [&>button]:active:scale-95
+    [&>button]:relative
+    [&>button]:overflow-hidden">
+    
+    <JoinExamButton courseId={course.id} label="Get Free Mock Tests" />
+</div>
 
           {/* Ad Section */}
           <div>
@@ -994,6 +1019,24 @@ export default async function ExamLandingPage({ params }: PageProps) {
             </div>
           )}
 
+          <div className="w-full flex items-center justify-center p-1 
+    [&>button]:w-full 
+    [&>button]:bg-gradient-to-r [&>button]:from-blue-600 [&>button]:to-blue-700 
+    [&>button]:text-white [&>button]:rounded-xl 
+    [&>button]:px-6 [&>button]:py-4 
+    [&>button]:text-base [&>button]:font-black 
+    [&>button]:uppercase [&>button]:tracking-wider
+    [&>button]:shadow-[0_10px_20px_-10px_rgba(37,99,235,0.4)]
+    [&>button]:hover:shadow-[0_20px_25px_-5px_rgba(37,99,235,0.4)]
+    [&>button]:hover:-translate-y-0.5
+    [&>button]:transition-all [&>button]:duration-300
+    [&>button]:active:scale-95
+    [&>button]:relative
+    [&>button]:overflow-hidden">
+    
+    <JoinExamButton courseId={course.id} label="Get Free Mock Tests" />
+</div>
+
           {/* RESULTS SECTION */}
           {tabs.results && (
             <div id="results" className="scroll-mt-40">
@@ -1155,6 +1198,24 @@ export default async function ExamLandingPage({ params }: PageProps) {
                )}
             </div>
           )}
+
+          <div className="w-full flex items-center justify-center p-1 
+    [&>button]:w-full 
+    [&>button]:bg-gradient-to-r [&>button]:from-blue-600 [&>button]:to-blue-700 
+    [&>button]:text-white [&>button]:rounded-xl 
+    [&>button]:px-6 [&>button]:py-4 
+    [&>button]:text-base [&>button]:font-black 
+    [&>button]:uppercase [&>button]:tracking-wider
+    [&>button]:shadow-[0_10px_20px_-10px_rgba(37,99,235,0.4)]
+    [&>button]:hover:shadow-[0_20px_25px_-5px_rgba(37,99,235,0.4)]
+    [&>button]:hover:-translate-y-0.5
+    [&>button]:transition-all [&>button]:duration-300
+    [&>button]:active:scale-95
+    [&>button]:relative
+    [&>button]:overflow-hidden">
+    
+    <JoinExamButton courseId={course.id} label="Get Free Mock Tests" />
+</div>
 
           {/* PARTICIPATING UNIVERSITIES SECTION */}
           {tabs.participating_universities && (
@@ -1320,6 +1381,24 @@ export default async function ExamLandingPage({ params }: PageProps) {
             </div>
           )}
 
+<div className="w-full flex items-center justify-center p-1 
+    [&>button]:w-full 
+    [&>button]:bg-gradient-to-r [&>button]:from-blue-600 [&>button]:to-blue-700 
+    [&>button]:text-white [&>button]:rounded-xl 
+    [&>button]:px-6 [&>button]:py-4 
+    [&>button]:text-base [&>button]:font-black 
+    [&>button]:uppercase [&>button]:tracking-wider
+    [&>button]:shadow-[0_10px_20px_-10px_rgba(37,99,235,0.4)]
+    [&>button]:hover:shadow-[0_20px_25px_-5px_rgba(37,99,235,0.4)]
+    [&>button]:hover:-translate-y-0.5
+    [&>button]:transition-all [&>button]:duration-300
+    [&>button]:active:scale-95
+    [&>button]:relative
+    [&>button]:overflow-hidden">
+    
+    <JoinExamButton courseId={course.id} label="Get Free Mock Tests" />
+</div>
+      
         </div>
 
         {/* RIGHT COLUMN (Sidebar) */}
@@ -1471,7 +1550,40 @@ export default async function ExamLandingPage({ params }: PageProps) {
            {/* End Sticky Container */}
 
         </div>
+
+        {/* Floating Desktop CTA */}
+<div className="hidden md:flex fixed bottom-8 right-8 z-50 animate-bounce-subtle">
+  <div className="group relative">
+    {/* Pulsing background effect */}
+    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+    
+    <div className="relative flex items-center 
+        [&>button]:bg-blue-600 
+        [&>button]:text-white 
+        [&>button]:rounded-full 
+        [&>button]:px-8 
+        [&>button]:py-4 
+        [&>button]:text-base 
+        [&>button]:font-bold 
+        [&>button]:shadow-2xl 
+        [&>button]:border-2 
+        [&>button]:border-white/20
+        [&>button]:hover:bg-blue-700 
+        [&>button]:transition-all
+        [&>button]:flex [&>button]:items-center [&>button]:gap-2">
+      
+      <JoinExamButton courseId={course.id} label="Get Free Mock Tests" />
+      
+      {/* Visual Cue: Arrow or Icon */}
+      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black animate-pulse">
+        FREE
+      </span>
+    </div>
+  </div>
+</div>
       </div>
     </div>
+
+    
   )
 }
