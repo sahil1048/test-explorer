@@ -16,6 +16,8 @@ import Faq from "@/components/landing/faq"; //
 import SchoolUpdates from "@/components/landing/school-updates"; //
 import CategoryGrid from "../categories/category-grid";
 import { createClient } from "@/lib/supabase/server";
+import TestimonialsAdminPage from "@/app/dashboard/testimonials/page";
+import SchoolPromo from "../landing/school-promo";
 
 export default async function LandingPage() {
   // 1. Detect School Slug from Headers (Set by Middleware)
@@ -36,6 +38,23 @@ export default async function LandingPage() {
     .select('*')
     .order('order_index')
 
+    let schoolTestimonials = [];
+
+  if (schoolSlug) {
+    schoolData = await getSchoolBySubdomain(schoolSlug);
+
+    if (schoolData) {
+      // Fetch specific testimonials for this school
+      const { data: tData } = await supabase
+        .from('school_testimonials')
+        .select('*')
+        .eq('organization_id', schoolData.id)
+        .order('created_at', { ascending: false });
+        
+      if (tData) schoolTestimonials = tData;
+    }
+  }
+
   return (
     <main className="flex flex-col min-h-screen">
       
@@ -55,7 +74,15 @@ export default async function LandingPage() {
       <CategoryGrid categories={categories}/>
       <Steps />
       <Features />
-      <Testimonials />
+      {schoolData ? (
+  schoolTestimonials.length > 0 && <Testimonials data={schoolTestimonials} />
+) : (
+  <Testimonials />
+)}
+
+{schoolData && (
+        <SchoolPromo schoolName={schoolData.name} />
+      )}
       <Faq />
 
       {/* === SECTION 3: FOOTER === */}

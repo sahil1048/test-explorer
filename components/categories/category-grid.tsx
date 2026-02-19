@@ -17,7 +17,7 @@ export default function CategoryGrid({ categories }: { categories: Category[] | 
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 container mx-auto bg-white">
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 container mx-auto">
       {categories.map((cat) => {
         // Dynamic Icon Logic
         // @ts-ignore

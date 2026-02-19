@@ -13,7 +13,6 @@ export default async function SubjectDetailsPage({
 }) {
   const supabase = await createClient()
   
-  // 1. Resolve Params & Authenticate User
   const { courseId, subjectId } = await params
   const { from } = await searchParams
 
@@ -21,19 +20,26 @@ export default async function SubjectDetailsPage({
 
   if (!user) return redirect('/login')
 
-  // 2. Fetch Subject & Course Info
   const { data: subject } = await supabase
     .from('subjects')
-    .select(`
-      title,
-      course:courses(title)
-    `)
+    .select('title')
     .eq('id', subjectId)
     .single()
 
   if (!subject) return notFound()
 
-  // 3. CHECK ENROLLMENT STATUS
+  const { data: course } = await supabase
+    .from('courses')
+    .select('title')
+    .eq('id', courseId)
+    .single()
+
+  const courseTitle = course?.title || ''
+  const isCuetCourse = courseTitle.toLowerCase().includes('cuet')
+
+  console.log('Course Title:', courseTitle)
+  console.log('Is CUET Course:', isCuetCourse)
+
   const { data: enrollment } = await supabase
     .from('student_enrollments')
     .select('id')
@@ -41,7 +47,6 @@ export default async function SubjectDetailsPage({
     .eq('subject_id', subjectId)
     .single()
 
-  // 4. CHECK USER ROLE
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
@@ -50,19 +55,9 @@ export default async function SubjectDetailsPage({
 
   const isAdmin = profile?.role === 'super_admin' || profile?.role === 'school_admin'
 
-  // 5. DETERMINE ACCESS LEVEL (FREEMIUM LOGIC)
-  const hasFullAccess = !!enrollment || isAdmin
+  const hasFullAccess = !!enrollment || isAdmin || isCuetCourse
 
-  // Handle Supabase Relation Array/Object weirdness for Course Title
-  // @ts-ignore
-  const courseData = subject.course as unknown as CourseRelation | CourseRelation[] | null
-  const courseTitle = Array.isArray(courseData) 
-    ? courseData[0]?.title 
-    : courseData?.title
-
-  // 6. Fetch Page Content (Fetching ALL content + Question Counts)
   const [modulesRes, practiceRes, mockRes] = await Promise.all([
-    // A. Prep Modules
     supabase
       .from('prep_modules')
       .select('*, questions(count)')
@@ -70,7 +65,6 @@ export default async function SubjectDetailsPage({
       .eq('is_published', true)
       .order('created_at', { ascending: true }),
       
-    // B. Practice Tests
     supabase
       .from('practice_tests')
       .select('*, questions(count)')
@@ -78,21 +72,18 @@ export default async function SubjectDetailsPage({
       .eq('is_published', true)
       .order('created_at', { ascending: true }),
       
-    // C. Mock Tests
     supabase
       .from('mock_tests')
       .select('*, questions:mock_test_questions(count)')
-      .eq('subject_id', subjectId) // <--- FILTER BY SUBJECT ID
+      .eq('subject_id', subjectId) 
       .eq('is_active', true)
       .order('created_at', { ascending: false })
   ])
 
-  // Helper to extract count safely
   const formatData = (data: any[] | null) => {
     if (!data) return []
     return data.map((item) => ({
       ...item,
-      // Supabase returns questions: [{ count: 5 }]
       question_count: item.questions?.[0]?.count || 0
     }))
   }
@@ -107,7 +98,6 @@ export default async function SubjectDetailsPage({
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navbar Stub */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="container mx-auto px-6 h-16 flex items-center gap-4">
           <Link 

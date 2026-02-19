@@ -1,8 +1,9 @@
 'use client'
-import { createClient } from '@supabase/supabase-js' // Use raw client for Admin actions
+
+import { createClient } from '@supabase/supabase-js'
 import { redirect, useRouter } from 'next/navigation'
 import { createSchoolAction } from '../actions'
-import { ArrowLeft, Building2, Lock, Mail, User } from 'lucide-react'
+import { ArrowLeft, Building2, Lock, Mail, User, Image as ImageIcon } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { useState } from 'react'
@@ -17,12 +18,10 @@ export default function AddSchoolPage() {
     
     const formData = new FormData(event.currentTarget)
     
-    // Call the Server Action
     const result = await createSchoolAction(formData)
     setIsPending(false)
 
     if (result && 'error' in result) {
-      // SERVER said there was an error, so CLIENT shows toast
       toast.error(result.error) 
     } else {
       toast.success('School created successfully!')
@@ -45,7 +44,6 @@ export default function AddSchoolPage() {
         
         <form onSubmit={handleSubmit} className="space-y-6">
           
-          {/* Section 1: School Details */}
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
               <Building2 className="w-4 h-4" /> School Information
@@ -64,7 +62,34 @@ export default function AddSchoolPage() {
 
           <div className="h-px bg-gray-100 my-4" />
 
-          {/* Section 2: Admin Credentials */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+              <ImageIcon className="w-4 h-4" /> Principal Details
+            </h3>
+            
+            <div>
+              <label className="block text-xs font-bold text-gray-500 mb-1">Principal Message</label>
+              <textarea 
+                name="principal_message" 
+                placeholder="Message for the students..." 
+                rows={3} 
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-black outline-none" 
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 mb-1">Principal Image (URL)</label>
+              <input 
+                name="principal_image" 
+                type="text" 
+                placeholder="https://example.com/principal.jpg" 
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-black outline-none" 
+              />
+            </div>
+          </div>
+
+          <div className="h-px bg-gray-100 my-4" />
+
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
               <User className="w-4 h-4" /> Admin Credentials
@@ -97,8 +122,8 @@ export default function AddSchoolPage() {
             </div>
           </div>
 
-          <button type="submit" className="w-full py-4 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all shadow-lg mt-6">
-            Create School & User
+          <button type="submit" disabled={isPending} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all shadow-lg mt-6 disabled:opacity-70">
+            {isPending ? 'Creating...' : 'Create School & User'}
           </button>
         </form>
       </div>

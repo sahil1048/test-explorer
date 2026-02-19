@@ -83,6 +83,8 @@ export async function updateSchoolAction(formData: FormData) {
   const name = (formData.get('name') as string || '').trim()
   const slug = (formData.get('slug') as string || '').toLowerCase().trim().replace(/\s+/g, '-')
   const welcome_message = (formData.get('welcome_message') as string || '').trim()
+  const principal_message = (formData.get('principal_message') as string || '').trim()
+  const principal_image = (formData.get('principal_image') as string || '').trim()
 
   if (!id || !name || !slug) return { error: 'Missing required fields.' }
 
@@ -91,7 +93,9 @@ export async function updateSchoolAction(formData: FormData) {
     .update({ 
       name,
       slug,
-      welcome_message 
+      welcome_message,
+      principal_message,
+      principal_image
     })
     .eq('id', id)
 
@@ -107,8 +111,6 @@ export async function updateSchoolAction(formData: FormData) {
 }
 
 export async function createSchoolAction(formData: FormData) {
-    'use server'
-    
     // 1. Initialize Admin Client (Bypasses RLS)
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -127,15 +129,23 @@ export async function createSchoolAction(formData: FormData) {
     const adminName = (formData.get('adminName') as string || '').trim()
     const email = (formData.get('email') as string || '').trim()
     const password = (formData.get('password') as string || '').trim()
+    const principal_message = (formData.get('principal_message') as string || '').trim()
+    const principal_image = (formData.get('principal_image') as string || '').trim()
 
     if (!name || !slug || !adminName || !email || !password) {
-      return { error: 'All fields are required.' }
+      return { error: 'All fields except principal details are required.' }
     }
 
     // 3. Create the Organization (School)
     const { data: org, error: orgError } = await supabaseAdmin
       .from('organizations')
-      .insert({ name, slug, welcome_message: `Welcome to ${name}` })
+      .insert({ 
+        name, 
+        slug, 
+        welcome_message: `Welcome to ${name}! We're excited to have you on board.`,
+        principal_message,
+        principal_image
+      })
       .select()
       .single()
 
@@ -161,10 +171,10 @@ export async function createSchoolAction(formData: FormData) {
     if (authUser.user && org) {
        const { error: profileError } = await supabaseAdmin
         .from('profiles')
-        .upsert({ // <--- CHANGED FROM insert TO upsert
+        .upsert({ 
           id: authUser.user.id,
           full_name: adminName,
-          role: 'school_admin', // This will now overwrite 'student'
+          role: 'school_admin', 
           organization_id: org.id
         })
       
