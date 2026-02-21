@@ -80,14 +80,14 @@ export default function Footer({ school }: { school?: any }) {
 
           {/* Column 2: Platform */}
           <div>
-            <h3 className="font-bold text-lg mb-6">Platform</h3>
-            <ul className="space-y-4 text-gray-400">
-              <li><Link href="/features" className="hover:text-white transition-colors">Features</Link></li>
-              <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-              <li><Link href="/streams" className="hover:text-white transition-colors">Streams</Link></li>
-              <li><Link href="/login" className="hover:text-white transition-colors">Student Login</Link></li>
-            </ul>
-          </div>
+  <h3 className="font-bold text-lg mb-6 text-white">Platform</h3>
+  <ul className="space-y-4 text-gray-400">
+    <li><Link href="/getting-started" className="hover:text-white transition-colors">Getting Started</Link></li>
+    <li><Link href="/library" className="hover:text-white transition-colors">Open Library</Link></li>
+    <li><Link href="/categories" className="hover:text-white transition-colors">Streams</Link></li>
+    <li><Link href="/login" className="hover:text-white transition-colors">Student Login</Link></li>
+  </ul>
+</div>
 
           {/* Column 3: Resources */}
           <div>
@@ -106,8 +106,8 @@ export default function Footer({ school }: { school?: any }) {
             <ul className="space-y-4 text-gray-400">
               <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Cookie Policy</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Security</Link></li>
+              <li><Link href="/cookie-policy" className="hover:text-white transition-colors">Cookie Policy</Link></li>
+              <li><Link href="/security" className="hover:text-white transition-colors">Security</Link></li>
             </ul>
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function Footer({ school }: { school?: any }) {
             &copy; {currentYear} {brandName}. All rights reserved.
           </p>
           <p className="text-gray-600 text-sm flex items-center gap-1">
-            Made with <Heart className="w-3 h-3 text-red-500 fill-red-500" /> in India
+            Made with <Heart className="w-3 h-3 text-red-500 fill-red-500" /> by Geeta Technical Hub
           </p>
         </div>
       </div>

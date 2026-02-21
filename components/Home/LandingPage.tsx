@@ -16,8 +16,6 @@ import Faq from "@/components/landing/faq"; //
 import SchoolUpdates from "@/components/landing/school-updates"; //
 import CategoryGrid from "../categories/category-grid";
 import { createClient } from "@/lib/supabase/server";
-import TestimonialsAdminPage from "@/app/dashboard/testimonials/page";
-import SchoolPromo from "../landing/school-promo";
 
 export default async function LandingPage() {
   // 1. Detect School Slug from Headers (Set by Middleware)
@@ -25,7 +23,7 @@ export default async function LandingPage() {
   const schoolSlug = headersList.get("x-school-slug"); // <--- CHANGED: Read Middleware Header
   const supabase = await createClient()
   
-  let schoolData = null;
+  let schoolData: any = null;
 
   // 2. Fetch School Data if Slug Exists
   if (schoolSlug) {
@@ -41,8 +39,6 @@ export default async function LandingPage() {
     let schoolTestimonials = [];
 
   if (schoolSlug) {
-    schoolData = await getSchoolBySubdomain(schoolSlug);
-
     if (schoolData) {
       // Fetch specific testimonials for this school
       const { data: tData } = await supabase
