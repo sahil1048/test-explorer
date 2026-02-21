@@ -37,7 +37,7 @@ export default async function RootLayout({
   const headersList = await headers();
   const schoolSlug = headersList.get("x-school-slug"); // Read from middleware
 
-  let schoolData = null;
+  let schoolData: any = null;
   if (schoolSlug) {
     // We can reuse getSchoolBySubdomain if it just looks up by 'slug' column
     schoolData = await getSchoolBySubdomain(schoolSlug);

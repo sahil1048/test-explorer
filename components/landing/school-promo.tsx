@@ -1,4 +1,5 @@
 import { Zap, Gift, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 
 export default function SchoolPromo({ schoolName }: { schoolName: string }) {
   return (
@@ -59,10 +60,12 @@ export default function SchoolPromo({ schoolName }: { schoolName: string }) {
               </div>
             </div>
 
-            <button className="mt-8 w-full bg-gray-900 hover:bg-blue-600 text-white font-bold py-4 rounded-2xl transition-all duration-300 shadow-xl hover:shadow-blue-200 flex items-center justify-center gap-3 group active:scale-95">
-              Get Started Now
-              <Gift className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-            </button>
+            <Link href="/exams/cuet" className="block mt-8 w-full">
+  <button className="w-full bg-gray-900 hover:bg-blue-600 text-white font-bold py-4 rounded-2xl transition-all duration-300 shadow-xl hover:shadow-blue-200 flex items-center justify-center gap-3 group active:scale-95">
+    Get Started Now
+    <Gift className="w-4 h-4 md:w-5 md:h-5 group-hover:rotate-12 transition-transform" />
+  </button>
+</Link>
           </div>
 
         </div>
