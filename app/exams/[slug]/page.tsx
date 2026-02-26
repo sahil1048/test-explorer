@@ -182,6 +182,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
   return (
     <div className="min-h-screenbg-red-500 min-w-full font-sans text-gray-900 pb-20">
       
+      <div className='sticky top-16 z-50'>
       {/* ================= 1. HEADER SECTION ================= */}
       <div className="bg-white pt-4 pb-2 shadow-sm">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -238,7 +239,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
       <div className='hidden md:block'>
       <ExamNavigationPills />
       </div>
-
+</div>
       <div className="text-xs text-gray-500 items-center gap-2 max-w-[90%] ml-28 mt-4 hidden md:flex">
          <span className="w-2 h-2 rounded-full bg-green-500"></span>
          Updated on {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} by <span className="text-blue-600 font-medium">TestExplorer Team</span>
@@ -263,86 +264,109 @@ export default async function ExamLandingPage({ params }: PageProps) {
 
           {/* HIGHLIGHTS SECTION */}
           {tabs.highlights && (
-      <div id="overview" className="scroll-mt-40">
-         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">{course.title} Highlights</h2>
-         
-         {tabs.highlights_intro && (
-           <p className="text-sm text-gray-700 leading-relaxed mb-6">
-             {tabs.highlights_intro}
-           </p>
-         )}
+  <>
+    {/* 1. BULLETPROOF ANCHOR: 
+        This div is invisible, but it tells the browser the section starts 240px higher 
+        than the actual text. This clears both sticky headers perfectly. 
+    */}
+    <div 
+      id="overview" 
+      className="block h-[200px] -mt-[200px] invisible pointer-events-none" 
+      aria-hidden="true"
+    ></div>
+    
+    {/* 2. ACTUAL VISIBLE CONTENT */}
+    <div className="relative z-10">
+       <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">{course.title} Highlights</h2>
+       
+       {tabs.highlights_intro && (
+         <p className="text-sm text-gray-700 leading-relaxed mb-6">
+           {tabs.highlights_intro}
+         </p>
+       )}
 
-         {/* Responsive Table Wrapper */}
-         <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm font-sans">
-           <div className="overflow-x-auto">
-             <table className="w-full min-w-[600px] text-sm text-left border-collapse table-fixed">
-               <thead className="bg-[#2563EB] text-white">
-                 <tr>
-                   <th className="px-4 sm:px-6 py-4 font-bold border-r border-blue-400 w-1/3 text-base">Particulars</th>
-                   <th className="px-4 sm:px-6 py-4 font-bold w-2/3 text-base">Details</th>
+       {/* Responsive Table Wrapper */}
+       <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm font-sans">
+         <div className="overflow-x-auto">
+           <table className="w-full min-w-[600px] text-sm text-left border-collapse table-fixed">
+             <thead className="bg-[#2563EB] text-white">
+               <tr>
+                 <th className="px-4 sm:px-6 py-4 font-bold border-r border-blue-400 w-1/3 text-base">Particulars</th>
+                 <th className="px-4 sm:px-6 py-4 font-bold w-2/3 text-base">Details</th>
+               </tr>
+             </thead>
+             <tbody className="divide-y divide-gray-200 bg-white">
+               {tabs.highlights.map((row, i) => (
+                 <tr key={i} className="hover:bg-gray-50 transition-colors">
+                   <td className="px-4 sm:px-6 py-4 font-bold text-gray-900 border-r border-gray-200 align-top leading-relaxed bg-gray-50/30">
+                     {row.label}
+                   </td>
+                   <td className="px-4 sm:px-6 py-4 text-gray-700 align-top leading-relaxed whitespace-pre-line">
+                     {row.value}
+                   </td>
                  </tr>
-               </thead>
-               <tbody className="divide-y divide-gray-200 bg-white">
-                 {tabs.highlights.map((row, i) => (
-                   <tr key={i} className="hover:bg-gray-50 transition-colors">
-                     <td className="px-4 sm:px-6 py-4 font-bold text-gray-900 border-r border-gray-200 align-top leading-relaxed bg-gray-50/30">
-                       {row.label}
-                     </td>
-                     <td className="px-4 sm:px-6 py-4 text-gray-700 align-top leading-relaxed whitespace-pre-line">
-                       {row.value}
-                     </td>
-                   </tr>
-                 ))}
-               </tbody>
-             </table>
-           </div>
+               ))}
+             </tbody>
+           </table>
          </div>
+       </div>
 
-         {tabs.whats_new && (
-           <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 sm:p-6 mt-8">
-              <h3 className="text-lg font-bold text-blue-900 mb-3 flex items-center gap-2">
-                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs shrink-0">NEW</span>
-                 What&apos;s New in {course.title}?
-              </h3>
-              <p className="text-sm text-gray-700 leading-7 text-justify">
-                 {tabs.whats_new}
-              </p>
-           </div>
-         )}
-      </div>
-    )}
+       {tabs.whats_new && (
+         <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 sm:p-6 mt-8">
+            <h3 className="text-lg font-bold text-blue-900 mb-3 flex items-center gap-2">
+               <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs shrink-0">NEW</span>
+               What&apos;s New in {course.title}?
+            </h3>
+            <p className="text-sm text-gray-700 leading-7 text-justify">
+               {tabs.whats_new}
+            </p>
+         </div>
+       )}
+    </div>
+  </>
+)}
 
           {/* DATES SECTION */}
           {tabs.important_dates && (
-            <div id="dates" className='scroll-mt-40'>
-               <h2 className="text-xl font-bold text-gray-900 mb-4">{course.title} Important Dates</h2>
-               
-               {tabs.important_dates_intro && (
-                 <p className="text-sm text-gray-700 leading-relaxed mb-6">
-                   {tabs.important_dates_intro}
-                 </p>
-               )}
+  <>
+    {/* 1. BULLETPROOF ANCHOR */}
+    <div 
+      id="dates" 
+      className="block h-[200px] -mt-[200px] invisible pointer-events-none" 
+      aria-hidden="true"
+    ></div>
 
-               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                 <table className="w-full text-sm text-left">
-                    <thead className="bg-[#2563EB] text-white">
-                       <tr>
-                         <th className="px-6 py-4 font-bold border-r border-blue-400 w-1/2 text-base">{course.title} Events</th>
-                         <th className="px-6 py-4 font-bold w-1/2 text-base">Dates</th>
-                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
-                       {tabs.important_dates.map((item, i) => (
-                          <tr key={i} className="hover:bg-gray-50 ">
-                             <td className="px-6 py-4 font-bold text-gray-900 border-r border-gray-200 align-top leading-relaxed bg-gray-50/30">{item.event}</td>
-                             <td className="px-6 py-4 text-gray-700 align-top leading-relaxed whitespace-pre-line">{item.date}</td>
-                          </tr>
-                       ))}
-                    </tbody>
-                 </table>
-               </div>
-            </div>
-          )}
+    {/* 2. VISIBLE CONTENT */}
+    <div className="relative z-10">
+       <h2 className="text-xl font-bold text-gray-900 mb-4">{course.title} Important Dates</h2>
+       
+       {tabs.important_dates_intro && (
+         <p className="text-sm text-gray-700 leading-relaxed mb-6">
+           {tabs.important_dates_intro}
+         </p>
+       )}
+
+       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+         <table className="w-full text-sm text-left">
+            <thead className="bg-[#2563EB] text-white">
+               <tr>
+                 <th className="px-6 py-4 font-bold border-r border-blue-400 w-1/2 text-base">{course.title} Events</th>
+                 <th className="px-6 py-4 font-bold w-1/2 text-base">Dates</th>
+               </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 bg-white">
+               {tabs.important_dates.map((item, i) => (
+                  <tr key={i} className="hover:bg-gray-50 ">
+                     <td className="px-6 py-4 font-bold text-gray-900 border-r border-gray-200 align-top leading-relaxed bg-gray-50/30">{item.event}</td>
+                     <td className="px-6 py-4 text-gray-700 align-top leading-relaxed whitespace-pre-line">{item.date}</td>
+                  </tr>
+               ))}
+            </tbody>
+         </table>
+       </div>
+    </div>
+  </>
+)}
 
           {/* Ad Section */}
           <div>
@@ -353,7 +377,17 @@ export default async function ExamLandingPage({ params }: PageProps) {
 
           {/* ELIGIBILITY SECTION */}
           {tabs.eligibility && (
-            <div id="eligibility" className='scroll-mt-40'>
+
+<>
+{/* 1. BULLETPROOF ANCHOR */}
+    <div 
+      id="eligibility" 
+      className="block h-[240px] -mt-[240px] invisible pointer-events-none" 
+      aria-hidden="true"
+    ></div>
+
+    {/* 2. VISIBLE CONTENT */}
+            <div className='relative z-10'>
                <h2 className="text-xl font-bold text-gray-900 mb-4">{tabs.eligibility.title || "Eligibility Criteria"}</h2>
                
                {/* Intro Text */}
@@ -393,6 +427,8 @@ export default async function ExamLandingPage({ params }: PageProps) {
                  </p>
                )}
             </div>
+
+            </>
           )}
 
           <div className="w-full flex items-center justify-center p-1 
@@ -414,7 +450,14 @@ export default async function ExamLandingPage({ params }: PageProps) {
 </div>
 
           {/* APPLICATION PROCESS */}
-          <div id="application" className="scroll-mt-40">
+
+<div 
+      id="application" 
+      className="block h-[240px] -mt-[240px] invisible pointer-events-none" 
+      aria-hidden="true"
+    ></div>
+
+          <div  className="relative z-10">
              <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Application Process</h2>
              
              {/* 1. Intro */}
@@ -532,7 +575,13 @@ export default async function ExamLandingPage({ params }: PageProps) {
 
           {/* APPLICATION CORRECTION */}
           {tabs.application_process?.correction_window && (
-             <div id="correction" className="scroll-mt-40">
+            <>
+            <div 
+      id="correction" 
+      className="block h-[240px] -mt-[240px] invisible pointer-events-none" 
+      aria-hidden="true"
+    ></div>
+             <div className="relative z-10">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Application Form Correction</h2>
                 
                 {/* Intro Text */}
@@ -603,11 +652,18 @@ export default async function ExamLandingPage({ params }: PageProps) {
                    </div>
                 )}
              </div>
+             </>
           )}
 
           {/* EXAM PATTERN & MARKING */}
           {(tabs.exam_pattern || tabs.marking_scheme) && (
-            <div id="pattern" className="scroll-mt-40">
+            <>
+            <div 
+      id="pattern" 
+      className="block h-[240px] -mt-[240px] invisible pointer-events-none" 
+      aria-hidden="true"
+    ></div>
+            <div className="relative z-10">
                {/* 1. Exam Pattern Section */}
                {tabs.exam_pattern && (
                  <div className="mb-10">
@@ -686,6 +742,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
                  </div>
                )}
             </div>
+            </>
           )}
 
           <div className="w-full flex items-center justify-center p-1 
@@ -708,7 +765,14 @@ export default async function ExamLandingPage({ params }: PageProps) {
 
           {/* SYLLABUS SECTION */}
           {tabs.syllabus && (
-            <div id="syllabus" className="scroll-mt-40">
+            <>
+            <div 
+      id="syllabus" 
+      className="block h-[240px] -mt-[240px] invisible pointer-events-none" 
+      aria-hidden="true"
+    ></div>
+            
+            <div  className="relative z-10">
                <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Syllabus</h2>
                
                {/* Intro Text */}
@@ -818,6 +882,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
                   </button>
                </div>
             </div>
+            </>
           )}
 
           <div className="w-full flex items-center justify-center p-1 
@@ -847,7 +912,13 @@ export default async function ExamLandingPage({ params }: PageProps) {
 
           {/* PREPARATION & BOOKS SECTION */}
           {(tabs.preparation || tabs.books) && (
-            <div id="preparation" className="scroll-mt-40">
+            <>
+            <div 
+      id="preparation" 
+      className="block h-[240px] -mt-[240px] invisible pointer-events-none" 
+      aria-hidden="true"
+    ></div>
+            <div  className="relative z-10">
                {/* 1. Preparation Tips */}
                {tabs.preparation && (
                  <div className="mb-10">
@@ -906,11 +977,18 @@ export default async function ExamLandingPage({ params }: PageProps) {
                  </div>
                )}
             </div>
+            </>
           )}
 
           {/* ADMIT CARD SECTION */}
           {tabs.admit_card && (
-            <div id="admit-card" className="scroll-mt-40">
+            <>
+            <div 
+      id="admit-card"
+      className="block h-[240px] -mt-[240px] invisible pointer-events-none" 
+      aria-hidden="true"
+    ></div>
+            <div  className="relative z-10">
                <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Admit Card</h2>
                
                {/* 1. Intro */}
@@ -965,11 +1043,18 @@ export default async function ExamLandingPage({ params }: PageProps) {
                   </p>
                )}
             </div>
+            </>
           )}
 
           {/* ANSWER KEY SECTION */}
           {tabs.answer_key && (
-            <div id="answer-key" className="scroll-mt-40">
+            <>
+            <div 
+      id="answer-key"
+      className="block h-[240px] -mt-[240px] invisible pointer-events-none" 
+      aria-hidden="true"
+    ></div>
+            <div className="relative z-10">
                <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Answer Key</h2>
                
                {/* Intro */}
@@ -1017,6 +1102,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
                   </div>
                )}
             </div>
+            </>
           )}
 
           <div className="w-full flex items-center justify-center p-1 
@@ -1039,7 +1125,13 @@ export default async function ExamLandingPage({ params }: PageProps) {
 
           {/* RESULTS SECTION */}
           {tabs.results && (
-            <div id="results" className="scroll-mt-40">
+            <>
+            <div 
+      id="results"
+      className="block h-[240px] -mt-[240px] invisible pointer-events-none" 
+      aria-hidden="true"
+    ></div>
+            <div className="relative z-10">
                <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Results</h2>
                
                {/* Intro */}
@@ -1088,13 +1180,20 @@ export default async function ExamLandingPage({ params }: PageProps) {
                   </div>
                )}
             </div>
+            </>
           )}
 
           
 
           {/* CUTOFFS SECTION */}
           {tabs.cutoffs && (
-            <div id="cutoffs" className="scroll-mt-40">
+            <>
+            <div 
+      id="cutoffs"
+      className="block h-[240px] -mt-[240px] invisible pointer-events-none" 
+      aria-hidden="true"
+    ></div>
+            <div className="relative z-10">
                <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Cutoff</h2>
                
                {/* Intro Text */}
@@ -1156,6 +1255,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
                  </div>
                </div>
             </div>
+            </>
           )}
 
           {/* Ad Section */}
@@ -1167,7 +1267,13 @@ export default async function ExamLandingPage({ params }: PageProps) {
 
           {/* COUNSELLING SECTION */}
           {tabs.counselling && (
-            <div id="counselling" className="scroll-mt-40">
+            <>
+            <div 
+      id="counselling"
+      className="block h-[240px] -mt-[240px] invisible pointer-events-none" 
+      aria-hidden="true"
+    ></div>
+            <div className="relative z-10">
                <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Counselling</h2>
                
                {/* Intro */}
@@ -1197,6 +1303,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
                   </div>
                )}
             </div>
+            </>
           )}
 
           <div className="w-full flex items-center justify-center p-1 
@@ -1219,7 +1326,13 @@ export default async function ExamLandingPage({ params }: PageProps) {
 
           {/* PARTICIPATING UNIVERSITIES SECTION */}
           {tabs.participating_universities && (
-            <div id="universities" className="scroll-mt-40">
+            <>
+            <div 
+      id="universities"
+      className="block h-[240px] -mt-[240px] invisible pointer-events-none" 
+      aria-hidden="true"
+    ></div>
+            <div className="relative z-10">
                <h2 className="text-2xl font-bold text-gray-900 mb-4">{course.title} Participating Universities</h2>
                
                {/* Main Intro */}
@@ -1273,11 +1386,18 @@ export default async function ExamLandingPage({ params }: PageProps) {
                   ))}
                </div>
             </div>
+            </>
           )}
 
           {/* FAQs SECTION */}
           {tabs.faqs && (
-             <div id="faqs" className='scroll-mt-40'>
+            <>
+            <div 
+      id="faqs"
+      className="block h-[240px] -mt-[240px] invisible pointer-events-none" 
+      aria-hidden="true"
+    ></div>
+             <div className='scroll-mt-40'>
                 <h2 className="text-xl font-bold text-gray-900 mb-4">{course.title} FAQs</h2>
                 <div className="space-y-4">
                   {tabs.faqs.map((faq, i) => (
@@ -1293,12 +1413,19 @@ export default async function ExamLandingPage({ params }: PageProps) {
                   ))}
                 </div>
              </div>
+             </>
           )}
 
           {/* IMPORTANT UPDATES & EXPIRED EVENTS */}
           {tabs.updates_section && (
+            <>
+            <div 
+      id="important-dates"
+      className="block h-[240px] -mt-[240px] invisible pointer-events-none" 
+      aria-hidden="true"
+    ></div>
             <div>
-            <div id="important-dates" className="scroll-mt-40">
+            <div className="relative z-10">
                
                {/* 1. Current Updates Table */}
                {tabs.updates_section.current_events && (
@@ -1379,6 +1506,7 @@ export default async function ExamLandingPage({ params }: PageProps) {
                )}
             </div>
             </div>
+            </>
           )}
 
 <div className="w-full flex items-center justify-center p-1 
@@ -1404,152 +1532,152 @@ export default async function ExamLandingPage({ params }: PageProps) {
         {/* RIGHT COLUMN (Sidebar) */}
         <div className="lg:col-span-3 space-y-6 hidden lg:block">
            
-           {/* 1. UPCOMING EXAMS (Normal Scroll) */}
-           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-              <div className="bg-[#1e293b] px-4 py-3 flex items-center gap-2">
-                 <CalendarDays className="w-4 h-4 text-white" />
-                 <h3 className="font-bold text-white text-sm uppercase tracking-wide">Upcoming Exams</h3>
-              </div>
-              <div className="divide-y divide-gray-100">
-                 {upcomingExamsList.length > 0 ? (
-                    upcomingExamsList.map((exam, i) => (
-                       <Link href={`/exams/${exam.slug}`} key={i} className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors cursor-pointer group">
-                          <div className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 font-bold bg-white group-hover:border-blue-500 group-hover:text-blue-600 uppercase">
-                             {exam.title.charAt(0)}
-                          </div>
-                          <div>
-                             <div className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{exam.title}</div>
-                             <div className="text-xs text-gray-500 mt-0.5">{getExamDate(exam.details)}</div>
-                          </div>
-                       </Link>
-                    ))
-                 ) : (
-                    <div className="p-4 text-xs text-gray-500">No upcoming exams found.</div>
-                 )}
-              </div>
-           </div>
+   {/* 1. UPCOMING EXAMS (Normal Scroll) */}
+   <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+      <div className="bg-[#1e293b] px-4 py-3 flex items-center gap-2">
+         <CalendarDays className="w-4 h-4 text-white" />
+         <h3 className="font-bold text-white text-sm uppercase tracking-wide">Upcoming Exams</h3>
+      </div>
+      <div className="divide-y divide-gray-100">
+         {upcomingExamsList.length > 0 ? (
+            upcomingExamsList.map((exam, i) => (
+               <Link href={`/exams/${exam.slug}`} key={i} className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors cursor-pointer group">
+                  <div className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 font-bold bg-white group-hover:border-blue-500 group-hover:text-blue-600 uppercase">
+                     {exam.title.charAt(0)}
+                  </div>
+                  <div>
+                     <div className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{exam.title}</div>
+                     <div className="text-xs text-gray-500 mt-0.5">{getExamDate(exam.details)}</div>
+                  </div>
+               </Link>
+            ))
+         ) : (
+            <div className="p-4 text-xs text-gray-500">No upcoming exams found.</div>
+         )}
+      </div>
+   </div>
 
-           {/* 2. NEWS WIDGET (Dynamic if available) */}
-           {tabs.news && tabs.news.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                <div className="bg-[#1e293b] px-4 py-3 flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-white" />
-                    <h3 className="font-bold text-white text-sm uppercase tracking-wide">Trending News</h3>
-                </div>
-                <div className="divide-y divide-gray-100">
-                    {tabs.news.map((item, i) => (
-                        <div key={i} className="p-4 hover:bg-gray-50 cursor-pointer">
-                            <p className="text-sm text-gray-800 font-medium hover:text-blue-600 leading-snug line-clamp-2">{item.title}</p>
-                            <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
-                                <Clock className="w-3 h-3" /> {item.date}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-           )}
-
-           {/* 3. AD BANNER 1 (Square) */}
-           <div className="w-full aspect-square bg-gray-100 border border-gray-200 rounded-xl flex flex-col items-center justify-center text-center p-4">
-              <span className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Advertisement</span>
-              <span className="text-[10px] text-gray-300 mt-2">300x250 Square</span>
-           </div>
-
-           {/* 4. PYQ (Previous Year Questions) */}
-           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-              <div className="bg-[#1e293b] px-4 py-3 flex items-center gap-2">
-                 <Download className="w-4 h-4 text-white" />
-                 <h3 className="font-bold text-white text-sm uppercase tracking-wide">Previous Papers</h3>
-              </div>
-              <div className="p-4 space-y-3">
-                 {[2025, 2024, 2023].map((year) => (
-                    <div key={year} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-blue-50 group cursor-pointer transition-colors">
-                       <div className="flex items-center gap-3">
-                          <div className="bg-red-100 p-2 rounded text-red-600">
-                             <FileText className="w-4 h-4" />
-                          </div>
-                          <div>
-                             <div className="text-sm font-bold text-gray-800 group-hover:text-blue-700">{course.title} {year}</div>
-                             <div className="text-[10px] text-gray-500">PDF • 2.4 MB</div>
-                          </div>
-                       </div>
-                       <Download className="w-4 h-4 text-gray-400 group-hover:text-blue-600" />
-                    </div>
-                 ))}
-                 <button className="w-full text-center text-xs font-bold text-blue-600 mt-2 hover:underline">View All Papers</button>
-              </div>
-           </div>
-
-           {/* 5. ACCEPTING UNIVERSITIES (*** STICKY START ***) */}
-           <div className="sticky top-32 z-30 space-y-6">
-              
-              {sidebarUniversities.length > 0 && (
-                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                    <div className="bg-[#1e293b] px-4 py-3 flex items-center justify-between">
-                       <h3 className="font-bold text-white text-sm uppercase tracking-wide flex items-center gap-2">
-                          <Building2 className="w-4 h-4" /> Participating Colleges
-                       </h3>
-                    </div>
-                    <div className="p-5">
-                       {/* Count Header */}
-                       <div className="text-center mb-6 border-b border-gray-100 pb-6">
-                          <div className="text-3xl font-bold text-gray-900 mb-1">
-                             {tabs.participating_universities?.groups.reduce((acc, g) => acc + g.names.length, 0) || "50+"}
-                          </div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Universities Accepting Score</p>
-                       </div>
-
-                       {/* Top Colleges List */}
-                       <div className="mb-6">
-                           <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Top Universities</div>
-                           <div className="space-y-3">
-                              {sidebarUniversities.map((uni, i) => (
-                                 <div key={i} className="flex items-center gap-3 text-sm text-gray-700 group cursor-pointer hover:text-blue-600">
-                                    <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors shrink-0">
-                                       {uni.substring(0, 1)}
-                                    </div>
-                                    <span className="font-medium truncate leading-tight">{uni}</span>
-                                 </div>
-                              ))}
-                           </div>
-                       </div>
-                       
-                       <a href="#universities" className="block w-full bg-[#1e293b] text-white text-sm font-bold py-2.5 rounded-lg text-center hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md">
-                          View All Colleges
-                       </a>
-                    </div>
-                 </div>
-              )}
-
-              {/* 6. AD BANNER 2 */}
-              <div className="w-full h-[300px] bg-white border border-gray-200 rounded-xl flex flex-col items-center justify-center text-center p-4">
-                 <span className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Advertisement</span>
-                 <span className="text-[10px] text-gray-300 mt-2">300x300 Vertical</span>
-              </div>
-
-              {/* 7. SIMILAR EXAMS */}
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                 <div className="bg-[#1e293b] px-4 py-3 border-b border-gray-100">
-                    <h3 className="font-bold text-white text-sm">Similar Exams</h3>
-                 </div>
-                 <div className="divide-y divide-gray-100">
-                    {similarExamsList.length > 0 ? (
-                       similarExamsList.map((exam, i) => (
-                          <Link href={`/exams/${exam.slug}`} key={i} className="p-3 flex items-center justify-between hover:bg-gray-50 cursor-pointer group">
-                             <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600">{exam.title}</span>
-                             <ChevronRight className="w-4 h-4 text-gray-400" />
-                          </Link>
-                       ))
-                    ) : (
-                       <div className="p-3 text-xs text-gray-500">No similar exams found.</div>
-                    )}
-                 </div>
-              </div>
-
-           </div> 
-           {/* End Sticky Container */}
-
+   {/* 2. NEWS WIDGET (Dynamic if available) */}
+   {tabs.news && tabs.news.length > 0 && (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div className="bg-[#1e293b] px-4 py-3 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-white" />
+            <h3 className="font-bold text-white text-sm uppercase tracking-wide">Trending News</h3>
         </div>
+        <div className="divide-y divide-gray-100">
+            {tabs.news.map((item, i) => (
+                <div key={i} className="p-4 hover:bg-gray-50 cursor-pointer">
+                    <p className="text-sm text-gray-800 font-medium hover:text-blue-600 leading-snug line-clamp-2">{item.title}</p>
+                    <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
+                        <Clock className="w-3 h-3" /> {item.date}
+                    </div>
+                </div>
+            ))}
+        </div>
+    </div>
+   )}
+
+   {/* 3. AD BANNER 1 (Square) */}
+   <div className="w-full aspect-square bg-gray-100 border border-gray-200 rounded-xl flex flex-col items-center justify-center text-center p-4">
+      <span className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Advertisement</span>
+      <span className="text-[10px] text-gray-300 mt-2">300x250 Square</span>
+   </div>
+
+   {/* 4. PYQ (Previous Year Questions) */}
+   <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+      <div className="bg-[#1e293b] px-4 py-3 flex items-center gap-2">
+         <Download className="w-4 h-4 text-white" />
+         <h3 className="font-bold text-white text-sm uppercase tracking-wide">Previous Papers</h3>
+      </div>
+      <div className="p-4 space-y-3">
+         {[2025, 2024, 2023].map((year) => (
+            <div key={year} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-blue-50 group cursor-pointer transition-colors">
+               <div className="flex items-center gap-3">
+                  <div className="bg-red-100 p-2 rounded text-red-600">
+                     <FileText className="w-4 h-4" />
+                  </div>
+                  <div>
+                     <div className="text-sm font-bold text-gray-800 group-hover:text-blue-700">{course.title} {year}</div>
+                     <div className="text-[10px] text-gray-500">PDF • 2.4 MB</div>
+                  </div>
+               </div>
+               <Download className="w-4 h-4 text-gray-400 group-hover:text-blue-600" />
+            </div>
+         ))}
+         <button className="w-full text-center text-xs font-bold text-blue-600 mt-2 hover:underline">View All Papers</button>
+      </div>
+   </div>
+
+   {/* 5. ACCEPTING UNIVERSITIES (*** STICKY START ***) */}
+   <div className="sticky top-[280px] z-30 space-y-6">
+      
+      {sidebarUniversities.length > 0 && (
+         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+            <div className="bg-[#1e293b] px-4 py-3 flex items-center justify-between">
+               <h3 className="font-bold text-white text-sm uppercase tracking-wide flex items-center gap-2">
+                  <Building2 className="w-4 h-4" /> Participating Colleges
+               </h3>
+            </div>
+            <div className="p-5">
+               {/* Count Header */}
+               <div className="text-center mb-6 border-b border-gray-100 pb-6">
+                  <div className="text-3xl font-bold text-gray-900 mb-1">
+                     {tabs.participating_universities?.groups.reduce((acc, g) => acc + g.names.length, 0) || "50+"}
+                  </div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Universities Accepting Score</p>
+               </div>
+
+               {/* Top Colleges List */}
+               <div className="mb-6">
+                   <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Top Universities</div>
+                   <div className="space-y-3">
+                      {sidebarUniversities.map((uni, i) => (
+                         <div key={i} className="flex items-center gap-3 text-sm text-gray-700 group cursor-pointer hover:text-blue-600">
+                            <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors shrink-0">
+                               {uni.substring(0, 1)}
+                            </div>
+                            <span className="font-medium truncate leading-tight">{uni}</span>
+                         </div>
+                      ))}
+                   </div>
+               </div>
+               
+               <a href="#universities" className="block w-full bg-[#1e293b] text-white text-sm font-bold py-2.5 rounded-lg text-center hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md">
+                  View All Colleges
+               </a>
+            </div>
+         </div>
+      )}
+
+      {/* 6. AD BANNER 2 */}
+      <div className="w-full h-[300px] bg-white border border-gray-200 rounded-xl flex flex-col items-center justify-center text-center p-4">
+         <span className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Advertisement</span>
+         <span className="text-[10px] text-gray-300 mt-2">300x300 Vertical</span>
+      </div>
+
+      {/* 7. SIMILAR EXAMS */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+         <div className="bg-[#1e293b] px-4 py-3 border-b border-gray-100">
+            <h3 className="font-bold text-white text-sm">Similar Exams</h3>
+         </div>
+         <div className="divide-y divide-gray-100">
+            {similarExamsList.length > 0 ? (
+               similarExamsList.map((exam, i) => (
+                  <Link href={`/exams/${exam.slug}`} key={i} className="p-3 flex items-center justify-between hover:bg-gray-50 cursor-pointer group">
+                     <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600">{exam.title}</span>
+                     <ChevronRight className="w-4 h-4 text-gray-400" />
+                  </Link>
+               ))
+            ) : (
+               <div className="p-3 text-xs text-gray-500">No similar exams found.</div>
+            )}
+         </div>
+      </div>
+
+   </div> 
+   {/* End Sticky Container */}
+
+</div>
 
         {/* Floating Desktop CTA */}
 <div className="hidden md:flex fixed bottom-8 right-8 z-50 animate-bounce-subtle">

@@ -24,7 +24,7 @@ export default async function EditExamPage({
   let questionFK = 'module_id'
 
   if (currentType === 'mock') {
-    table = 'exams'
+    table = 'mock_tests'
     questionFK = 'exam_id'
   } else if (currentType === 'practice') {
     table = 'practice_tests'
@@ -40,11 +40,27 @@ export default async function EditExamPage({
   if (!item) return notFound()
 
   // 2. Fetch Existing Questions for this Exam
-  const { data: questions } = await supabase
-    .from('questions')
-    .select('id, text, order_index')
-    .eq(questionFK, id)
-    .order('order_index', { ascending: true })
+  let questions = [];
+
+  if (currentType === 'mock') {
+    // Mock tests use the junction table: mock_test_questions
+    const { data } = await supabase
+      .from('questions')
+      .select('id, text, order_index, mock_test_questions!inner(mock_test_id)')
+      .eq('mock_test_questions.mock_test_id', id)
+      .order('order_index', { ascending: true })
+      
+    questions = data || []
+  } else {
+    // Prep and Practice use direct foreign keys on the questions table
+    const { data } = await supabase
+      .from('questions')
+      .select('id, text, order_index')
+      .eq(questionFK, id)
+      .order('order_index', { ascending: true })
+      
+    questions = data || []
+  }
 
   // 3. Fetch Full Hierarchy for Dropdown (Streams -> Courses -> Subjects)
   const { data: streams } = await supabase

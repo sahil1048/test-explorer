@@ -669,40 +669,47 @@ export default function ContentManager({ streams }: { streams: Stream[] }) {
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                  {/* --- CHANGED: LINK TO EDIT PAGE INSTEAD OF MODAL --- */}
-                                  <Link
-                                    href={`/dashboard/admin/subjects/${sub.id}/edit`}
-                                    className="p-1.5 text-gray-300 hover:text-blue-600 transition-colors"
-                                  >
-                                    <Pencil className="w-3 h-3" />
-                                  </Link>
+  {/* REVERTED TO MODAL EDITING */}
+  <button
+    onClick={() =>
+      setModal({
+        type: "subject",
+        mode: "edit",
+        data: sub,
+        parentId: exam.id,
+      })
+    }
+    className="p-1.5 text-gray-300 hover:text-blue-600 transition-colors"
+  >
+    <Pencil className="w-3 h-3" />
+  </button>
 
-                                  <form
-                                    onSubmit={async (e) => {
-                                      e.preventDefault();
-                                      const toastId = toast.loading("Deleting subject...");
-                                      const formData = new FormData(
-                                        e.currentTarget
-                                      );
-                                      const result = await deleteSubjectAction(formData) as any;
-                                      
-                                      toast.dismiss(toastId);
-                                      
-                                      if (result && 'error' in result)
-                                        toast.error(result.error);
-                                      else toast.success("Subject deleted");
-                                    }}
-                                  >
-                                    <input
-                                      type="hidden"
-                                      name="id"
-                                      value={sub.id}
-                                    />
-                                    <button className="p-1.5 text-gray-300 hover:text-red-600">
-                                      <Trash2 className="w-3 h-3" />
-                                    </button>
-                                  </form>
-                                </div>
+  <form
+    onSubmit={async (e) => {
+      e.preventDefault();
+      const toastId = toast.loading("Deleting subject...");
+      const formData = new FormData(
+        e.currentTarget
+      );
+      const result = await deleteSubjectAction(formData) as any;
+      
+      toast.dismiss(toastId);
+      
+      if (result && 'error' in result)
+        toast.error(result.error);
+      else toast.success("Subject deleted");
+    }}
+  >
+    <input
+      type="hidden"
+      name="id"
+      value={sub.id}
+    />
+    <button className="p-1.5 text-gray-300 hover:text-red-600">
+      <Trash2 className="w-3 h-3" />
+    </button>
+  </form>
+</div>
                               </div>
                             ))}
                           </div>

@@ -50,8 +50,8 @@ export default async function SuperAdminDashboard() {
   const kpis = [
     { label: 'Total Schools', value: schools.count || 0, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50', link: '/dashboard/admin/schools' },
     { label: 'Total Students', value: students.count || 0, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50', link: '/dashboard/admin/users' },
-    { label: 'Total Streams', value: streams.count || 0, icon: Layers, color: 'text-purple-600', bg: 'bg-purple-50', link: '/dashboard/admin/categories' },
-    { label: 'Mock Tests', value: mocktests.count || 0, icon: BookOpen, color: 'text-emerald-600', bg: 'bg-emerald-50', link: '/dashboard/admin/mock-tests' },
+    { label: 'Total Streams', value: streams.count || 0, icon: Layers, color: 'text-purple-600', bg: 'bg-purple-50', link: '/dashboard/admin/manage-content' },
+    { label: 'Mock Tests', value: mocktests.count || 0, icon: BookOpen, color: 'text-emerald-600', bg: 'bg-emerald-50', link: '/dashboard/admin/mocktest' },
     { label: 'Published Blogs', value: blogs.count || 0, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50', link: '/dashboard/admin/blogs' },
   ]
 

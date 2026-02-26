@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Lock } from 'lucide-react' // Added Lock icon
 import ProfileForm from './profile-form'
+import BackButton from '@/components/ui/back-button'
 
 export default async function ProfilePage() {
   const supabase = await createClient()
@@ -21,14 +22,13 @@ export default async function ProfilePage() {
       <div className="max-w-3xl mx-auto">
         
         {/* Header */}
+        <div className="max-w-3xl mx-auto">
+        
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Link 
-              href="/dashboard" 
-              className="p-2 bg-white rounded-full border border-gray-200 text-gray-500 hover:text-black transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
+            {/* Replaced <Link> with the Client BackButton */}
+            <BackButton />
             <h1 className="text-3xl font-black text-gray-900">My Profile</h1>
           </div>
           
@@ -40,6 +40,10 @@ export default async function ProfilePage() {
             <Lock className="w-4 h-4" /> Change Password
           </Link>
         </div>
+
+        </div>
+
+        {/* Profile Card */}
 
         <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
           {/* Cover / Header Banner */}

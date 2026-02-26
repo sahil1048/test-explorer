@@ -8,7 +8,8 @@ import {
   Trophy, 
   Calendar,
   ArrowRight,
-  Bell
+  Bell,
+  Mail,
 } from 'lucide-react'
 
 export default async function SchoolAdminOverview({ profile }: { profile: any }) {
