@@ -106,18 +106,26 @@ export default function UserNav({ profile, email }: UserNavProps) {
         {/* The 3 Main Options */}
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href={getDashboardLink()} className="cursor-pointer w-full flex items-center py-2.5">
-              <LayoutDashboard className="mr-3 h-4 w-4 text-gray-500" />
-              <span className="font-medium">Dashboard</span>
-            </Link>
-          </DropdownMenuItem>
-          
-          <DropdownMenuItem asChild>
-            <Link href="/profile" className="cursor-pointer w-full flex items-center py-2.5">
-              <User className="mr-3 h-4 w-4 text-gray-500" />
-              <span className="font-medium">Profile</span>
-            </Link>
-          </DropdownMenuItem>
+  <Link 
+    href={getDashboardLink()} 
+    className="cursor-pointer w-full flex items-center py-2.5"
+    onClick={() => toast("Navigating to Dashboard...", { duration: 1500 })}
+  >
+    <LayoutDashboard className="mr-3 h-4 w-4 text-gray-500" />
+    <span className="font-medium">Dashboard</span>
+  </Link>
+</DropdownMenuItem>
+
+<DropdownMenuItem asChild>
+  <Link 
+    href="/profile" 
+    className="cursor-pointer w-full flex items-center py-2.5"
+    onClick={() => toast("Navigating to Profile...", { duration: 1500 })}
+  >
+    <User className="mr-3 h-4 w-4 text-gray-500" />
+    <span className="font-medium">Profile</span>
+  </Link>
+</DropdownMenuItem>
         </DropdownMenuGroup>
         
         <DropdownMenuSeparator />

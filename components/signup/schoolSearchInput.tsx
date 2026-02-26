@@ -91,34 +91,26 @@ export default function SchoolSearchInput({ prefilledSchool, readOnly = false }:
           autoComplete="off"
         />
         
-        {/* Dropdown Suggestions (Only if NOT readOnly) */}
-        {!readOnly && isOpen && query.length > 0 && !selectedSchool && (
+        {/* Dropdown Suggestions: Now only renders if options.length > 0 */}
+        {!readOnly && isOpen && query.length > 0 && !selectedSchool && options.length > 0 && (
           <div className="absolute z-50 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 max-h-60 overflow-auto">
-            {options.length > 0 ? (
-              <>
-                <div className="p-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  Partner Schools
-                </div>
-                {options.map((school) => (
-                  <button
-                    key={school.id}
-                    type="button"
-                    className="w-full text-left px-4 py-3 hover:bg-orange-50 flex items-center gap-3 transition-colors"
-                    onClick={() => {
-                      setSelectedSchool(school)
-                      setIsOpen(false)
-                    }}
-                  >
-                    <School className="w-4 h-4 text-orange-500" />
-                    <span className="text-gray-700 font-medium">{school.name}</span>
-                  </button>
-                ))}
-              </>
-            ) : (
-                <div className="p-4 text-sm text-gray-500 text-center">
-                   No schools found. Leave blank if independent.
-                </div>
-            )}
+            <div className="p-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Partner Schools
+            </div>
+            {options.map((school) => (
+              <button
+                key={school.id}
+                type="button"
+                className="w-full text-left px-4 py-3 hover:bg-orange-50 flex items-center gap-3 transition-colors"
+                onClick={() => {
+                  setSelectedSchool(school)
+                  setIsOpen(false)
+                }}
+              >
+                <School className="w-4 h-4 text-orange-500" />
+                <span className="text-gray-700 font-medium">{school.name}</span>
+              </button>
+            ))}
           </div>
         )}
       </div>
