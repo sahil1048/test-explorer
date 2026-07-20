@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { Metadata } from "next"; // Import Metadata type
+import { ThemeProvider } from "@/components/providers/theme-provider";
 
 // 1. ADD METADATA EXPORT
 export const metadata: Metadata = {
@@ -36,8 +37,10 @@ export default async function RootLayout({
   // --- CHANGED LOGIC START ---
   const headersList = await headers();
   const schoolSlug = headersList.get("x-school-slug"); // Read from middleware
+  const currentPath = headersList.get("x-current-path") || "/";
+  const isDashboard = currentPath === "/dashboard" || currentPath.includes("/dashboard/");
 
-  let schoolData: any = null;
+  let schoolData: Awaited<ReturnType<typeof getSchoolBySubdomain>> = null;
   if (schoolSlug) {
     // We can reuse getSchoolBySubdomain if it just looks up by 'slug' column
     schoolData = await getSchoolBySubdomain(schoolSlug);
@@ -45,16 +48,20 @@ export default async function RootLayout({
   // --- CHANGED LOGIC END ---
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-gray-50 font-sans antialiased" suppressHydrationWarning={true}>
-        <SiteHeader 
-          school={schoolData} 
-          user={user} 
-          profile={profile} 
-          schoolSlug={schoolSlug} // Pass this so Header knows to format links
-        />
-        <main>{children}</main>
-        <Toaster />
+        <ThemeProvider>
+          {!isDashboard && (
+            <SiteHeader
+              school={schoolData}
+              user={user}
+              profile={profile}
+              schoolSlug={schoolSlug} // Pass this so Header knows to format links
+            />
+          )}
+          <main>{children}</main>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

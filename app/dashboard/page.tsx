@@ -23,8 +23,8 @@ export default async function DashboardPage() {
     redirect('/dashboard/admin')
   }
 
-  // 3. SHOW SCHOOL ADMIN VIEW
-  if (profile?.role === 'school_admin') {
+  // 3. SHOW SCHOOL WORKSPACE VIEW
+  if (profile?.role === 'school_admin' || profile?.role === 'teacher') {
     return <SchoolAdminOverview profile={profile} />
   }
 
