@@ -1,13 +1,6 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardRole } from '@/lib/auth/dashboard-guard'
 
 export default async function QuestionBankLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-  if (!profile || !['super_admin', 'school_admin', 'teacher'].includes(profile.role)) redirect('/dashboard')
-
+  await requireDashboardRole(['super_admin', 'school_admin', 'teacher'])
   return children
 }

@@ -1,12 +1,6 @@
-import { redirect } from 'next/navigation'
-import { AuthorizationError, requireSuperAdmin } from '@/lib/auth/require-role'
+import { requireDashboardRole } from '@/lib/auth/dashboard-guard'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  try {
-    await requireSuperAdmin()
-  } catch (error) {
-    if (error instanceof AuthorizationError) redirect('/dashboard')
-    throw error
-  }
+  await requireDashboardRole(['super_admin'])
   return children
 }
