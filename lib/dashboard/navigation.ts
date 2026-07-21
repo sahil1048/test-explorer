@@ -37,7 +37,7 @@ const schoolWorkspace: DashboardNavGroup[] = [
     label: 'Workspace',
     items: [
       { label: 'Question Bank', href: '/dashboard/question-bank', iconName: 'Database' },
-      { label: 'Assessments', href: '/dashboard/assessments', iconName: 'ClipboardCheck', badge: 'Soon' },
+      { label: 'Assessments', href: '/dashboard/assessments', iconName: 'ClipboardCheck' },
       { label: 'Analytics', href: '/dashboard/analytics', iconName: 'ChartNoAxesCombined', badge: 'Soon' },
       { label: 'Announcements', href: '/dashboard/communication/announcements', iconName: 'Megaphone' },
     ],

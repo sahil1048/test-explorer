@@ -11,6 +11,7 @@ export const PERMISSIONS = [
   'announcements.view',
   'announcements.manage',
   'assessments.view',
+  'assessments.manage',
   'analytics.view',
 ] as const
 
@@ -28,6 +29,7 @@ const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
     'announcements.view',
     'announcements.manage',
     'assessments.view',
+    'assessments.manage',
     'analytics.view',
   ],
   teacher: [
@@ -36,6 +38,7 @@ const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
     'people.view',
     'announcements.view',
     'assessments.view',
+    'assessments.manage',
     'analytics.view',
   ],
   student: ['organization.view', 'announcements.view', 'assessments.view'],
