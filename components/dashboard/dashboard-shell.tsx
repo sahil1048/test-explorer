@@ -1,6 +1,6 @@
 'use client'
 
-import { Menu, Search } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import UserNav from '@/components/Navbar/UserNav'
@@ -33,18 +33,13 @@ export default function DashboardShell({ children, groups, schoolData, basePath,
       <DashboardSidebar groups={groups} schoolData={schoolData} basePath={basePath} profile={profile} mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
       <div className="min-h-screen md:pl-[17rem]">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-gray-200/70 bg-white/85 px-4 backdrop-blur-xl dark:border-white/10 dark:bg-gray-950/85 sm:px-6 lg:px-8">
-          <button type="button" aria-label="Open navigation" onClick={() => setMobileOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl border border-gray-200 bg-white text-gray-600 md:hidden dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
+          <button type="button" aria-label="Open navigation" aria-expanded={mobileOpen} onClick={() => setMobileOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl border border-gray-200 bg-white text-gray-600 md:hidden dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
             <Menu className="h-4 w-4" />
           </button>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{pageTitle}</p>
             <p className="hidden text-xs text-gray-400 sm:block">{schoolData?.name || 'Test Explorer workspace'}</p>
           </div>
-          <button type="button" className="hidden h-9 w-56 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-left text-xs text-gray-400 transition hover:border-gray-300 lg:flex dark:border-white/10 dark:bg-white/5">
-            <Search className="h-3.5 w-3.5" />
-            Search workspace
-            <kbd className="ml-auto rounded border border-gray-200 px-1.5 py-0.5 text-[10px] dark:border-white/10">⌘K</kbd>
-          </button>
           <ThemeToggle />
           <NotificationCenter />
           <UserNav profile={profile} email={email} />

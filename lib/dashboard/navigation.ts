@@ -53,11 +53,21 @@ const schoolWorkspace: DashboardNavGroup[] = [
   },
 ]
 
+const teacherWorkspace: DashboardNavGroup[] = schoolWorkspace
+  .map((group) => ({
+    ...group,
+    items: group.items.filter((item) => ![
+      '/dashboard/intelligence',
+      '/dashboard/settings',
+      '/dashboard/school-settings/operations',
+    ].includes(item.href)),
+  }))
+  .filter((group) => group.items.length > 0)
+
 const studentWorkspace: DashboardNavGroup[] = [
   {
     items: [
       { label: 'Dashboard', href: '/dashboard', iconName: 'LayoutDashboard' },
-      { label: 'My Courses', href: '/dashboard/my-courses', iconName: 'GraduationCap' },
       { label: 'Assigned Assessments', href: '/dashboard/assigned-assessments', iconName: 'FileText' },
       { label: 'Updates', href: '/dashboard/communication', iconName: 'Megaphone' },
       { label: 'Calendar', href: '/dashboard/communication/calendar', iconName: 'CalendarRange' },
@@ -127,7 +137,9 @@ export function getDashboardNavigation(role: AppRole, basePath = ''): DashboardN
       ? parentWorkspace
       : role === 'student'
       ? studentWorkspace
-      : schoolWorkspace
+      : role === 'teacher'
+        ? teacherWorkspace
+        : schoolWorkspace
 
   return withBasePath(groups, basePath)
 }
