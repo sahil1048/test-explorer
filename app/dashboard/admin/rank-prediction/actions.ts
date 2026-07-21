@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { requireSuperAdmin } from '@/lib/auth/require-role'
 import { revalidatePath } from 'next/cache'
 import { parse } from 'csv-parse/sync'
 
@@ -13,6 +14,7 @@ interface RankCSVRow {
 }
 
 export async function uploadRankDataAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
 
   // CHANGED: Now accepting course_id
@@ -80,6 +82,7 @@ export async function uploadRankDataAction(formData: FormData) {
 }
 
 export async function deleteRankDataAction(courseId: string) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   
   // Delete by course_id

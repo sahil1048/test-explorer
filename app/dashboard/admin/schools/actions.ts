@@ -1,24 +1,17 @@
 'use server'
 
-import { createClient } from '@supabase/supabase-js' 
 import { revalidatePath } from 'next/cache'
+import { requireSuperAdmin } from '@/lib/auth/require-role'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function deleteSchoolAction(formData: FormData) {
+  await requireSuperAdmin()
   const schoolId = formData.get('schoolId') as string
 
   if (!schoolId) return { error: 'School ID is required for deletion.' }
 
   // 1. Initialize Admin Client (Required for deleting Auth users)
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    }
-  )
+  const supabaseAdmin = createAdminClient()
 
   try {
     // 2. Fetch all users linked to this school
@@ -65,17 +58,9 @@ export async function deleteSchoolAction(formData: FormData) {
 
 // --- UPDATE SCHOOL ---
 export async function updateSchoolAction(formData: FormData) {
+  await requireSuperAdmin()
   // 1. Initialize Admin Client (Bypasses RLS for smooth updates)
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    }
-  )
+  const supabaseAdmin = createAdminClient()
 
   const id = formData.get('id') as string
 
@@ -111,17 +96,9 @@ export async function updateSchoolAction(formData: FormData) {
 }
 
 export async function createSchoolAction(formData: FormData) {
+    await requireSuperAdmin()
     // 1. Initialize Admin Client (Bypasses RLS)
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!, 
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const supabaseAdmin = createAdminClient()
 
     // 2. Extract Form Data
     const name = (formData.get('name') as string || '').trim()

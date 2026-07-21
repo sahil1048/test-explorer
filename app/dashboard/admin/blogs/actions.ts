@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { requireSuperAdmin } from '@/lib/auth/require-role'
 import { revalidatePath } from 'next/cache'
 
 function parseTags(tagString: string): string[] {
@@ -32,6 +33,7 @@ async function uploadImage(file: File, supabase: any, bucket: string = 'blog-ima
 }
 
 export async function createBlogAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   
   // Basic Info
@@ -91,6 +93,7 @@ export async function createBlogAction(formData: FormData) {
 }
 
 export async function updateBlogAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const id = formData.get('id') as string
   
@@ -147,6 +150,7 @@ export async function updateBlogAction(formData: FormData) {
 }
 
 export async function deleteBlogAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const id = formData.get('id') as string
 

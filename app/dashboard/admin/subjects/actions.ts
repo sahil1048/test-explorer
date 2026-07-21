@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { requireSuperAdmin } from '@/lib/auth/require-role'
 import { revalidatePath } from 'next/cache'
 
 // -----------------------------------------------------------------------------
@@ -8,6 +9,7 @@ import { revalidatePath } from 'next/cache'
 // -----------------------------------------------------------------------------
 
 export async function createSubjectAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const title = formData.get('title') as string
   const course_id = formData.get('course_id') as string
@@ -20,6 +22,7 @@ export async function createSubjectAction(formData: FormData) {
 }
 
 export async function updateSubjectAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const id = formData.get('id') as string
   const title = formData.get('title') as string
@@ -33,6 +36,7 @@ export async function updateSubjectAction(formData: FormData) {
 }
 
 export async function deleteSubjectAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const id = formData.get('id') as string
 
@@ -113,6 +117,7 @@ async function getSubjectQuestions(subjectId: string) {
 // -----------------------------------------------------------------------------
 // Finds questions NOT assigned to a module yet and creates new modules for them.
 export async function generatePrepModulesAction(subjectId: string) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const CHUNK_SIZE = 10
 
@@ -180,6 +185,7 @@ export async function generatePrepModulesAction(subjectId: string) {
 // -----------------------------------------------------------------------------
 // Finds questions NOT assigned to a practice test yet and creates new sets.
 export async function generatePracticeTestsAction(subjectId: string) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const CHUNK_SIZE = 20
 
@@ -249,6 +255,7 @@ export async function generatePracticeTestsAction(subjectId: string) {
 // -----------------------------------------------------------------------------
 // Finds questions NOT used in any existing Subject Mock and creates NEW Active Mocks.
 export async function generateSubjectMockAction(subjectId: string) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const MOCK_SIZE = 50 
 

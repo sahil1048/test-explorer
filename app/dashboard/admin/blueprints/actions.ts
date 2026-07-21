@@ -1,12 +1,14 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { requireSuperAdmin } from '@/lib/auth/require-role'
 import { revalidatePath } from 'next/cache'
 
 // -----------------------------------------------------------------------------
 // 1. CREATE BLUEPRINT & GENERATE MOCKS
 // -----------------------------------------------------------------------------
 export async function createBlueprintAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   
   // 1. Parse Form Data
@@ -69,6 +71,7 @@ export async function createBlueprintAction(formData: FormData) {
 // 2. UPDATE BLUEPRINT & RE-GENERATE MOCKS
 // -----------------------------------------------------------------------------
 export async function updateBlueprintAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   
   const id = formData.get('id') as string
@@ -128,6 +131,7 @@ export async function updateBlueprintAction(formData: FormData) {
 }
 
 export async function deleteBlueprintAction(id: string) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const { error } = await supabase.from('mock_blueprints').delete().eq('id', id)
   if (error) return { error: error.message }

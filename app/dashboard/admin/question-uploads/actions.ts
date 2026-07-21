@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { requireSuperAdmin } from '@/lib/auth/require-role'
 import { revalidatePath } from 'next/cache'
 import { parse } from 'csv-parse/sync'
 // ✅ Import the new incremental generators
@@ -129,6 +130,7 @@ async function parseAndInsertQuestions(file: File, parentId: string) {
 
 // --- MAIN ACTION: Upload Bank & Trigger Auto-Generation ---
 export async function uploadQuestionBankAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   
   const title = formData.get('title') as string

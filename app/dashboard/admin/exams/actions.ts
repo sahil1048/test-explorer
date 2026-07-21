@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { requireSuperAdmin } from '@/lib/auth/require-role'
 import { revalidatePath } from 'next/cache'
 import { parse } from 'csv-parse/sync'
 
@@ -159,6 +160,7 @@ async function parseAndInsertQuestions(
 // --- ACTIONS ---
 
 export async function createExamAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   
   const type = formData.get('type') as 'prep' | 'mock' | 'practice'
@@ -199,6 +201,7 @@ export async function createExamAction(formData: FormData) {
 }
 
 export async function updateExamAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   
   const id = formData.get('id') as string
@@ -240,6 +243,7 @@ export async function updateExamAction(formData: FormData) {
 }
 
 export async function deleteExamAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const id = formData.get('id') as string
   const type = formData.get('type') as string
@@ -257,6 +261,7 @@ export async function deleteExamAction(formData: FormData) {
 }
 
 export async function deleteQuestionAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const questionId = formData.get('question_id') as string
   const examId = formData.get('exam_id') as string
@@ -273,6 +278,7 @@ export async function deleteQuestionAction(formData: FormData) {
 }
 
 export async function deleteAllQuestionsAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const examId = formData.get('exam_id') as string
   const type = formData.get('exam_type') as string

@@ -1,11 +1,13 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { requireSuperAdmin } from '@/lib/auth/require-role'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 // FETCH ALL EXAMS
 export async function getExamLandingPages() {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('courses')
@@ -18,6 +20,7 @@ export async function getExamLandingPages() {
 
 // FETCH SINGLE EXAM DETAILS
 export async function getExamDetails(id: string) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('courses')
@@ -31,6 +34,7 @@ export async function getExamDetails(id: string) {
 
 // UPDATE EXAM DETAILS (The heavy lifter)
 export async function updateExamDetails(id: string, details: any) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   
   // We only update the 'details' jsonb column
@@ -48,6 +52,7 @@ export async function updateExamDetails(id: string, details: any) {
 
 // DELETE EXAM
 export async function deleteExam(id: string) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const { error } = await supabase.from('courses').delete().eq('id', id)
 
@@ -59,6 +64,7 @@ export async function deleteExam(id: string) {
 
 // CREATE NEW EXAM STUB
 export async function createExamStub(title: string, slug: string) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('courses')

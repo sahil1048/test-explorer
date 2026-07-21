@@ -1,10 +1,12 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { requireSuperAdmin } from '@/lib/auth/require-role'
 import { revalidatePath } from 'next/cache'
 
 // Create Stream
 export async function createStreamAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   
   const title = formData.get('title') as string
@@ -25,6 +27,7 @@ export async function createStreamAction(formData: FormData) {
 
 // Update Stream
 export async function updateStreamAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   
   const id = formData.get('id') as string
@@ -47,6 +50,7 @@ export async function updateStreamAction(formData: FormData) {
 
 // Delete Stream
 export async function deleteStreamAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const id = formData.get('id') as string
 
@@ -57,4 +61,3 @@ export async function deleteStreamAction(formData: FormData) {
   revalidatePath('/dashboard/admin/streams')
   return { success: true }
 }
-

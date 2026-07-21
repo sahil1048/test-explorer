@@ -1,10 +1,12 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { requireSuperAdmin } from '@/lib/auth/require-role'
 import { revalidatePath } from 'next/cache'
 
 // Create Course
 export async function createCourseAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   
   const title = formData.get('title') as string
@@ -29,6 +31,7 @@ export async function createCourseAction(formData: FormData) {
 
 // Update Course
 export async function updateCourseAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   
   const id = formData.get('id') as string
@@ -55,6 +58,7 @@ export async function updateCourseAction(formData: FormData) {
 
 // Delete Course
 export async function deleteCourseAction(formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   const id = formData.get('id') as string
 

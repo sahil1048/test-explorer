@@ -1,22 +1,12 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createDirectClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 function getAdminClient() {
-  return createDirectClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    }
-  )
+  return createAdminClient()
 }
 
 async function getRedirectPath(userId: string) {
@@ -48,7 +38,7 @@ async function getRedirectPath(userId: string) {
       if (candidate && !SYSTEM_ROUTES.includes(candidate)) {
         schoolPrefix = `/${candidate}`
       }
-    } catch (e) {
+    } catch {
     }
   }
 
@@ -95,9 +85,6 @@ export async function login(formData: FormData) {
 }
 
 export async function signup(formData: FormData) {
-  const rawData = Object.fromEntries(formData.entries())
-  console.log("SERVER ACTION: Signup received data:", rawData)
-  
   // 1. EXTRACT CUSTOM REDIRECT (For Ad Funnel)
   const customRedirect = formData.get('redirectTo') as string
 
@@ -169,8 +156,6 @@ export async function signup(formData: FormData) {
       if (profileError) {
         console.error("CRITICAL: Profile creation failed:", profileError)
         return { error: "Profile creation failed: " + profileError.message }
-      } else {
-        console.log("SUCCESS: Profile created for user", data.user.id)
       }
     }
   } catch (err) {

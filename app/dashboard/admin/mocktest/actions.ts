@@ -1,10 +1,12 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { requireSuperAdmin } from '@/lib/auth/require-role'
 import { revalidatePath } from 'next/cache'
 
 // 1. Delete Single Mock Test
 export async function deleteMockTest(id: string) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   
   // Auth check
@@ -21,6 +23,7 @@ export async function deleteMockTest(id: string) {
 
 // 2. Update Mock Test Details
 export async function updateMockTest(id: string, formData: FormData) {
+  await requireSuperAdmin()
   const supabase = await createClient()
   
   // Auth check
@@ -43,6 +46,7 @@ export async function updateMockTest(id: string, formData: FormData) {
 
 // 3. NEW: Bulk Delete Mock Tests (For "Delete All" button)
 export async function deleteMockTestsAction(mockIds: string[]) {
+  await requireSuperAdmin()
   const supabase = await createClient()
 
   // Auth check

@@ -10,6 +10,20 @@ export async function submitMockTestAction(
 ) {
   const supabase = await createClient()
 
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) return { error: 'Authentication required.' }
+
+  const { data: attempt, error: attemptError } = await supabase
+    .from('exam_attempts')
+    .select('id, user_id, mock_test_id, status')
+    .eq('id', attemptId)
+    .eq('user_id', user.id)
+    .eq('mock_test_id', examId)
+    .eq('status', 'in_progress')
+    .maybeSingle()
+
+  if (attemptError || !attempt) return { error: 'Attempt not found or already submitted.' }
+
   // 1. Fetch Dynamic Marking Scheme from mock_tests table
   const { data: mockData, error: mockError } = await supabase
     .from('mock_tests')
@@ -43,8 +57,8 @@ export async function submitMockTestAction(
   questions.forEach(q => {
     const userAnswerId = answers[q.id]
     if (userAnswerId) {
-      // @ts-ignore
-      const correctOption = q.options.find(o => o.is_correct)
+      const options = q.options as unknown as Array<{ id: string; is_correct: boolean }>
+      const correctOption = options.find((option) => option.is_correct)
       
       if (correctOption && correctOption.id === userAnswerId) {
         correct++
@@ -67,6 +81,9 @@ export async function submitMockTestAction(
       completed_at: new Date().toISOString()
     })
     .eq('id', attemptId)
+    .eq('user_id', user.id)
+    .eq('mock_test_id', examId)
+    .eq('status', 'in_progress')
 
   if (error) return { error: error.message }
 
