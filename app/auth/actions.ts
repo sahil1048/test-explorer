@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getSafeInternalPath } from '@/lib/security/internal-redirect'
 
 function getAdminClient() {
   return createAdminClient()
@@ -60,7 +61,7 @@ export async function login(formData: FormData) {
   const password = formData.get('password') as string
   
   // Optional: support redirect on login too if you decide to add the hidden input there
-  const customRedirect = formData.get('redirectTo') as string
+  const customRedirect = getSafeInternalPath(formData.get('redirectTo'))
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -74,7 +75,7 @@ export async function login(formData: FormData) {
   revalidatePath('/', 'layout')
   
   // 1. Check for custom redirect (Ad Funnel)
-  if (customRedirect && customRedirect.startsWith('/')) {
+  if (customRedirect) {
     return { success: true, redirectUrl: customRedirect }
   }
 
@@ -86,7 +87,7 @@ export async function login(formData: FormData) {
 
 export async function signup(formData: FormData) {
   // 1. EXTRACT CUSTOM REDIRECT (For Ad Funnel)
-  const customRedirect = formData.get('redirectTo') as string
+  const customRedirect = getSafeInternalPath(formData.get('redirectTo'))
 
   // Keep Service Role Key Check
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -167,7 +168,7 @@ export async function signup(formData: FormData) {
   
   if (userId) {
     // 2. CHECK CUSTOM REDIRECT FIRST
-    if (customRedirect && customRedirect.startsWith('/')) {
+    if (customRedirect) {
         return { success: true, redirectUrl: customRedirect }
     }
 
