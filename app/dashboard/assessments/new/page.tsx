@@ -1,2 +1,3 @@
 import AssessmentWizard from '@/features/assessment-builder/components/assessment-wizard'
-export default function NewAssessmentPage() { return <AssessmentWizard /> }
+import AssistPanel from '@/features/productivity/components/assist-panel'
+export default function NewAssessmentPage() { return <div className="space-y-5"><AssistPanel title="Paper preparation" actions={[{key:'draft',label:'Generate assessment draft'},{key:'chapters',label:'Draft from chapters'},{key:'outcomes',label:'Draft from outcomes'},{key:'balance',label:'Balance difficulty'},{key:'variants',label:'Plan variants'},{key:'recommend',label:'Recommend duration & marks'},{key:'coverage',label:'Analyze coverage'}]}/><AssessmentWizard /></div> }

@@ -1,2 +1,3 @@
 import AssessmentWizard from '@/features/assessment-builder/components/assessment-wizard'
-export default async function EditAssessmentPage({ params }: { params: Promise<{ assessmentId: string }> }) { return <AssessmentWizard assessmentId={(await params).assessmentId} /> }
+import AssistPanel from '@/features/productivity/components/assist-panel'
+export default async function EditAssessmentPage({ params }: { params: Promise<{ assessmentId: string }> }) { return <div className="space-y-5"><AssistPanel title="Paper preparation" actions={[{key:'balance',label:'Balance difficulty'},{key:'variants',label:'Plan variants'},{key:'recommend',label:'Recommend duration & marks'},{key:'duplicates',label:'Check duplicates'},{key:'coverage',label:'Analyze coverage'}]}/><AssessmentWizard assessmentId={(await params).assessmentId} /></div> }

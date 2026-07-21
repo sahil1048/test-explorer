@@ -1,2 +1,3 @@
 import ResultsWorkspace from '@/features/evaluation/components/results-workspace'
-export default async function AssessmentResultsPage({params}:{params:Promise<{assessmentId:string}>}){return <ResultsWorkspace assessmentId={(await params).assessmentId}/>}
+import AssistPanel from '@/features/productivity/components/assist-panel'
+export default async function AssessmentResultsPage({params}:{params:Promise<{assessmentId:string}>}){return <div className="space-y-5"><AssistPanel title="Evidence-based action drafts" actions={[{key:'weak',label:'Summarize weak topics'},{key:'misconceptions',label:'Find misconceptions'},{key:'class',label:'Draft class summary'},{key:'revision',label:'Draft revision plan'},{key:'reteach',label:'Suggest reteach topics'},{key:'followup',label:'Draft follow-up assessment'}]}/><ResultsWorkspace assessmentId={(await params).assessmentId}/></div>}

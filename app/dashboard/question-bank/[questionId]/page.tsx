@@ -1,2 +1,3 @@
 import QuestionEditor from '@/features/question-editor/components/question-editor'
-export default async function EditQuestionPage({ params }: { params: Promise<{ questionId: string }> }) { return <QuestionEditor questionId={(await params).questionId} /> }
+import AssistPanel from '@/features/productivity/components/assist-panel'
+export default async function EditQuestionPage({ params }: { params: Promise<{ questionId: string }> }) { return <div className="space-y-5"><AssistPanel actions={[{key:'rewrite',label:'Rewrite'},{key:'simplify',label:'Simplify language'},{key:'difficulty',label:'Adjust difficulty'},{key:'translate',label:'Translate'},{key:'explanation',label:'Draft explanation'},{key:'hints',label:'Draft hints'},{key:'distractors',label:'Suggest distractors'},{key:'duplicates',label:'Check duplicates'},{key:'quality',label:'Review quality'}]}/><QuestionEditor questionId={(await params).questionId} /></div> }
