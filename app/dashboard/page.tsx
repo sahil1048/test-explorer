@@ -24,6 +24,10 @@ export default async function DashboardPage() {
     redirect('/dashboard/admin')
   }
 
+  if (profile?.role === 'parent') {
+    redirect('/dashboard/parent')
+  }
+
   // 3. SHOW SCHOOL WORKSPACE VIEW
   if (profile?.role === 'teacher') {
     return <TeacherOverview profile={profile} />

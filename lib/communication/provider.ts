@@ -1,0 +1,3 @@
+import type { DeliveryChannel,DeliveryRecipient,DeliveryResult,ResolvedMessage } from './types'
+export interface NotificationProvider {readonly key:string;readonly channel:DeliveryChannel;send(message:ResolvedMessage,recipient:DeliveryRecipient,signal?:AbortSignal):Promise<DeliveryResult>}
+export class NotificationProviderRegistry {private providers=new Map<DeliveryChannel,NotificationProvider>();register(provider:NotificationProvider){this.providers.set(provider.channel,provider)}get(channel:DeliveryChannel){const provider=this.providers.get(channel);if(!provider)throw new Error(`No notification provider configured for ${channel}`);return provider}available(){return [...this.providers.values()].map(item=>({key:item.key,channel:item.channel}))}}

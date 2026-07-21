@@ -42,6 +42,7 @@ const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
     'analytics.view',
   ],
   student: ['organization.view', 'announcements.view', 'assessments.view'],
+  parent: ['organization.view', 'announcements.view', 'assessments.view'],
 }
 
 export function hasPermission(role: AppRole, permission: Permission) {

@@ -40,7 +40,8 @@ const schoolWorkspace: DashboardNavGroup[] = [
       { label: 'Assessments', href: '/dashboard/assessments', iconName: 'ClipboardCheck' },
       { label: 'Evaluation', href: '/dashboard/evaluation', iconName: 'ChartNoAxesCombined' },
       { label: 'Intelligence', href: '/dashboard/intelligence', iconName: 'ChartNoAxesCombined' },
-      { label: 'Announcements', href: '/dashboard/communication/announcements', iconName: 'Megaphone' },
+      { label: 'Communication', href: '/dashboard/communication', iconName: 'Megaphone' },
+      { label: 'Calendar', href: '/dashboard/communication/calendar', iconName: 'CalendarRange' },
     ],
   },
   {
@@ -55,6 +56,19 @@ const studentWorkspace: DashboardNavGroup[] = [
       { label: 'Dashboard', href: '/dashboard', iconName: 'LayoutDashboard' },
       { label: 'My Courses', href: '/dashboard/my-courses', iconName: 'GraduationCap' },
       { label: 'Assigned Assessments', href: '/dashboard/assigned-assessments', iconName: 'FileText' },
+      { label: 'Updates', href: '/dashboard/communication', iconName: 'Megaphone' },
+      { label: 'Calendar', href: '/dashboard/communication/calendar', iconName: 'CalendarRange' },
+    ],
+  },
+]
+
+const parentWorkspace: DashboardNavGroup[] = [
+  {
+    items: [
+      { label: 'Family Dashboard', href: '/dashboard/parent', iconName: 'LayoutDashboard' },
+      { label: 'Updates', href: '/dashboard/communication', iconName: 'Megaphone' },
+      { label: 'Calendar', href: '/dashboard/communication/calendar', iconName: 'CalendarRange' },
+      { label: 'Preferences', href: '/dashboard/communication/preferences', iconName: 'Settings' },
     ],
   },
 ]
@@ -103,7 +117,9 @@ function withBasePath(groups: DashboardNavGroup[], basePath: string) {
 export function getDashboardNavigation(role: AppRole, basePath = ''): DashboardNavGroup[] {
   const groups = role === 'super_admin'
     ? platformWorkspace
-    : role === 'student'
+    : role === 'parent'
+      ? parentWorkspace
+      : role === 'student'
       ? studentWorkspace
       : schoolWorkspace
 
