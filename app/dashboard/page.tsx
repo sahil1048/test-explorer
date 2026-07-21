@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 // Components
 import SchoolAdminOverview from '@/components/dashboard/school-overview'
 import StudentOverview from '@/components/dashboard/student-overview'
+import TeacherOverview from '@/features/teacher-dashboard/components/teacher-overview'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -24,7 +25,11 @@ export default async function DashboardPage() {
   }
 
   // 3. SHOW SCHOOL WORKSPACE VIEW
-  if (profile?.role === 'school_admin' || profile?.role === 'teacher') {
+  if (profile?.role === 'teacher') {
+    return <TeacherOverview profile={profile} />
+  }
+
+  if (profile?.role === 'school_admin') {
     return <SchoolAdminOverview profile={profile} />
   }
 
