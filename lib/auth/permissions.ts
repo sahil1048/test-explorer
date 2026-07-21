@@ -13,6 +13,14 @@ export const PERMISSIONS = [
   'assessments.view',
   'assessments.manage',
   'analytics.view',
+  'billing.view',
+  'billing.manage',
+  'integrations.view',
+  'integrations.manage',
+  'security.view',
+  'security.manage',
+  'audit.view',
+  'roles.manage',
 ] as const
 
 export type Permission = (typeof PERMISSIONS)[number]
@@ -31,6 +39,14 @@ const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
     'assessments.view',
     'assessments.manage',
     'analytics.view',
+    'billing.view',
+    'billing.manage',
+    'integrations.view',
+    'integrations.manage',
+    'security.view',
+    'security.manage',
+    'audit.view',
+    'roles.manage',
   ],
   teacher: [
     'organization.view',

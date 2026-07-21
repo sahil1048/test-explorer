@@ -1,0 +1,6 @@
+import Link from 'next/link'
+import { ArrowLeft, Database, Search } from 'lucide-react'
+
+export function OperationsSection({ title, description, items = [] }: { title: string; description: string; items?: string[] }) {
+  return <div className="mx-auto max-w-6xl space-y-6"><Link href="/dashboard/admin/operations" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900"><ArrowLeft className="h-4 w-4"/>SaaS operations</Link><div><h1 className="text-3xl font-bold tracking-tight text-slate-950">{title}</h1><p className="mt-2 text-slate-500">{description}</p></div><div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3"><Search className="h-4 w-4 text-slate-400"/><span className="text-sm text-slate-400">Search and filters become active when the operational repository is connected.</span></div><div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center"><Database className="mx-auto h-6 w-6 text-slate-400"/><h2 className="mt-3 font-semibold text-slate-900">No operational records yet</h2><p className="mx-auto mt-1 max-w-xl text-sm text-slate-500">{items.length ? `This workspace will contain ${items.join(', ')}.` : 'Apply the Phase 9 migration and connect the repository to begin.'}</p></div></div>
+}

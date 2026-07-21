@@ -46,7 +46,10 @@ const schoolWorkspace: DashboardNavGroup[] = [
   },
   {
     label: 'Organization',
-    items: [{ label: 'Settings', href: '/dashboard/settings', iconName: 'Settings' }],
+    items: [
+      { label: 'Settings', href: '/dashboard/settings', iconName: 'Settings' },
+      { label: 'Operations & Billing', href: '/dashboard/school-settings/operations', iconName: 'ShieldCheck' },
+    ],
   },
 ]
 
@@ -75,7 +78,10 @@ const parentWorkspace: DashboardNavGroup[] = [
 
 const platformWorkspace: DashboardNavGroup[] = [
   {
-    items: [{ label: 'Platform Overview', href: '/dashboard/admin', iconName: 'LayoutDashboard' }],
+    items: [
+      { label: 'Platform Overview', href: '/dashboard/admin', iconName: 'LayoutDashboard' },
+      { label: 'SaaS Operations', href: '/dashboard/admin/operations', iconName: 'ShieldCheck' },
+    ],
   },
   {
     label: 'Organizations',
