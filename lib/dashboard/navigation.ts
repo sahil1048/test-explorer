@@ -53,7 +53,7 @@ const studentWorkspace: DashboardNavGroup[] = [
     items: [
       { label: 'Dashboard', href: '/dashboard', iconName: 'LayoutDashboard' },
       { label: 'My Courses', href: '/dashboard/my-courses', iconName: 'GraduationCap' },
-      { label: 'My Exams', href: '/dashboard/exams', iconName: 'FileText' },
+      { label: 'Assigned Assessments', href: '/dashboard/assigned-assessments', iconName: 'FileText' },
     ],
   },
 ]

@@ -1,0 +1,3 @@
+import AssessmentPlayer from '@/features/assessment-player/components/assessment-player'
+import type { DeliveryAssessment } from '@/features/student-assessment/types'
+export default async function AssessmentAttemptPage({params}:{params:Promise<{assessmentId:string;attemptId:string}>}){const {assessmentId}=await params;const assessment:DeliveryAssessment={id:assessmentId,title:'Assessment',subject:'',teacher:'',durationMinutes:60,totalMarks:0,instructions:[],calculatorAllowed:false,fullscreenRequired:false,resultPolicy:'hidden'};return <AssessmentPlayer assessment={assessment} questions={[]}/>}
