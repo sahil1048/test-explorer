@@ -112,6 +112,11 @@ export default async function SchoolAdminOverview({ profile }: SchoolAdminOvervi
             Continue setup <ArrowRight className="h-4 w-4" />
           </Link>
         )}
+        {academicsConfigured && canManage && (
+          <Link href="/dashboard/intelligence" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gray-950 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100">
+            Open intelligence center <ArrowRight className="h-4 w-4" />
+          </Link>
+        )}
       </section>
 
       <section>

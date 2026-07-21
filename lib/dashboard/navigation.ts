@@ -39,7 +39,7 @@ const schoolWorkspace: DashboardNavGroup[] = [
       { label: 'Question Bank', href: '/dashboard/question-bank', iconName: 'Database' },
       { label: 'Assessments', href: '/dashboard/assessments', iconName: 'ClipboardCheck' },
       { label: 'Evaluation', href: '/dashboard/evaluation', iconName: 'ChartNoAxesCombined' },
-      { label: 'Analytics', href: '/dashboard/analytics', iconName: 'ChartNoAxesCombined', badge: 'Soon' },
+      { label: 'Intelligence', href: '/dashboard/intelligence', iconName: 'ChartNoAxesCombined' },
       { label: 'Announcements', href: '/dashboard/communication/announcements', iconName: 'Megaphone' },
     ],
   },
