@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { Phone, MapPin, ArrowLeft, User, GraduationCap } from 'lucide-react'
+import { Phone, MapPin, ArrowLeft, User, GraduationCap, Calendar, Clock } from 'lucide-react'
 import Link from 'next/link'
 import EnrollmentManager from '@/components/admin/enrollment-manager'
 import ExportStudentsBtn from '@/components/admin/export-students-btn'
@@ -59,6 +59,8 @@ export default async function SchoolStudentsPage({
     students.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''))
   } else if (sort === 'name_desc') {
     students.sort((a, b) => (b.full_name || '').localeCompare(a.full_name || ''))
+  } else if (sort === 'oldest') {
+    students.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
   } else {
     students.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }
@@ -105,13 +107,14 @@ export default async function SchoolStudentsPage({
                 <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider">Stream</th>
                 <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider">Phone Number</th>
                 <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider">Address</th>
+                <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider">Enrolled On</th>
                 <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Access Control</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {students.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-8 py-12 text-center text-gray-400 font-medium">
+                  <td colSpan={6} className="px-8 py-12 text-center text-gray-400 font-medium">
                     No students found matching your filters.
                   </td>
                 </tr>
@@ -148,6 +151,34 @@ export default async function SchoolStudentsPage({
                          {/* @ts-ignore */}
                          {student.city && student.state ? `${student.city}, ${student.state}` : <span className="text-gray-300 italic">No address</span>}
                        </div>
+                    </td>
+                    <td className="px-8 py-5">
+                      {student.created_at ? (
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-800">
+                            <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                            <span>
+                              {new Date(student.created_at).toLocaleDateString('en-US', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-1 font-medium">
+                            <Clock className="w-3 h-3 text-gray-400 shrink-0" />
+                            <span>
+                              {new Date(student.created_at).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true,
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-300 italic">--</span>
+                      )}
                     </td>
                     <td className="px-8 py-5 text-right">
                       <EnrollmentManager 

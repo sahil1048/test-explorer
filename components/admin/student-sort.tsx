@@ -37,6 +37,7 @@ export default function StudentSort() {
             <div className="p-1">
               {[
                 { label: "Newest First", value: "newest" },
+                { label: "Oldest First", value: "oldest" },
                 { label: "Name (A-Z)", value: "name_asc" },
                 { label: "Name (Z-A)", value: "name_desc" },
               ].map((option) => (

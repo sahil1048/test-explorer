@@ -25,17 +25,25 @@ export default function ExportStudentsBtn({ data }: { data: any[] }) {
       "Address",
       "Stream",
       "School/Organization",
+      "Enrolled Date & Time",
     ];
 
     // 2. Map Data to Rows
-    const rows = data.map((student: Student) => [
-      student.full_name || "",
-      student.email || "",
-      student.phone || student.phone_no || "",
-      student.address || "",
-      student.stream || "N/A",
-      student.organizations?.name || "Individual",
-    ]);
+    const rows = data.map((student: Student) => {
+      const enrolledAt = student.created_at
+        ? `${new Date(student.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })} ${new Date(student.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`
+        : "N/A";
+
+      return [
+        student.full_name || "",
+        student.email || "",
+        student.phone || student.phone_no || "",
+        student.address || "",
+        student.stream || "N/A",
+        student.organizations?.name || "Individual",
+        enrolledAt,
+      ];
+    });
 
     // 3. Convert to CSV Format
     const csvContent = [
