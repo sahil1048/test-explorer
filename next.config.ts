@@ -4,7 +4,12 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   /* config options here */
   images: {
-    domains: ['ykbehghnwjciwwlxipcw.supabase.co'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'ykbehghnwjciwwlxipcw.supabase.co',
+      },
+    ],
   },
 
   experimental: {
