@@ -17,31 +17,31 @@ export default function Testimonials({ data }: { data?: any[] }) {
   const defaultTestimonials = [
     {
       name: "Varuna S",
-      role: "Student, APS Waranagal",
+      role: "Student, APS Warangal",
       text: "The platform offered by Test Explorer is precisely mapped with CUET conducted by NTA.",
       gradient: "from-blue-600 to-violet-600",
-      image: "https://i.pravatar.cc/150?u=varuna" 
+      image: "/testimonials/varuna.jpg" 
     },
     {
       name: "S.K Malhotra",
       role: "SKM Classes (Owner)",
       text: "I have been running my coaching centre successfully for more than 2 decades.",
       gradient: "from-orange-400 to-red-500",
-      image: "https://i.pravatar.cc/150?u=skm",
+      image: "/testimonials/sk_malhotra.jpg",
     },
     {
       name: "Manish Kumar",
       role: "Student, DPS Patna",
       text: "I solved MCQs on the platform for hardly one month but in a consistent manner.",
       gradient: "from-emerald-400 to-teal-600",
-      image: "https://i.pravatar.cc/150?u=manish"
+      image: "/testimonials/manish.jpg"
     },
     {
       name: "Priya Sharma",
       role: "Student, KV Delhi",
       text: "The analytics helped me find my weak areas in Physics instantly.",
       gradient: "from-pink-500 to-rose-500",
-      image: "https://i.pravatar.cc/150?u=priya"
+      image: "/testimonials/priya.jpg"
     }
   ];
 
